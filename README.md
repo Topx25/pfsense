@@ -69,9 +69,11 @@ libraries.
 
 ## Install
 
+> دليل التركيب بالعربي: **[docs/INSTALL.ar.md](docs/INSTALL.ar.md)**
+
 ```sh
-git clone https://github.com/YOURNAME/pfsense-netcontrol.git
-cd pfsense-netcontrol
+git clone https://github.com/Topx25/pfsense.git
+cd pfsense
 sh install.sh
 ```
 
