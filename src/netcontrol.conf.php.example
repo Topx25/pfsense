@@ -13,7 +13,7 @@
 /* Addresses that must never be blocked or throttled, comma separated.
    The firewall's own LAN address is always protected and need not be
    listed. Add switches, access points, hypervisors, NAS, printers. */
-define('NC_OVERRIDE_PROTECTED', '192.168.1.20,192.168.1.250,192.168.1.101');
+// define('NC_OVERRIDE_PROTECTED', '10.0.0.20,10.0.0.250');
 
 /* Uncomment any of these if detection picks the wrong interface. */
 // define('NC_OVERRIDE_LAN_IF',     'em1');
