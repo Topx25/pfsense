@@ -1679,10 +1679,20 @@ function nc_stale($days = 30) {
 	$arp   = nc_arp_table();
 	$res   = nc_dhcp_reservations();
 	$cut   = time() - ($days * 86400);
+	$prot  = array_flip(nc_protected_ips());
 	$out   = array();
 
 	foreach ($res as $mac => $r) {
 		if (isset($arp[$mac])) {
+			continue;
+		}
+		/*
+		 * Never offer infrastructure for deletion. A switch or an access
+		 * point that is simply offline when this runs looks exactly like an
+		 * abandoned reservation, and removing it moves that device onto a
+		 * different address at its next renewal.
+		 */
+		if (isset($prot[$r['ip'] ?? ''])) {
 			continue;
 		}
 		$seen = $store['devices'][$mac]['last_seen'] ?? null;
@@ -1700,6 +1710,9 @@ function nc_stale($days = 30) {
 	}
 	foreach ($store['devices'] as $mac => $rule) {
 		if (isset($arp[$mac]) || isset($res[$mac])) {
+			continue;
+		}
+		if (isset($prot[$rule['ip'] ?? ''])) {
 			continue;
 		}
 		$seen = $rule['last_seen'] ?? null;

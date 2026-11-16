@@ -322,9 +322,44 @@ case 'clean': {
 	}
 	global $config;
 	$removed = 0;
+	$skipped = array();
+	$prot = array_flip(nc_protected_ips());
 	$maps = &$config['dhcpd']['lan']['staticmap'];
+
 	foreach ($macs as $m) {
 		$mac = nc_norm_mac($m);
+
+		/*
+		 * Check the shape before using it. This path writes config.xml, so
+		 * a value that is not a MAC has no business reaching it - and the
+		 * only other guard, nc_require_device(), is deliberately not used
+		 * here because a stale entry has no live device to match.
+		 */
+		if (!preg_match('/^[0-9a-f]{2}(:[0-9a-f]{2}){5}$/', $mac)) {
+			$skipped[] = $m;
+			continue;
+		}
+
+		/*
+		 * Refuse protected devices even when asked directly. nc_stale()
+		 * already keeps them off the list, but the list is not the only way
+		 * to reach this: deleting the gateway's or the switch's reservation
+		 * moves it to a new address at its next renewal.
+		 */
+		$ip = $store['devices'][$mac]['ip'] ?? '';
+		if ($ip === '' && is_array($maps)) {
+			foreach ($maps as $row) {
+				if (nc_norm_mac($row['mac'] ?? '') === $mac) {
+					$ip = $row['ipaddr'] ?? '';
+					break;
+				}
+			}
+		}
+		if ($ip !== '' && isset($prot[$ip])) {
+			$skipped[] = $ip;
+			continue;
+		}
+
 		if (is_array($maps)) {
 			foreach ($maps as $i => $row) {
 				if (nc_norm_mac($row['mac'] ?? '') === $mac) {
@@ -344,7 +379,14 @@ case 'clean': {
 		services_dhcpd_configure();
 	}
 	nc_log(sprintf("CLEAN اتمسح %d حجز و %d قاعدة", $removed, count($macs)));
-	nc_out(array('ok' => true, 'removed' => $removed));
+	nc_out(array(
+		'ok'      => true,
+		'removed' => $removed,
+		'skipped' => $skipped,
+		'note'    => $skipped
+			? 'اتخطى ' . count($skipped) . ' عنصر محمي أو غير صالح'
+			: '',
+	));
 }
 
 case 'savepolicy': {
