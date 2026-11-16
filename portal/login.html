@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تسجيل الدخول للشبكة</title>
+<style>
+/* Layout: login card first, then the Wi-Fi setup notice beneath it. */
+:root{
+  --bg:#f1f5f9; --card:#fff; --head:#f8fafc; --line:#e8edf3;
+  --ink:#0f172a; --dim:#64748b; --faint:#94a3b8;
+  --acc:#2563eb; --accb:#dbeafe; --acc2:#4f46e5;
+  --ok:#059669; --okb:#d1fae5;
+  --warn:#b45309; --warnb:#fef3c7;
+  --crit:#dc2626; --critb:#fee2e2;
+  --soft:#f5f8fb; --r:14px; --rs:10px;
+  --sh:0 1px 3px rgba(15,23,42,.05),0 4px 12px rgba(15,23,42,.06);
+  --fs:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;
+  --fm:ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0b1220;--card:#131c2e;--head:#18233a;--line:#263349;
+    --ink:#e8eef7;--dim:#94a3b8;--faint:#64748b;
+    --acc:#60a5fa;--accb:#1e3a5f;--acc2:#818cf8;
+    --ok:#34d399;--okb:#064e3b;--warn:#fbbf24;--warnb:#4a3410;
+    --crit:#f87171;--critb:#4c1d1d;--soft:#1a2436;
+    --sh:0 4px 14px rgba(0,0,0,.35);color-scheme:dark}
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--fs);
+  margin:0;line-height:1.7;padding:18px;display:flex;flex-direction:column;
+  align-items:center;min-height:100vh}
+.wrap{width:100%;max-width:440px}
+
+.login-card{background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);box-shadow:var(--sh);padding:26px 22px;
+  margin-bottom:16px;text-align:center}
+.login-card .badge{width:54px;height:54px;border-radius:15px;margin:0 auto 14px;
+  display:flex;align-items:center;justify-content:center;font-size:25px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
+  box-shadow:0 4px 14px rgba(37,99,235,.3)}
+.login-card h1{font-size:19px;font-weight:700;margin:0 0 4px}
+.login-card .sub{font-size:13px;color:var(--dim);margin-bottom:20px}
+.login-card img{max-width:180px;max-height:70px;margin-bottom:12px}
+
+#error-message:not(:empty){background:var(--critb);color:var(--crit);
+  border-radius:var(--rs);padding:10px 13px;font-size:13px;
+  margin-bottom:14px;text-align:start}
+
+form input[type=text],form input[type=password]{width:100%;
+  border:1px solid var(--line);border-radius:var(--rs);
+  padding:12px 14px;font-size:15px;font-family:inherit;margin-bottom:10px;
+  background:var(--card);color:var(--ink);text-align:start}
+form input:focus{outline:0;border-color:var(--acc);
+  box-shadow:0 0 0 3px rgba(37,99,235,.14)}
+form input[type=submit]{width:100%;border:0;border-radius:var(--rs);
+  padding:13px;font-size:15px;font-weight:700;font-family:inherit;
+  background:var(--acc);color:#fff;cursor:pointer;margin-top:4px;
+  box-shadow:0 2px 6px rgba(37,99,235,.3)}
+form input[type=submit]:hover{background:var(--acc2)}
+form input[type=submit]:disabled{background:var(--faint);cursor:not-allowed;
+  box-shadow:none}
+
+.terms{display:flex;align-items:flex-start;gap:9px;text-align:start;
+  font-size:12.5px;color:var(--dim);margin:14px 0 4px}
+.terms input{margin-top:4px;flex:none;width:17px;height:17px;
+  accent-color:var(--acc)}
+.terms a{color:var(--acc)}
+#terms{display:none;text-align:start;font-size:12px;color:var(--dim);
+  background:var(--soft);border:1px solid var(--line);border-radius:var(--rs);
+  padding:12px;margin-top:10px;max-height:190px;overflow-y:auto}
+
+/* ---- the Wi-Fi setup notice ---- */
+.guide{background:var(--card);border:1px solid var(--line);
+  border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.guide .gh{display:flex;align-items:center;gap:11px;padding:14px 18px;
+  background:var(--warnb);color:var(--warn);font-weight:700;font-size:14px;
+  border-bottom:1px solid color-mix(in srgb,var(--warn) 25%,transparent)}
+.guide .gb{padding:16px 18px}
+.guide p{margin:0 0 12px;font-size:13px;color:var(--dim)}
+.guide p b{color:var(--ink)}
+.guide details{border:1px solid var(--line);border-radius:var(--rs);
+  margin-bottom:8px;overflow:hidden}
+.guide details[open]{box-shadow:var(--sh)}
+.guide summary{padding:11px 14px;cursor:pointer;font-weight:600;font-size:13.5px;
+  display:flex;align-items:center;gap:9px;background:var(--head);
+  list-style:none}
+.guide summary::-webkit-details-marker{display:none}
+.guide summary::after{content:"▾";margin-inline-start:auto;color:var(--faint);
+  font-size:11px}
+.guide details[open] summary::after{content:"▴"}
+.guide summary .os{width:26px;height:26px;border-radius:8px;flex:none;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  background:var(--accb);color:var(--acc)}
+.guide ol{margin:0;padding:12px 16px;list-style:none;counter-reset:s}
+.guide ol li{counter-increment:s;position:relative;padding-inline-start:32px;
+  padding-block:7px;font-size:13px}
+.guide ol li::before{content:counter(s);position:absolute;
+  inset-inline-start:0;top:7px;width:21px;height:21px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  font-weight:700;background:var(--accb);color:var(--acc);font-family:var(--fm)}
+.guide ol li+li{border-top:1px solid var(--line)}
+kbd{font-family:inherit;font-weight:600;background:var(--soft);
+  border:1px solid var(--line);border-radius:5px;padding:1px 6px;
+  font-size:12.5px;white-space:nowrap;display:inline-block}
+.ok-note{background:var(--okb);color:var(--ok);border-radius:var(--rs);
+  padding:10px 13px;font-size:12.5px;margin-top:4px}
+.foot{font-size:11.5px;color:var(--faint);text-align:center;margin-top:18px}
+
+/* ---- the warning modal ---- */
+.modal{position:fixed;inset:0;background:rgba(10,14,20,.6);z-index:999;
+  display:flex;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(2px)}
+.modal[hidden]{display:none}
+.mbox{background:var(--card);border-radius:var(--r);width:100%;max-width:460px;
+  max-height:88vh;display:flex;flex-direction:column;box-shadow:var(--sh),
+  0 20px 50px rgba(15,23,42,.3);overflow:hidden}
+.mh{display:flex;align-items:center;gap:11px;padding:16px 18px;
+  background:var(--warnb);color:var(--warn);
+  border-bottom:1px solid color-mix(in srgb,var(--warn) 25%,transparent)}
+.mh h2{margin:0;font-size:15.5px;font-weight:700;line-height:1.4}
+.mi{font-size:20px;flex:none}
+.mb{padding:16px 18px;overflow-y:auto;flex:1}
+.mb p{margin:0 0 14px;font-size:13.5px;color:var(--dim)}
+.mb p b{color:var(--ink)}
+.step{display:flex;gap:11px;align-items:flex-start;margin:14px 0 10px}
+.sn{width:25px;height:25px;border-radius:50%;flex:none;display:flex;
+  align-items:center;justify-content:center;font-size:12px;font-weight:700;
+  background:var(--acc);color:#fff}
+.step b{font-size:14px}
+.sd{font-size:12.5px;color:var(--dim);margin-top:3px;line-height:1.6}
+.mnote{background:var(--okb);color:var(--ok);border-radius:var(--rs);
+  padding:10px 13px;font-size:12.5px;margin-top:14px;line-height:1.6}
+.mf{display:flex;gap:9px;padding:14px 18px;border-top:1px solid var(--line);
+  background:var(--head)}
+.mbtn{flex:1;border:0;border-radius:var(--rs);padding:12px;font-size:14px;
+  font-weight:700;font-family:inherit;cursor:pointer;background:var(--acc);
+  color:#fff}
+.mbtn:hover{background:var(--acc2)}
+.mbtn.ghost{background:var(--card);color:var(--dim);
+  border:1px solid var(--line);flex:0 0 auto;padding:12px 16px}
+.mbtn.ghost:hover{background:var(--soft);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="login-card">
+    <div class="badge">📶</div>
+    <h1>تسجيل الدخول للشبكة</h1>
+    <div class="sub">ادخل اليوزر والباسورد بتاعك علشان تتصل بالإنترنت</div>
+
+    <div id="error-message">$PORTAL_MESSAGE$</div>
+
+    <form name="login_form" method="post" action="$PORTAL_ACTION$">
+      <input type="text" name="auth_user" placeholder="اسم المستخدم"
+        id="auth_user" autocapitalize="none" autocorrect="off">
+      <input type="password" name="auth_pass" placeholder="كلمة المرور"
+        id="auth_pass">
+      <input name="auth_voucher" type="text" placeholder="كود الفاوتشر (اختياري)"
+        value="#VOUCHER#">
+
+      <div class="terms">
+        <input type="checkbox" id="agree"
+          onchange="document.getElementById('login').disabled = !this.checked;">
+        <span>موافق على <a href="#terms" rel="noopener"
+          onclick="document.getElementById('terms').style.display='block';return false;"
+          >شروط الاستخدام</a></span>
+      </div>
+      <!-- pfSense inlines the terms into its own template rather than
+           offering a placeholder, so they are written out here. Keep this
+           in step with Services > Captive Portal > Terms and Conditions. -->
+      <div id="terms">
+        📵 يرجى عدم عمل هوتسبوت للموبايل<br>
+        🚫 يرجى عدم تغيير الشبكة<br>
+        ❌ عدم استخدام بيانات الحساب على أكثر من جهاز
+      </div>
+
+      <input name="redirurl" type="hidden" value="$PORTAL_REDIRURL$">
+      <input name="zone" type="hidden" value="$PORTAL_ZONE$">
+      <input id="login" name="accept" type="submit" value="دخول" disabled>
+    </form>
+  </div>
+
+  <div class="guide">
+    <div class="gh"><span>⚠</span>خطوة واحدة مهمة قبل ما تدخل</div>
+    <div class="gb">
+      <p>موبايلك بيخترع <b>عنوان شبكة جديد</b> كل مرة يتصل. ده بيخلي الشبكة
+         تفتكرك جهاز جديد في كل مرة، فبتضيع إعداداتك وممكن الاتصال يتقطع.</p>
+      <p>اقفل الميزة دي <b>لشبكتنا بس</b> — هتفضل شغالة في أي شبكة تانية بره،
+         فخصوصيتك مش هتتأثر.</p>
+
+      <details>
+        <summary><span class="os">🤖</span>أندرويد</summary>
+        <ol>
+          <li>افتح <kbd>الإعدادات</kbd> ← <kbd>الواي فاي</kbd></li>
+          <li>دوس على <b>اسم شبكتنا</b> أو على <kbd>⚙</kbd> اللي جنبها</li>
+          <li>دوّر على <kbd>خصوصية MAC</kbd> أو <kbd>MAC privacy</kbd></li>
+          <li>غيّرها لـ <kbd>استخدام MAC الجهاز</kbd></li>
+          <li>اقفل الواي فاي وشغّله تاني</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary><span class="os">🍎</span>آيفون و آيباد</summary>
+        <ol>
+          <li>افتح <kbd>الإعدادات</kbd> ← <kbd>Wi‑Fi</kbd></li>
+          <li>دوس <kbd>ⓘ</kbd> جنب <b>اسم شبكتنا</b></li>
+          <li>دوّر على <kbd>عنوان Wi‑Fi الخاص</kbd></li>
+          <li>iOS 18 أو أحدث: خليها <kbd>إيقاف</kbd> — الأقدم: اقفل المفتاح</li>
+          <li>دوس <kbd>انضمام مرة أخرى</kbd> لو ظهرت</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary><span class="os">🪟</span>ويندوز</summary>
+        <ol>
+          <li><kbd>الإعدادات</kbd> ← <kbd>الشبكة والإنترنت</kbd> ← <kbd>Wi‑Fi</kbd></li>
+          <li>اقفل <kbd>عناوين الأجهزة العشوائية</kbd></li>
+        </ol>
+      </details>
+
+      <div class="ok-note">عملتها؟ تمام — تقدر تدخل عادي دلوقتي.</div>
+    </div>
+  </div>
+
+  <div class="foot">لو واجهتك مشكلة كلّم الـ IT ومعاك نوع موبايلك</div>
+</div>
+
+<!-- Shown only to devices that look like they use a private MAC. -->
+<div id="warn" class="modal" hidden>
+  <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="wt">
+    <div class="mh">
+      <span class="mi">⚠</span>
+      <h2 id="wt">جهازك محتاج خطوتين قبل ما تدخل</h2>
+    </div>
+    <div class="mb">
+      <p>شبكتنا مش عارفة تعرف جهازك، وده بيعمل مشكلتين ليك إنت:
+         <b>بيفصلك كل شوية</b>، و<b>بتضيع إعداداتك</b> كل مرة تتصل.</p>
+
+      <div class="step">
+        <span class="sn">1</span>
+        <div>
+          <b>اقفل العنوان العشوائي</b>
+          <div class="sd">موبايلك بيخترع عنوان جديد كل اتصال، فالشبكة
+            بتفتكرك جهاز جديد في كل مرة.</div>
+        </div>
+      </div>
+
+      <details>
+        <summary><span class="os">🤖</span>أندرويد</summary>
+        <ol>
+          <li>الإعدادات ← الواي فاي</li>
+          <li>دوس على <b>اسم شبكتنا</b> أو على ⚙ اللي جنبها</li>
+          <li>دوّر على <kbd>خصوصية MAC</kbd></li>
+          <li>غيّرها لـ <kbd>استخدام MAC الجهاز</kbd></li>
+        </ol>
+      </details>
+
+      <details>
+        <summary><span class="os">🍎</span>آيفون و آيباد</summary>
+        <ol>
+          <li>الإعدادات ← Wi‑Fi</li>
+          <li>دوس ⓘ جنب <b>اسم شبكتنا</b></li>
+          <li>دوّر على <kbd>عنوان Wi‑Fi الخاص</kbd></li>
+          <li>خليها <kbd>إيقاف</kbd>، وبعدين <kbd>انضمام مرة أخرى</kbd></li>
+        </ol>
+      </details>
+
+      <div class="step">
+        <span class="sn">2</span>
+        <div>
+          <b>سمّي جهازك باسمك</b>
+          <div class="sd">علشان نعرف مين صاحبه لما نحتاج نساعدك.</div>
+        </div>
+      </div>
+
+      <details>
+        <summary><span class="os">🤖</span>أندرويد — تغيير الاسم</summary>
+        <ol>
+          <li>الإعدادات ← <kbd>حول الهاتف</kbd></li>
+          <li>دوس <kbd>اسم الجهاز</kbd> واكتب اسمك</li>
+        </ol>
+      </details>
+
+      <details>
+        <summary><span class="os">🍎</span>آيفون — تغيير الاسم</summary>
+        <ol>
+          <li>الإعدادات ← <kbd>عام</kbd> ← <kbd>حول</kbd></li>
+          <li>دوس <kbd>الاسم</kbd> واكتب اسمك</li>
+        </ol>
+      </details>
+
+      <div class="mnote">الإعدادين دول <b>لشبكتنا بس</b> — خصوصيتك في أي
+        شبكة تانية مش هتتأثر.</div>
+    </div>
+    <div class="mf">
+      <button type="button" class="mbtn ghost" id="wlater">هكملها بعدين</button>
+      <button type="button" class="mbtn" id="wdone">عملتها</button>
+    </div>
+  </div>
+</div>
+<script>
+/*
+ * Decide whether to show the warning.
+ *
+ * A web page cannot read the client's MAC address, so this infers from
+ * what the browser does expose. It errs towards silence: a device that
+ * does not clearly look like a phone is left alone, because nagging
+ * somebody whose setup is already fine teaches them to dismiss it.
+ *
+ * The choice is remembered per browser, so it is asked once rather than
+ * on every login.
+ */
+(function(){
+  var KEY = 'nc_mac_warned';
+  try { if (localStorage.getItem(KEY) === 'done') return; } catch(e){}
+
+  var ua = navigator.userAgent || '';
+  var isAndroid = /Android/i.test(ua);
+  var isIOS     = /iPhone|iPad|iPod/i.test(ua) ||
+                  (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+
+  /*
+   * Only phones and tablets invent a MAC per network, and only they can
+   * fix it from Settings. A laptop or desktop is left alone.
+   */
+  if (!isAndroid && !isIOS) return;
+
+  /* iOS 14+ and Android 10+ are the versions that randomise by default */
+  var warn = true;
+  var m = ua.match(/Android (\d+)/);
+  if (m && parseInt(m[1], 10) < 10) warn = false;
+  m = ua.match(/OS (\d+)_/);
+  if (m && parseInt(m[1], 10) < 14) warn = false;
+  if (!warn) return;
+
+  var box = document.getElementById('warn');
+  if (!box) return;
+
+  /* show it only after the page is readable behind it */
+  setTimeout(function(){ box.hidden = false; }, 400);
+
+  function close(remember){
+    box.hidden = true;
+    if (remember) { try { localStorage.setItem(KEY, 'done'); } catch(e){} }
+    var u = document.getElementById('auth_user');
+    if (u) u.focus();
+  }
+  document.getElementById('wdone').onclick  = function(){ close(true); };
+  document.getElementById('wlater').onclick = function(){ close(false); };
+  box.addEventListener('click', function(e){ if (e.target === box) close(false); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !box.hidden) close(false);
+  });
+})();
+</script>
+</body>
+</html>
