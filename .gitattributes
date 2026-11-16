@@ -1,0 +1,9 @@
+# These ship to FreeBSD. CRLF breaks the shebang in install.sh and can
+# corrupt PHP heredocs, so keep LF regardless of the checkout platform.
+* text=auto eol=lf
+*.php text eol=lf
+*.inc text eol=lf
+*.sh  text eol=lf
+*.xml text eol=lf
+*.md  text eol=lf
+*.json text eol=lf
