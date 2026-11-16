@@ -15,11 +15,25 @@ $store = nc_store_load();
 $tbl = array_filter(preg_split('/\s+/',
 	trim((string)shell_exec('/sbin/pfctl -t ' . NC_TABLE . ' -T show 2>/dev/null'))));
 $tbl = array_flip($tbl);
-$miss = 0;
+/*
+ * A blocked device that is offline is deliberately NOT in the table: its
+ * address goes back to the DHCP pool, and holding it would block whoever
+ * is handed it next. Only a device that is present and unenforced is a
+ * fault.
+ */
+$arp  = nc_arp_table();
+$miss = 0; $withheld = 0;
 foreach ($store['devices'] as $mac => $d) {
 	if (empty($d['blocked'])) continue;
 	$ip = $d['ip'] ?? '';
-	if ($ip && !isset($tbl[$ip])) { $miss++; }
+	if (!$ip) continue;
+	if (isset($tbl[$ip])) continue;
+	if (isset($arp[$mac])) { $miss++; }      /* present but not enforced */
+	else { $withheld++; }                    /* absent - correct */
+}
+if ($withheld) {
+	printf("  %d block(s) withheld while the device is offline (correct)
+", $withheld);
 }
 printf("  blocked in store: %d · in pf table: %d · missing: %d\n",
 	count(array_filter($store['devices'], function($d){ return !empty($d['blocked']); })),

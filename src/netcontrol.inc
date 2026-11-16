@@ -2643,12 +2643,42 @@ function nc_apply() {
 		nc_dns_apply();
 	}
 
+	/*
+	 * Who holds each address right now. A block is recorded against a MAC
+	 * but enforced against an address, so the two have to be checked
+	 * against each other before anything reaches the table.
+	 */
+	$arp_now = nc_arp_table();
+	$holder  = array();
+	foreach ($arp_now as $m => $a) {
+		if (!empty($a['ip'])) {
+			$holder[$a['ip']] = $m;
+		}
+	}
+
 	foreach ($store['devices'] as $mac => $rule) {
 		$ip = $rule['ip'] ?? '';
 		if (!$ip) {
 			continue;
 		}
 		if (!empty($rule['blocked'])) {
+			/*
+			 * Only block the address while the blocked device is the one
+			 * behind it. When the device is gone the address goes back to
+			 * the pool, and blocking it would hit whoever is handed it
+			 * next - punishing a stranger for something they did not do,
+			 * with nothing in the UI to explain why.
+			 *
+			 * The rule itself is not removed: it stays keyed to the MAC
+			 * and takes effect again the moment the device reappears.
+			 */
+			$now = $holder[$ip] ?? null;
+			if ($now !== null && $now !== $mac) {
+				continue;            /* somebody else has it - leave them alone */
+			}
+			if ($now === null && !isset($arp_now[$mac])) {
+				continue;            /* device absent: do not hold the address */
+			}
 			$block_ips[] = $ip;
 		}
 		if (isset($rule['limit']) && $rule['limit'] !== null && (int)$rule['limit'] > 0) {

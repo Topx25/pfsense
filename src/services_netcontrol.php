@@ -51,6 +51,9 @@ function nc_h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 #nc .nc-hd h1{font-size:21px;font-weight:800;margin:0 0 2px;color:var(--ink)}
 #nc .nc-hd .sub{font-size:12.5px;color:var(--dim)}
 #nc .nc-hd .sp-r{margin-inline-start:auto;display:flex;gap:9px;flex-wrap:wrap}
+#nc .nc-bar{display:flex;align-items:center;justify-content:flex-end;
+  gap:9px;flex-wrap:wrap;margin-bottom:10px}
+#nc .nc-bar .sp-r{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
 #nc .nc-note{background:var(--accb);border:1px solid rgba(37,99,235,.2);
   border-radius:var(--rs);padding:12px 16px;margin-bottom:14px;font-size:13px;
   color:#1e40af}
@@ -770,6 +773,15 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
 </style>
 
 <div id="nc">
+  <!--
+    A bar for page-level controls. The language switch mounts into .sp-r;
+    without this the switch fell back to the end of #nc, where it rendered
+    below the log and was effectively invisible.
+  -->
+  <div class="nc-bar">
+    <div class="sp-r"></div>
+  </div>
+
   <div class="nc-note" id="live">
     <strong>جاري تحميل حالة الشبكة…</strong>
   </div>
@@ -2917,7 +2929,8 @@ setInterval(()=>{ if(!$('#sheet')) load(1); }, 10000);
   });
 
   function mount(){
-    var host = root.querySelector('.nc-hd .sp-r') ||
+    var host = root.querySelector('.nc-bar .sp-r') ||
+               root.querySelector('.nc-hd .sp-r') ||
                root.querySelector('.nc-hd') || root;
     var w = document.createElement('div');
     w.className = 'langsw';
