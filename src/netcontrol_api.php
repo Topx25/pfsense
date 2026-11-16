@@ -12,6 +12,7 @@
 
 require_once("guiconfig.inc");
 require_once("/usr/local/pkg/netcontrol.inc");
+require_once("/usr/local/pkg/netcontrol_report.inc");
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -92,6 +93,38 @@ if ($action === 'history') {
 		'usage'   => nc_usage_history(7),
 		'now'     => time(),
 	));
+}
+
+if ($action === 'report') {
+	$days = nc_report_days();
+	$day  = (string)($_GET['day'] ?? '');
+	/* only a day we actually hold figures for, or today */
+	if ($day === '' || (!in_array($day, $days, true) && $day !== date('Y-m-d'))) {
+		$day = date('Y-m-d');
+	}
+	nc_out(array('ok' => true, 'report' => nc_report($day), 'days' => $days));
+}
+
+/*
+ * The same report as a file to save.
+ *
+ * Served as a download rather than JSON the page assembles, so what the
+ * admin keeps is exactly what the firewall reported, and it opens on a
+ * machine that cannot reach this box.
+ */
+if ($action === 'reporthtml') {
+	$days = nc_report_days();
+	$day  = (string)($_GET['day'] ?? '');
+	if ($day === '' || (!in_array($day, $days, true) && $day !== date('Y-m-d'))) {
+		$day = date('Y-m-d');
+	}
+	$html = nc_report_html(nc_report($day));
+	header_remove('Content-Type');
+	header('Content-Type: text/html; charset=utf-8');
+	header('Content-Disposition: attachment; filename="network-report-' . $day . '.html"');
+	header('X-Content-Type-Options: nosniff');
+	echo $html;
+	exit;
 }
 
 if ($action === 'policy') {

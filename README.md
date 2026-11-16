@@ -224,6 +224,8 @@ tick has actually run recently.
 
 ```
 src/netcontrol.inc              the library: all detection and enforcement
+src/netcontrol_report.inc       daily reports + standalone HTML export
+src/netcontrol_diag.inc         per-device diagnostics
 src/netcontrol_api.php          JSON API, CSRF-checked
 src/services_netcontrol.php     the page
 src/netcontrol_tick.php         cron: runs every minute
