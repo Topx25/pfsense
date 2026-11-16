@@ -1037,16 +1037,71 @@ async function api(action, body){
       else f.append(k, v);
     }
     o.body = f;
-    const r = await fetch(API, o);
-    return r.json();
   }
-  const r = await fetch(API+'?action='+action+(body===null?'':''));
-  return r.json();
+  const url = body ? API : API+'?action='+action;
+
+  let r;
+  try{
+    r = await fetch(url, o);
+  }catch(e){
+    /* the network, not the server: the firewall may be reloading rules */
+    apiFail('الاتصال بالسيرفر انقطع — حاول تاني بعد لحظة');
+    throw e;
+  }
+
+  /*
+   * Read the body as text first. A failing pfSense returns an HTML error
+   * page, and calling r.json() on that throws a parse error that says
+   * nothing useful - which is how a refused action became a button that
+   * silently does nothing.
+   */
+  const txt = await r.text();
+  let d = null;
+  try{ d = JSON.parse(txt); }catch(e){}
+
+  if (!d){
+    apiFail(r.status === 403
+      ? 'انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5)'
+      : 'السيرفر رجّع رد غير متوقع (' + r.status + ')');
+    throw new Error('bad response ' + r.status);
+  }
+  if (d.ok === false){
+    apiFail(d.error || 'الطلب اترفض');
+    /* returned, not thrown: callers that do check ok still see the object */
+  }
+  return d;
+}
+
+/* One place to report a failed call, so no caller can forget to. */
+function apiFail(msg){
+  try{ console.warn('netcontrol:', msg); }catch(e){}
+  const box = $('#alerts');
+  if (!box) { alert(msg); return; }
+  const el = document.createElement('div');
+  el.className = 'al crit';
+  el.innerHTML = '<span style="font-size:15px">⚠</span>' +
+                 '<div class="grow">' + esc(msg) + '</div>';
+  box.prepend(el);
+  setTimeout(()=>{ try{ el.remove(); }catch(e){} }, 9000);
 }
 async function get(action, qs){
-  const r = await fetch(API+'?action='+action+(qs?'&'+qs:''));
-  if(!r.ok) throw new Error(r.status);
-  return r.json();
+  let r;
+  try{
+    r = await fetch(API+'?action='+action+(qs?'&'+qs:''));
+  }catch(e){
+    apiFail('الاتصال بالسيرفر انقطع');
+    throw e;
+  }
+  const txt = await r.text();
+  let d = null;
+  try{ d = JSON.parse(txt); }catch(e){}
+  if(!r.ok || !d){
+    apiFail(r.status === 403
+      ? 'انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5)'
+      : 'ماقدرش يقرا البيانات (' + r.status + ')');
+    throw new Error('bad response ' + r.status);
+  }
+  return d;
 }
 
 /* ---------------- load ---------------- */
