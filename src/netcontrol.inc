@@ -2057,6 +2057,7 @@ function nc_reattach_rules(&$store) {
 	$names = nc_lease_names();
 	$arp   = nc_arp_table();
 	$prot  = nc_protected_ips();
+	$res   = nc_dhcp_reservations();   /* a reserved MAC is a known machine */
 
 	/* the fingerprints we hold a block for, and which MAC holds each */
 	$held = array();
@@ -2065,11 +2066,12 @@ function nc_reattach_rules(&$store) {
 			$held[$rule['fp']] = $mac;
 		}
 	}
-	if (!$held) {
-		return false;
-	}
-
-	foreach ($arp as $mac => $a) {
+	/*
+	 * No early return when $held is empty: the account pass below runs even
+	 * when we hold no fingerprints at all, which is exactly the case for a
+	 * device that never announced a name.
+	 */
+	foreach (($held ? $arp : array()) as $mac => $a) {
 		if (!empty($store['devices'][$mac]['blocked'])) {
 			continue;                 /* already blocked, nothing to carry */
 		}
@@ -2100,6 +2102,135 @@ function nc_reattach_rules(&$store) {
 			$old, $mac, $ip ?: '-', $fp));
 		$dirty = true;
 	}
+
+	/*
+	 * Learn the account for a block that predates us recording one.
+	 *
+	 * A block made before this was added carries no account, so it is still
+	 * lost the moment the device rotates its MAC. The portal logged which
+	 * account was on that MAC, so take it from there - once, and only for a
+	 * blocked device we have no other way to follow.
+	 */
+	$unfollowable = array();
+	foreach ($store['devices'] as $mac => $rule) {
+		if (empty($rule['blocked']) || !empty($rule['cp_user'])) {
+			continue;
+		}
+		if (!empty($rule['fp']) && !nc_fp_is_generic($rule['fp'])) {
+			continue;
+		}
+		$unfollowable[$mac] = true;
+	}
+	if ($unfollowable) {
+		/* oldest first, so the newest login for a MAC is what we keep */
+		foreach (array_reverse(nc_login_log(3000)) as $e) {
+			if (!$e['mac'] || $e['user'] === '' ||
+			    stripos($e['kind'], 'ACCEPT') === false) {
+				continue;
+			}
+			if (isset($unfollowable[$e['mac']])) {
+				$store['devices'][$e['mac']]['cp_user'] = $e['user'];
+			}
+		}
+		/*
+		 * Announce only what this pass learned. Every entry in
+		 * $unfollowable had no account a moment ago, so one carrying an
+		 * account now was just learned, and the record is saved at the end
+		 * of the tick - so this does not repeat on the next run.
+		 */
+		foreach (array_keys($unfollowable) as $mac) {
+			$u = $store['devices'][$mac]['cp_user'] ?? '';
+			if ($u === '') {
+				continue;
+			}
+			nc_log(sprintf('ACCT-LEARN %s: الحظر اتربط بحساب %s علشان مايفلتش',
+				$mac, $u));
+			$dirty = true;
+		}
+	}
+
+	/*
+	 * Now the devices a fingerprint cannot follow.
+	 *
+	 * A randomized MAC with no usable hostname is a different device to us
+	 * every time it reconnects, so the block above never finds it. What does
+	 * persist is the portal account: the person has to type it to get online.
+	 * Where a block was made while its user was signed in, we recorded the
+	 * account; if that account turns up on an address we do not know, carry
+	 * the block onto it.
+	 */
+	$by_acct = array();
+	foreach ($store['devices'] as $mac => $rule) {
+		if (empty($rule['blocked']) || empty($rule['cp_user'])) {
+			continue;
+		}
+		/* only where we have no better handle on the device */
+		if (!empty($rule['fp']) && !nc_fp_is_generic($rule['fp'])) {
+			continue;
+		}
+		$by_acct[strtolower($rule['cp_user'])] = $mac;
+	}
+
+	if ($by_acct) {
+		$cp = nc_portal_sessions();
+		foreach ($cp['by_mac'] as $mac => $sess) {
+			$user = strtolower((string)($sess['username'] ?? ''));
+			if ($user === '' || !isset($by_acct[$user])) {
+				continue;
+			}
+			if (!empty($store['devices'][$mac]['blocked'])) {
+				continue;             /* already blocked */
+			}
+			$ip = $arp[$mac]['ip'] ?? '';
+			if ($ip !== '' && in_array($ip, $prot, true)) {
+				continue;             /* never touch infrastructure */
+			}
+			$old = $by_acct[$user];
+			if ($old === $mac) {
+				continue;
+			}
+
+			/*
+			 * An account identifies a person, not a device, and people own
+			 * more than one. Only carry the block onto an address that is
+			 * unidentifiable in the same way the blocked device was: a
+			 * randomized MAC with no name, no vendor and no reservation.
+			 *
+			 * Without this the block lands on that person's other machines.
+			 * Checked against the live data, the unrestricted version would
+			 * have blocked a MacBook Pro and an HP desktop whose owners'
+			 * phones were blocked - the wrong device, silently.
+			 */
+			if (!nc_mac_is_random($mac)) {
+				continue;             /* a burned-in MAC is its own device */
+			}
+			if (isset($res[$mac])) {
+				continue;             /* reserved, so a known machine */
+			}
+			if (trim((string)($names[$mac]['host'] ?? '')) !== '') {
+				continue;             /* it told us its name: not anonymous */
+			}
+			if (nc_vendor($mac) !== '') {
+				continue;             /* identifiable make */
+			}
+			$store['devices'][$mac] = array(
+				'ip'        => $ip,
+				'name'      => $store['devices'][$old]['name']    ?? '',
+				'blocked'   => true,
+				'limit'     => null,
+				'expires'   => $store['devices'][$old]['expires'] ?? null,
+				'by_policy' => !empty($store['devices'][$old]['by_policy']),
+				'fp'        => $store['devices'][$old]['fp'] ?? '',
+				'cp_user'   => $store['devices'][$old]['cp_user'],
+				'from_mac'  => $old,
+				'last_seen' => time(),
+			);
+			nc_log(sprintf('ACCT-BLOCK %s -> %s (%s): نفس الحساب %s — الحظر اتنقل معاه',
+				$old, $mac, $ip ?: '-', $store['devices'][$old]['cp_user']));
+			$dirty = true;
+		}
+	}
+
 	return $dirty;
 }
 
@@ -2342,8 +2473,37 @@ function nc_login_log($limit = 300) {
 }
 
 /* A per-user summary built from the same log. */
+/*
+ * What identifies the handset behind a MAC, for counting purposes.
+ *
+ * A phone that rotates its address appears under many MACs; all of them
+ * share a fingerprint (its DHCP hostname) when it offers one. Where there
+ * is none, the vendor prefix still separates makes of device, and a
+ * randomized MAC has no vendor at all - so every unidentifiable address
+ * for one account counts once, rather than once per reconnection.
+ */
+function nc_device_identity($mac, $fp = '') {
+	if ($fp !== '' && !nc_fp_is_generic($fp)) {
+		return 'fp:' . $fp;
+	}
+	if (nc_mac_is_random($mac)) {
+		return 'rand';            /* one bucket: it will not say what it is */
+	}
+	return 'oui:' . substr(strtolower((string)$mac), 0, 8);
+}
+
 function nc_login_summary($limit = 600) {
 	$by = array();
+
+	/* the fingerprints we already know, so a rotating phone can be matched */
+	$store = nc_store_load();
+	$fps   = array();
+	foreach ($store['devices'] as $m => $r) {
+		if (!empty($r['fp'])) {
+			$fps[$m] = $r['fp'];
+		}
+	}
+
 	foreach (nc_login_log($limit) as $e) {
 		$u = $e['user'];
 		if ($u === '') {
@@ -2351,7 +2511,8 @@ function nc_login_summary($limit = 600) {
 		}
 		if (!isset($by[$u])) {
 			$by[$u] = array('user' => $u, 'logins' => 0, 'kicked' => 0,
-			                'last' => null, 'macs' => array(), 'ips' => array());
+			                'last' => null, 'macs' => array(), 'ips' => array(),
+			                'ids' => array());
 		}
 		if (stripos($e['kind'], 'ACCEPT') !== false) {
 			$by[$u]['logins']++;
@@ -2360,16 +2521,34 @@ function nc_login_summary($limit = 600) {
 		    stripos($e['kind'], 'CONCURRENT') !== false) {
 			$by[$u]['kicked']++;
 		}
-		if ($e['mac']) { $by[$u]['macs'][$e['mac']] = 1; }
+		if ($e['mac']) {
+			$by[$u]['macs'][$e['mac']] = 1;
+			/*
+			 * Also bucket by handset, so a phone that changed its address
+			 * fifty times counts once. The MAC list is kept as it was -
+			 * the page still shows the addresses - but 'devices' now
+			 * answers "how many machines", which is the question asked.
+			 */
+			$fp = $fps[$e['mac']] ?? '';
+			$by[$u]['ids'][nc_device_identity($e['mac'], $fp)] = 1;
+		}
 		if ($e['ip'])  { $by[$u]['ips'][$e['ip']]   = 1; }
 		if ($e['at'] && (!$by[$u]['last'] || $e['at'] > $by[$u]['last'])) {
 			$by[$u]['last'] = $e['at'];
 		}
 	}
 	foreach ($by as &$u) {
-		$u['devices'] = count($u['macs']);
+		/*
+		 * 'devices' is the honest count of machines; 'addresses' is how many
+		 * MACs they appeared under. A big gap between them is MAC rotation,
+		 * not sharing, and the page says which it is looking at.
+		 */
+		$u['devices']   = max(1, count($u['ids']));
+		$u['addresses'] = count($u['macs']);
+		$u['rotating']  = ($u['addresses'] > $u['devices'] * 3);
 		$u['macs'] = array_keys($u['macs']);
 		$u['ips']  = array_keys($u['ips']);
+		unset($u['ids']);
 	}
 	unset($u);
 	uasort($by, function($a, $b) { return $b['logins'] <=> $a['logins']; });
@@ -2424,6 +2603,40 @@ function nc_usage_record() {
 		$now[$mac] = (int)($u['bytes'] ?? 0);
 	}
 
+	/*
+	 * Who each of these devices is, while we can still see it.
+	 *
+	 * The name and the portal account are only available live; once the
+	 * device leaves, its daily total becomes a bare MAC nobody can act on.
+	 * Recording it here costs one short entry per device and makes the
+	 * day's heaviest user answerable after they have gone home.
+	 */
+	$who   = $hist['_who'] ?? array();
+	$names = nc_lease_names();
+	$res   = nc_dhcp_reservations();
+	$cp    = nc_portal_sessions();
+	$store = nc_store_load();
+
+	foreach (array_keys($now) as $mac) {
+		$ip   = $arp[$mac]['ip'] ?? '';
+		$rule = $store['devices'][$mac] ?? array();
+		$name = $rule['name'] ?? '';
+		if ($name === '') { $name = $res[$mac]['descr'] ?? ''; }
+		if ($name === '') { $name = $names[$mac]['host'] ?? ''; }
+		$sess = $cp['by_mac'][$mac] ?? ($ip ? ($cp['by_ip'][$ip] ?? null) : null);
+		$user = $sess['username'] ?? ($rule['cp_user'] ?? '');
+
+		/* keep whatever we knew before when this tick can see less */
+		$had = $who[$mac] ?? array();
+		$who[$mac] = array(
+			'ip'   => $ip   !== '' ? $ip   : ($had['ip']   ?? ''),
+			'name' => $name !== '' ? $name : ($had['name'] ?? ''),
+			'user' => $user !== '' ? $user : ($had['user'] ?? ''),
+			'at'   => time(),
+		);
+	}
+	$hist['_who'] = $who;
+
 	foreach ($now as $mac => $bytes) {
 		$was = (int)($prev[$mac] ?? 0);
 		$d   = $bytes - $was;
@@ -2449,7 +2662,7 @@ function nc_usage_record() {
 
 	/* keep two weeks; anything older is noise nobody acts on */
 	foreach (array_keys($hist) as $k) {
-		if ($k === '_last') {
+		if ($k === '_last' || $k === '_who') {
 			continue;
 		}
 		if (strtotime($k) < strtotime('-14 days')) {
@@ -2470,7 +2683,8 @@ function nc_usage_history($days = 7) {
 	if (!is_array($hist)) {
 		return array();
 	}
-	unset($hist['_last']);
+	$who = $hist['_who'] ?? array();
+	unset($hist['_last'], $hist['_who']);
 
 	/* name and current address for each MAC, so the table reads properly */
 	$name = array();
@@ -2490,10 +2704,16 @@ function nc_usage_history($days = 7) {
 		$total = 0;
 		foreach ($rows as $mac => $bytes) {
 			$total += $bytes;
+			/*
+			 * A device that has left the network has no live name or
+			 * address, so fall back to what it was when it used the line.
+			 */
 			$items[] = array(
 				'mac'   => $mac,
-				'ip'    => $ipof[$mac] ?? '',
-				'name'  => $name[$mac] ?? '',
+				'ip'    => ($ipof[$mac] ?? '') ?: ($who[$mac]['ip']   ?? ''),
+				'name'  => ($name[$mac] ?? '') ?: ($who[$mac]['name'] ?? ''),
+				'user'  => $who[$mac]['user'] ?? '',
+				'gone'  => !isset($name[$mac]),
 				'bytes' => $bytes,
 			);
 		}

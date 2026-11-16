@@ -21,7 +21,7 @@ function nc_report_days() {
 	if (!is_array($hist)) {
 		return array();
 	}
-	unset($hist['_last']);
+	unset($hist['_last'], $hist['_who']);
 	$days = array_keys($hist);
 	rsort($days);
 	return $days;
@@ -57,6 +57,14 @@ function nc_report($day = null) {
 	$rows = (is_array($hist) && isset($hist[$day])) ? $hist[$day] : array();
 	arsort($rows);
 
+	/*
+	 * What the tick recorded about each device while it was still online.
+	 * The day's heaviest consumer has often gone home by the time anyone
+	 * reads the report, and a bare MAC is not something an admin can act
+	 * on - so fall back to the name and account it had at the time.
+	 */
+	$who = (is_array($hist) && isset($hist['_who'])) ? $hist['_who'] : array();
+
 	$name = $ipof = $user = array();
 	foreach ($devs as $d) {
 		if (empty($d['mac'])) {
@@ -73,9 +81,10 @@ function nc_report($day = null) {
 		if (count($top) < 25) {
 			$top[] = array(
 				'mac'   => $mac,
-				'ip'    => $ipof[$mac] ?? '',
-				'name'  => $name[$mac] ?? '',
-				'user'  => $user[$mac] ?? '',
+				'ip'    => ($ipof[$mac] ?? '') ?: ($who[$mac]['ip']   ?? ''),
+				'name'  => ($name[$mac] ?? '') ?: ($who[$mac]['name'] ?? ''),
+				'user'  => ($user[$mac] ?? '') ?: ($who[$mac]['user'] ?? ''),
+				'gone'  => !isset($name[$mac]),
 				'bytes' => (int)$bytes,
 			);
 		}
@@ -199,8 +208,14 @@ function nc_report_html($r) {
 	$rank = 0;
 	foreach ($u['top'] as $x) {
 		$rank++;
-		$who = $x['name'] ?: ($x['user'] ?: $x['ip']);
+		$who = $x['name'] ?: ($x['user'] ?: ($x['ip'] ?: $x['mac']));
+		if (!empty($x['gone'])) {
+			$who .= ' (خرج من الشبكة)';
+		}
 		$sub = trim(($x['ip'] ?? '') . ' · ' . ($x['mac'] ?? ''), ' ·');
+		if (!empty($x['user']) && $x['user'] !== $x['name']) {
+			$sub .= ' · ' . $x['user'];
+		}
 		$pct = $u['total'] ? round($x['bytes'] / $u['total'] * 100, 1) : 0;
 		$rowsHtml .= '<tr><td class="n">' . $rank . '</td>'
 			. '<td><b>' . $h($who) . '</b><div class="m">' . $h($sub) . '</div></td>'

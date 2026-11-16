@@ -278,6 +278,13 @@ case 'unblock': {
 				return ($f !== '' && !nc_fp_is_generic($f)) ? $f : '';
 			})($d['hostname'] ?? '')
 			: ($store['devices'][$mac]['fp'] ?? ''),
+		/*
+		 * For a device with no fingerprint to follow, the portal account is
+		 * the only identifier that survives a MAC rotation - the person has
+		 * to type it to get online. Taken from the portal's own session
+		 * table, never from the request. Cleared on unblock.
+		 */
+		'cp_user' => ($action === 'block') ? ($d['cp_user'] ?? '') : '',
 		'last_seen' => time(),
 	));
 	nc_store_save($store);
