@@ -90,22 +90,24 @@ if (!$inxml && !$insys) {
 	issue('MED', 'cron is in /etc/crontab only - a config restore will drop it');
 }
 
-/* did it actually run recently? */
-$last = 0;
-foreach (array_slice(file(NC_LOG, FILE_IGNORE_NEW_LINES) ?: array(), -200) as $l) {
-	if (strpos($l, 'system') !== false &&
-	    preg_match('/^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)/', $l, $m)) {
-		$t = strtotime($m[1]);
-		if ($t > $last) $last = $t;
-	}
-}
-if ($last) {
-	$age = (time() - $last) / 60;
-	printf("  last automatic run: %.0f minute(s) ago
+/*
+ * Did it actually run recently?
+ *
+ * Not from the log: the tick only writes a line when it changes something,
+ * so a quiet half hour read as "has not run for 31 minutes" while it was
+ * firing every minute. The rate snapshot is rewritten on every pass, so
+ * its timestamp is the honest signal.
+ */
+$stamp = '/var/db/netcontrol_rate.json';
+if (is_readable($stamp)) {
+	$age = (time() - filemtime($stamp)) / 60;
+	printf("  last tick: %.0f minute(s) ago
 ", $age);
-	if ($age > 15) issue('MED', sprintf('the tick has not run for %.0f minutes', $age));
+	if ($age > 5) {
+		issue('HIGH', sprintf('the tick has not run for %.0f minutes', $age));
+	}
 } else {
-	issue('MED', 'no automatic run found in the log');
+	issue('MED', 'no tick timestamp found - has it ever run?');
 }
 
 echo "\n=== data integrity ===\n";
