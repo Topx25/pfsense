@@ -115,9 +115,47 @@ if ($action === 'log') {
 	$lines = array();
 	if (file_exists(NC_LOG)) {
 		$raw = @file(NC_LOG, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-		$lines = array_slice(array_reverse($raw ?: array()), 0, 40);
+		$lines = array_slice(array_reverse($raw ?: array()), 0, 100);
 	}
-	nc_out(array('ok' => true, 'lines' => $lines));
+	/* 'who' runs parallel to 'lines': the host name and portal user of the device each one is about */
+	list($st, $live) = nc_ident_map();
+	nc_out(array('ok' => true, 'lines' => $lines, 'who' => nc_log_enrich($lines, $st, $live)));
+}
+
+/* every device we can name, for the diagnose box to complete from */
+if ($action === 'directory') {
+	nc_out(array('ok' => true, 'items' => nc_diag_directory(nc_devices(), nc_store_load())));
+}
+
+/* a full report for one device: ?q= a MAC, an IP, a host name or a person */
+if ($action === 'diagnose') {
+	$q    = trim((string)($_GET['q'] ?? ''));
+	$devs = nc_devices();
+	$st   = nc_store_load();
+	$dir  = nc_diag_directory($devs, $st);
+	$hits = nc_diag_search($q, $dir);
+	if (!$hits) {
+		nc_out(array('ok' => true, 'found' => 0, 'query' => $q));
+	}
+	/* one clear best match is reported; otherwise let the person choose */
+	$one = count($hits) === 1 || $hits[0]['score'] >= 95 &&
+	       (!isset($hits[1]) || $hits[1]['score'] < 95);
+	if (!$one) {
+		nc_out(array('ok' => true, 'found' => count($hits), 'choose' => $hits, 'query' => $q));
+	}
+	$by = array();
+	foreach ($devs as $d) { $by[$d['mac']] = $d; }
+	$h = $hits[0];
+	/* a device that has left is not in nc_devices(): build the same shape from what we remember */
+	$d = $by[$h['mac']] ?? array(
+		'mac' => $h['mac'], 'ip' => $h['ip'], 'name' => $h['name'], 'hostname' => $h['host'],
+		'cp_user' => '', 'vendor' => '', 'type' => '', 'type_name' => '', 'online' => false,
+		'blocked' => !empty($st['devices'][$h['mac']]['blocked']), 'rate' => 0,
+		'last_seen' => $st['ident'][$h['mac']]['at'] ?? ($st['devices'][$h['mac']]['last_seen'] ?? null),
+		'random' => nc_mac_is_random($h['mac']), 'fp' => $st['devices'][$h['mac']]['fp'] ?? '',
+		'reserved' => false, 'protected' => false, 'moved' => false,
+	);
+	nc_out(array('ok' => true, 'found' => 1, 'report' => nc_diagnose($d, nc_diag_context($devs))));
 }
 
 /* ------------------------------------------------------- writes (CSRF) */

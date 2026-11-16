@@ -21,3 +21,13 @@
 // define('NC_OVERRIDE_LAN_IP',     '192.168.1.1');
 // define('NC_OVERRIDE_LAN_SUBNET', '192.168.1.');
 // define('NC_OVERRIDE_CP_ZONE',    'mainlan');
+
+/*
+ * A standing speed cap for phones and tablets, in megabits. 0 or unset
+ * turns it off.
+ *
+ * Applied on every tick, so a phone that joins later is caught too. It
+ * never overrides a tighter limit set by hand, never touches a computer,
+ * and never touches a protected address.
+ */
+// define('NC_MOBILE_LIMIT', 1);

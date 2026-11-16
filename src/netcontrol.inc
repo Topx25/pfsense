@@ -1776,6 +1776,7 @@ function nc_store_prune(&$store, $days = 90) {
 		$removed++;
 	}
 	$store['policy_seen'] = $seenlist;
+	$removed += nc_ident_prune($store, $days);
 
 	if ($removed) {
 		nc_log(sprintf('PRUNE شال %d سجل قديم مالوش قاعدة', $removed));
@@ -1833,6 +1834,9 @@ function nc_tick() {
 	 * looks like a brand-new, unblocked device. If its fingerprint matches a
 	 * block we are already holding, carry that block onto the new MAC.
 	 */
+	/* remember who each device is, so the log can still say after it leaves */
+	$dirty = nc_ident_record($store, $names, nc_portal_sessions(), $arp) || $dirty;
+
 	/* record what each device used since the last tick */
 	nc_usage_record();
 
@@ -1848,6 +1852,7 @@ function nc_tick() {
 		$dirty = true;
 	}
 
+	$dirty = nc_mobile_limits($store) || $dirty;
 	$dirty = nc_video_limits($store) || $dirty;
 	$dirty = nc_reattach_rules($store) || $dirty;
 
@@ -1914,6 +1919,80 @@ function nc_video_limits(&$store) {
 		$store['devices'][$mac] = $cur;
 		nc_log(sprintf("VIDEO-LIMIT %s (%s): %s — حد %d ميجا",
 			$mac, $vv['ip'] ?: '-', $vv['kind'], $r['mb']));
+		$dirty = true;
+	}
+	return $dirty;
+}
+
+/* ------------------------------------------------- mobile speed cap */
+
+/*
+ * Cap phones at a fixed speed.
+ *
+ * Switched on with NC_MOBILE_LIMIT in netcontrol.conf.php (megabits; 0 or
+ * unset disables it). Applied on every tick so a phone that joins later is
+ * caught too.
+ *
+ * Deliberately narrow:
+ *   - only devices identified as a phone or tablet
+ *   - never a protected address
+ *   - never raises a tighter limit somebody set deliberately
+ *   - marked with by_mobile, so turning the feature off releases exactly
+ *     the devices it captured and nothing else
+ */
+function nc_mobile_limits(&$store) {
+	$mb = defined('NC_MOBILE_LIMIT') ? (int)constant('NC_MOBILE_LIMIT') : 0;
+	$dirty = false;
+
+	if ($mb <= 0) {
+		/* feature off: release only what this feature applied */
+		foreach ($store['devices'] as $mac => &$r) {
+			if (!empty($r['by_mobile'])) {
+				$r['limit'] = null;
+				unset($r['by_mobile']);
+				$dirty = true;
+			}
+		}
+		unset($r);
+		return $dirty;
+	}
+
+	$prot = array_flip(nc_protected_ips());
+
+	foreach (nc_devices() as $d) {
+		$mac = $d['mac'];
+		if ($mac === '' || !empty($d['protected'])) {
+			continue;
+		}
+		if (isset($prot[$d['ip'] ?? ''])) {
+			continue;
+		}
+
+		$fam = nc_os_family($mac, $d['hostname'], $d['vendor'], $d['type']);
+		if (!in_array($fam, array('android', 'ios', 'mobile_unknown'), true)) {
+			continue;                   /* not a phone - leave it alone */
+		}
+
+		$cur = $store['devices'][$mac] ?? array();
+		if (!empty($cur['blocked'])) {
+			continue;                   /* already cut off */
+		}
+
+		$have = (int)($cur['limit'] ?? 0);
+		if ($have > 0 && $have <= $mb && empty($cur['by_mobile'])) {
+			continue;                   /* an admin set something tighter */
+		}
+		if ($have === $mb && !empty($cur['by_mobile'])) {
+			continue;                   /* already applied */
+		}
+
+		$cur['ip']        = $d['ip'];
+		$cur['limit']     = $mb;
+		$cur['by_mobile'] = true;
+		$cur['last_seen'] = time();
+		$store['devices'][$mac] = $cur;
+		nc_log(sprintf('MOBILE-LIMIT %s (%s): حد %d ميجا للموبايلات',
+			$mac, $d['ip'] ?: '-', $mb));
 		$dirty = true;
 	}
 	return $dirty;
@@ -2721,5 +2800,7 @@ function nc_apply() {
 	}
 	return count($block_ips);
 }
+
+require_once('/usr/local/pkg/netcontrol_diag.inc');
 
 ?>

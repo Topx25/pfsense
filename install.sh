@@ -26,7 +26,7 @@ fail() { echo "ERROR: $*" >&2; exit 1; }
 [ -f /etc/version ] || fail "this does not look like pfSense"
 say "pfSense $(cat /etc/version 2>/dev/null)"
 
-for f in src/netcontrol.inc src/netcontrol_api.php src/services_netcontrol.php; do
+for f in src/netcontrol.inc src/netcontrol_diag.inc src/netcontrol_api.php src/services_netcontrol.php; do
 	[ -f "$f" ] || fail "missing $f - run this from the repository root"
 done
 
@@ -47,7 +47,7 @@ if [ "$1" = "remove" ]; then
 	pfctl -a 'userrules/ncdns'      -F rules 2>/dev/null || true
 	pfctl -a 'natearly/ncdns'       -F nat   2>/dev/null || true
 	pfctl -t nc_blocked -T flush 2>/dev/null || true
-	rm -f "$PKG/netcontrol.inc" "$PKG/netcontrol.xml" \
+	rm -f "$PKG/netcontrol.inc" "$PKG/netcontrol_diag.inc" "$PKG/netcontrol.xml" \
 	      "$WWW/netcontrol_api.php" "$WWW/services_netcontrol.php" \
 	      "$SBIN/netcontrol_tick.php" "$SBIN/netcontrol_selftest.php" 	      "$SBIN/netcontrol_audit.php" \
 	      "$PRIV/netcontrol.priv.inc" /var/unbound/netcontrol.conf
@@ -62,7 +62,7 @@ fi
 
 # ---------------------------------------------------------------- backup
 mkdir -p "$BACKUP"
-for f in "$PKG/netcontrol.inc" "$WWW/netcontrol_api.php" \
+for f in "$PKG/netcontrol.inc" "$PKG/netcontrol_diag.inc" "$WWW/netcontrol_api.php" \
          "$WWW/services_netcontrol.php" "$PKG/netcontrol.conf.php"; do
 	[ -f "$f" ] && cp "$f" "$BACKUP/" 2>/dev/null || true
 done
@@ -71,6 +71,7 @@ say "backup: $BACKUP"
 
 # ---------------------------------------------------------------- install
 install -m 0644 src/netcontrol.inc           "$PKG/netcontrol.inc"
+install -m 0644 src/netcontrol_diag.inc      "$PKG/netcontrol_diag.inc"
 install -m 0644 src/netcontrol_api.php       "$WWW/netcontrol_api.php"
 install -m 0644 src/services_netcontrol.php  "$WWW/services_netcontrol.php"
 install -m 0755 src/netcontrol_tick.php      "$SBIN/netcontrol_tick.php"
@@ -88,6 +89,7 @@ else
 fi
 
 php -l "$PKG/netcontrol.inc" >/dev/null || fail "netcontrol.inc has a syntax error"
+php -l "$PKG/netcontrol_diag.inc" >/dev/null || fail "netcontrol_diag.inc has a syntax error"
 php -l "$WWW/netcontrol_api.php" >/dev/null || fail "netcontrol_api.php has a syntax error"
 say "files installed"
 

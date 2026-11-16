@@ -22,7 +22,8 @@ its rule; a device with a randomized MAC is followed by its DHCP hostname
 where that name is specific enough to be safe.
 
 **Speed limits** — per device, enforced with dummynet pipes, plus a global
-per-device limit for everyone else.
+per-device limit for everyone else, and an optional standing cap for phones
+(`NC_MOBILE_LIMIT`) that never overrides a tighter limit set by hand.
 
 **Site blocking** — by domain, enforced in the resolver, with whole-service
 presets (YouTube, TikTok, Facebook…) that cover every domain a service uses.
@@ -34,6 +35,14 @@ portal.
 
 **History** — who logged in and when, which devices each account used, and
 how much each device consumed per day for the last two weeks.
+
+**Diagnose** — type a MAC, an IP, a host name or a person (it completes as you
+type) and get one report of everything that could be wrong with that device:
+blocked and why, block not enforced, no portal session, random MAC, address
+clash, limit not applied, offline. The log rows also show the host name and the
+portal user next to each MAC, remembered per MAC so a device that has left is
+still named. Run `php tests/netcontrol_diag_test.php` to test the logic without a
+firewall.
 
 **DNS enforcement** — forces every DNS query through the firewall and blocks
 the public DNS-over-HTTPS endpoints, so site blocking cannot be sidestepped
