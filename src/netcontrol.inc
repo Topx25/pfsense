@@ -149,6 +149,36 @@ function nc_store_load() {
 	return $d;
 }
 
+/*
+ * Hold an exclusive lock for a read-modify-write of the store.
+ *
+ * Returns a handle to pass to nc_store_unlock(), or null if the lock
+ * cannot be taken in time - the caller then skips rather than racing.
+ */
+function nc_store_lock($wait = 5) {
+	$f = NC_STORE . '.lock';
+	$fh = @fopen($f, 'c');
+	if (!$fh) {
+		return null;                     /* cannot lock: do not pretend we did */
+	}
+	$until = microtime(true) + $wait;
+	while (!@flock($fh, LOCK_EX | LOCK_NB)) {
+		if (microtime(true) >= $until) {
+			@fclose($fh);
+			return null;
+		}
+		usleep(50000);                   /* 50ms, so a click does not spin */
+	}
+	return $fh;
+}
+
+function nc_store_unlock($fh) {
+	if ($fh) {
+		@flock($fh, LOCK_UN);
+		@fclose($fh);
+	}
+}
+
 function nc_store_save($d) {
 	$tmp = NC_STORE . '.tmp';
 	if (file_put_contents($tmp, json_encode($d, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) === false) {
@@ -1793,6 +1823,18 @@ function nc_store_prune(&$store, $days = 90) {
  *   3. re-applies the resulting rule set to pf and dummynet
  */
 function nc_tick() {
+	/*
+	 * Hold the lock for the whole pass. Everything below reads the store,
+	 * decides, and writes it back, and the API is serving clicks
+	 * throughout - without this a block made during the pass is read and
+	 * then overwritten by the save at the end.
+	 */
+	$lock = nc_store_lock(10);
+	if (!$lock) {
+		nc_log('TICK-SKIP another run still holds the store');
+		return false;
+	}
+
 	$store = nc_store_load();
 	$arp   = nc_arp_table();
 	$names = nc_lease_names();
@@ -1862,6 +1904,9 @@ function nc_tick() {
 	if ($dirty) {
 		nc_store_save($store);
 	}
+	nc_store_unlock($lock);
+
+	/* applied outside the lock: it only reads, and it is the slow part */
 	nc_apply();
 	return $dirty;
 }
@@ -2577,6 +2622,48 @@ function nc_dns_enforced() {
 	        strpos((string)$n, 'domain') !== false);
 }
 
+/*
+ * A pipe number of this device's own.
+ *
+ * crc32(mac) % 500 collides: two MACs share a pipe and therefore share
+ * one speed limit, so the second device silently inherits the first's
+ * speed. The number is recorded in the store instead, assigned once and
+ * kept, so a device keeps the same pipe across reboots and renames.
+ */
+function nc_pipe_for($mac, &$store, &$dirty = null) {
+	$have = (int)($store['devices'][$mac]['pipe'] ?? 0);
+	if ($have >= NC_PIPE_BASE) {
+		return $have;
+	}
+
+	/* which numbers are already spoken for */
+	$used = array();
+	foreach ($store['devices'] as $m => $r) {
+		$n = (int)($r['pipe'] ?? 0);
+		if ($n) {
+			$used[$n] = true;
+		}
+	}
+
+	/* start where the old scheme would have put it, so most devices keep
+	   the pipe they already have, then walk forward to the first free one */
+	$start = NC_PIPE_BASE + (crc32($mac) % 500);
+	for ($i = 0; $i < 500; $i++) {
+		$n = NC_PIPE_BASE + ((($start - NC_PIPE_BASE) + $i) % 500);
+		if (!isset($used[$n])) {
+			if (!isset($store['devices'][$mac])) {
+				$store['devices'][$mac] = array();
+			}
+			$store['devices'][$mac]['pipe'] = $n;
+			$dirty = true;
+			return $n;
+		}
+	}
+	/* 500 devices with limits: out of numbers, and worth saying so */
+	nc_log('PIPE-FULL مافيش أرقام أنابيب فاضية');
+	return $start;
+}
+
 /* ------------------------------------------------ rule enforcement */
 
 /*
@@ -2630,10 +2717,15 @@ function nc_install_anchor() {
 		if ($exp > 0 && $exp <= $now) {
 			continue;                       /* lapsed */
 		}
-		$dn = NC_PIPE_BASE + (crc32($mac) % 500);
+		$dn = nc_pipe_for($mac, $store, $pipe_dirty);
 		$up = $dn + 1000;
 		$shape .= sprintf("pass in  quick on %s from %s to any keep state dnpipe(%d, %d)\n",
 			$lan, $ip, $up, $dn);
+	}
+
+	/* keep any pipe number this pass handed out */
+	if (!empty($pipe_dirty)) {
+		nc_store_save($store);
 	}
 
 	$rules = $shape .
@@ -2761,7 +2853,7 @@ function nc_apply() {
 			$block_ips[] = $ip;
 		}
 		if (isset($rule['limit']) && $rule['limit'] !== null && (int)$rule['limit'] > 0) {
-			$pipe = NC_PIPE_BASE + (crc32($mac) % 500);
+			$pipe = nc_pipe_for($mac, $store, $pipe_dirty);
 			$bw   = (int)$rule['limit'];
 			/*
 			 * "queue" and "codel" cannot both be given: dnctl rejects the
@@ -2781,6 +2873,16 @@ function nc_apply() {
 				nc_log("PIPE-ERROR {$mac}: dnctl رفض الأنبوب {$pipe} (rc={$rc}/{$rc2})");
 			}
 		}
+	}
+
+	/*
+	 * Persist any pipe number just assigned. Without this the allocator
+	 * hands one out, uses it for this run and forgets it, so the device
+	 * gets a different pipe next time and the guarantee that it keeps its
+	 * own pipe is empty.
+	 */
+	if (!empty($pipe_dirty)) {
+		nc_store_save($store);
 	}
 
 	/* Replace the table contents in one shot so there is no open window. */
