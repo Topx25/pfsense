@@ -229,6 +229,17 @@ State lives in `/var/db/netcontrol*.json`. Actions are logged to
 
 ---
 
+## Verifying an install is still healthy
+
+```sh
+php -f /usr/local/sbin/netcontrol_selftest.php   # 32 checks
+php -f /usr/local/sbin/netcontrol_audit.php      # store vs kernel
+```
+
+Both ask the kernel and the resolver directly rather than trusting what
+the page stores, because the failure this tool keeps producing is a UI
+that reports a rule while nothing enforces it.
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE).
