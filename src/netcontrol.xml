@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<packagegui>
+	<name>netcontrol</name>
+	<title>Services/Network Control</title>
+	<menu>
+		<name>Network Control</name>
+		<tooltiptext>عرض أجهزة الشبكة والتحكم في سرعتها وحظرها</tooltiptext>
+		<section>Services</section>
+		<url>/services_netcontrol.php</url>
+	</menu>
+	<menu>
+		<name>Network Control</name>
+		<tooltiptext>عرض أجهزة الشبكة والتحكم في سرعتها وحظرها</tooltiptext>
+		<section>Status</section>
+		<url>/services_netcontrol.php</url>
+	</menu>
+</packagegui>

@@ -1,0 +1,23 @@
+<?php
+/*
+ * netcontrol — per-installation overrides.
+ *
+ * Everything here is optional. The plugin reads the interfaces, the LAN
+ * subnet and the captive portal zone from the running configuration, so a
+ * standard single-LAN pfSense needs no entries at all.
+ *
+ * Set a value only when the automatic detection is wrong for your setup,
+ * or to protect addresses the plugin cannot know about.
+ */
+
+/* Addresses that must never be blocked or throttled, comma separated.
+   The firewall's own LAN address is always protected and need not be
+   listed. Add switches, access points, hypervisors, NAS, printers. */
+define('NC_OVERRIDE_PROTECTED', '192.168.1.20,192.168.1.250,192.168.1.101');
+
+/* Uncomment any of these if detection picks the wrong interface. */
+// define('NC_OVERRIDE_LAN_IF',     'em1');
+// define('NC_OVERRIDE_WAN_IF',     'em2');
+// define('NC_OVERRIDE_LAN_IP',     '192.168.1.1');
+// define('NC_OVERRIDE_LAN_SUBNET', '192.168.1.');
+// define('NC_OVERRIDE_CP_ZONE',    'mainlan');
