@@ -33,14 +33,23 @@ done
 # ---------------------------------------------------------------- remove
 if [ "$1" = "remove" ]; then
 	say "removing netcontrol"
-	crontab -l 2>/dev/null | grep -v netcontrol_tick | crontab - || true
+	php -r '
+	require_once("/etc/inc/config.inc");
+	$keep = [];
+	foreach (config_get_path("cron/item", []) as $i) {
+		if (strpos($i["command"] ?? "", "netcontrol_tick") === false) { $keep[] = $i; }
+	}
+	config_set_path("cron/item", $keep);
+	write_config("netcontrol: remove the tick job");
+	if (function_exists("configure_cron")) { configure_cron(); }
+	' 2>/dev/null || true
 	pfctl -a 'userrules/netcontrol' -F rules 2>/dev/null || true
 	pfctl -a 'userrules/ncdns'      -F rules 2>/dev/null || true
 	pfctl -a 'natearly/ncdns'       -F nat   2>/dev/null || true
 	pfctl -t nc_blocked -T flush 2>/dev/null || true
 	rm -f "$PKG/netcontrol.inc" "$PKG/netcontrol.xml" \
 	      "$WWW/netcontrol_api.php" "$WWW/services_netcontrol.php" \
-	      "$SBIN/netcontrol_tick.php" "$SBIN/netcontrol_selftest.php" \
+	      "$SBIN/netcontrol_tick.php" "$SBIN/netcontrol_selftest.php" 	      "$SBIN/netcontrol_audit.php" \
 	      "$PRIV/netcontrol.priv.inc" /var/unbound/netcontrol.conf
 	# the resolver include has to go too, or unbound will not start
 	if grep -q 'netcontrol.conf' /var/unbound/unbound.conf 2>/dev/null; then
@@ -66,6 +75,7 @@ install -m 0644 src/netcontrol_api.php       "$WWW/netcontrol_api.php"
 install -m 0644 src/services_netcontrol.php  "$WWW/services_netcontrol.php"
 install -m 0755 src/netcontrol_tick.php      "$SBIN/netcontrol_tick.php"
 install -m 0755 src/netcontrol_selftest.php  "$SBIN/netcontrol_selftest.php"
+install -m 0755 src/netcontrol_audit.php     "$SBIN/netcontrol_audit.php"
 [ -f src/netcontrol.xml ]      && install -m 0644 src/netcontrol.xml "$PKG/netcontrol.xml"
 [ -f src/netcontrol.priv.inc ] && install -m 0644 src/netcontrol.priv.inc "$PRIV/netcontrol.priv.inc"
 
@@ -82,14 +92,28 @@ php -l "$WWW/netcontrol_api.php" >/dev/null || fail "netcontrol_api.php has a sy
 say "files installed"
 
 # ---------------------------------------------------------------- cron
-if ! crontab -l 2>/dev/null | grep -q netcontrol_tick; then
-	( crontab -l 2>/dev/null; \
-	  echo "* * * * * /usr/local/bin/php -f $SBIN/netcontrol_tick.php >/dev/null 2>&1" \
-	) | crontab -
-	say "cron job added (runs every minute)"
-else
-	say "cron job already present"
-fi
+# pfSense keeps cron in config.xml and regenerates /etc/crontab from it.
+# A plain `crontab -` entry works until the next config change wipes it,
+# so register it the way pfSense itself does.
+php -r '
+require_once("/etc/inc/config.inc");
+$items = config_get_path("cron/item", []);
+foreach ($items as $i) {
+	if (strpos($i["command"] ?? "", "netcontrol_tick") !== false) {
+		echo "  cron job already registered\n";
+		exit(0);
+	}
+}
+$items[] = array(
+	"minute" => "*", "hour" => "*", "mday" => "*", "month" => "*",
+	"wday" => "*", "who" => "root",
+	"command" => "/usr/local/sbin/netcontrol_tick.php",
+);
+config_set_path("cron/item", $items);
+write_config("netcontrol: add the tick job");
+if (function_exists("configure_cron")) { configure_cron(); }
+echo "  cron job registered in config.xml (runs every minute)\n";
+' || fail "could not register the cron job"
 
 # ---------------------------------------------------------------- rules
 php -r '

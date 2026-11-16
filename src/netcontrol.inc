@@ -2398,6 +2398,22 @@ function nc_dns_enforce($enable = true) {
 	return true;
 }
 
+/*
+ * Is our zone file actually included by the resolver?
+ *
+ * Checked separately from "does the file exist", because the file can be
+ * perfectly correct while unbound never reads it - which is exactly the
+ * state pfSense leaves behind when it regenerates its config.
+ */
+function nc_dns_included() {
+	$conf = '/var/unbound/unbound.conf';
+	if (!is_readable($conf)) {
+		return false;
+	}
+	return (strpos((string)@file_get_contents($conf),
+	               'include: /var/unbound/netcontrol.conf') !== false);
+}
+
 /* Is DNS enforcement loaded right now? */
 function nc_dns_enforced() {
 	$n = shell_exec("/sbin/pfctl -a 'natearly/ncdns' -s nat 2>/dev/null");
@@ -2532,6 +2548,23 @@ function nc_apply() {
 	 */
 	if (!nc_dns_enforced()) {
 		nc_dns_enforce(true);
+	}
+
+	/*
+	 * And the resolver's include. pfSense regenerates unbound.conf whenever
+	 * its DNS settings are touched, dropping our line with it; the blocked
+	 * domains then resolve normally while the page still lists them as
+	 * blocked. Re-adding it here costs one string search per tick.
+	 */
+	if (!nc_dns_included()) {
+		/*
+		 * Restore it even when nothing is blocked right now. Waiting until
+		 * a block exists means the first block after a config rewrite does
+		 * nothing, and the page reports it as applied - the failure is
+		 * invisible precisely when it matters.
+		 */
+		nc_log('DNS-HEAL the resolver include was missing - restoring');
+		nc_dns_apply();
 	}
 
 	foreach ($store['devices'] as $mac => $rule) {

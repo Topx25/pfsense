@@ -196,6 +196,17 @@ php -f /usr/local/sbin/netcontrol_selftest.php
 evaluated, because the failure mode in this kind of tool is a UI that
 reports a block while the traffic flows.
 
+For a deeper check that compares the store against the kernel item by item:
+
+```sh
+php -f /usr/local/sbin/netcontrol_audit.php
+```
+
+It reports every blocked device missing from the `pf` table, every limit
+without a pipe or without a rule feeding that pipe, site blocks the resolver
+does not have, protected addresses that ended up blocked, and whether the
+tick has actually run recently.
+
 ---
 
 ## Layout

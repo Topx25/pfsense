@@ -114,11 +114,23 @@ $flows = preg_match_all('/^\s*\d+\s+ip/m', (string)$p22);
 head('site blocking');
 $live = nc_dns_active();
 echo "  $live site rule(s) live\n";
+/*
+ * Check the include unconditionally.
+ *
+ * This used to be skipped when nothing was blocked, which read as "fine"
+ * while the include had actually been dropped by a pfSense config rewrite.
+ * The next site block would then have had no effect at all, and the page
+ * would still have listed it as blocked.
+ */
 $conf = @file_get_contents('/var/unbound/unbound.conf');
-(strpos((string)$conf, 'netcontrol.conf') !== false)
-	? ok('unbound includes the block file')
-	: ($live > 0 ? bad('block file NOT included - sites are not blocked')
-	             : note('block file not included (nothing to block)'));
+$inc  = (strpos((string)$conf, 'include: /var/unbound/netcontrol.conf') !== false);
+if ($inc) {
+	ok('unbound includes the block file');
+} elseif ($live > 0) {
+	bad('block file NOT included - the blocked sites still resolve');
+} else {
+	bad('block file not included - a new site block would do nothing');
+}
 
 $chk = mwexec('/usr/local/sbin/unbound-checkconf /var/unbound/unbound.conf >/dev/null 2>&1');
 ($chk === 0) ? ok('unbound config is valid')
