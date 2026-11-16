@@ -1732,6 +1732,57 @@ function nc_stale($days = 30) {
 	return $out;
 }
 
+/*
+ * Drop records that carry no decision and have not been seen for months.
+ *
+ * Deliberately conservative: a record is kept forever if it is blocked,
+ * limited, named, grouped, scheduled or fingerprinted. Only the leftovers
+ * of devices that merely appeared once are removed - mostly the randomized
+ * MACs that modern phones invent per connection.
+ */
+function nc_store_prune(&$store, $days = 90) {
+	$cut     = time() - ($days * 86400);
+	$removed = 0;
+
+	foreach ($store['devices'] as $mac => $r) {
+		/* anything an admin decided, or the system is tracking, stays */
+		if (!empty($r['blocked']) || !empty($r['limit']) || !empty($r['name']) ||
+		    !empty($r['group'])   || !empty($r['fp'])    || !empty($r['expires']) ||
+		    !empty($r['by_video'])) {
+			continue;
+		}
+		$seen = $r['last_seen'] ?? null;
+		if ($seen === null || $seen > $cut) {
+			continue;                   /* never seen, or seen recently */
+		}
+		unset($store['devices'][$mac]);
+		$removed++;
+	}
+
+	/*
+	 * policy_seen is just "we have already acted on this MAC". An entry for
+	 * a MAC that no longer exists anywhere is dead weight, and this is the
+	 * list that grows fastest on a network with randomized MACs.
+	 */
+	$seenlist = $store['policy_seen'] ?? array();
+	foreach ($seenlist as $mac => $when) {
+		if ((int)$when > $cut) {
+			continue;
+		}
+		if (isset($store['devices'][$mac])) {
+			continue;                   /* still a device we know about */
+		}
+		unset($seenlist[$mac]);
+		$removed++;
+	}
+	$store['policy_seen'] = $seenlist;
+
+	if ($removed) {
+		nc_log(sprintf('PRUNE شال %d سجل قديم مالوش قاعدة', $removed));
+	}
+	return $removed;
+}
+
 /* ------------------------------------------------------------ housekeeping */
 
 /*
@@ -1784,6 +1835,18 @@ function nc_tick() {
 	 */
 	/* record what each device used since the last tick */
 	nc_usage_record();
+
+	/*
+	 * Prune once a day. Doing it every minute would rewrite the store for
+	 * no reason; a stamp in the store itself survives restarts, which a
+	 * static variable would not.
+	 */
+	$lastprune = (int)($store['pruned_at'] ?? 0);
+	if (time() - $lastprune > 86400) {
+		nc_store_prune($store);
+		$store['pruned_at'] = time();
+		$dirty = true;
+	}
 
 	$dirty = nc_video_limits($store) || $dirty;
 	$dirty = nc_reattach_rules($store) || $dirty;
