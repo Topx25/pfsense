@@ -39,6 +39,13 @@ how much each device consumed per day for the last two weeks.
 the public DNS-over-HTTPS endpoints, so site blocking cannot be sidestepped
 by pointing a laptop at 8.8.8.8.
 
+**Arabic and English** — a switch in the header, remembered per browser.
+The page is authored in Arabic and translated at render time, so a phrase
+with no translation stays Arabic rather than leaving a gap. Layout flips to
+LTR in English; numeric columns keep their alignment. Device names, hostnames,
+MACs, addresses and the log are never rewritten — they are data, not
+interface. The dictionary is `docs/translations.json`.
+
 ---
 
 ## Requirements
