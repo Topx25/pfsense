@@ -1381,6 +1381,15 @@ function nc_os_family($mac, $hostname, $vendor, $type) {
 	if (preg_match('/android|galaxy|redmi|xiaomi|huawei|oppo|vivo|realme|infinix|tecno|poco/i', $h)) {
 		return 'android';
 	}
+	/*
+	 * Phones mostly announce a model number, not a brand: "v2207" is a
+	 * vivo, "m2010j19sg" a Redmi, "cph2219" an OPPO, "rmx3085" a realme.
+	 * None of those contain a brand word, so the patterns above miss them.
+	 */
+	if (preg_match('/^(v\d{4}|rmx\d{4}|cph\d{4}|m\d{4}[a-z]\d+|sm-[a-z]\d+|' .
+	               'lge?-?\w+|pixel|moto[\s-]?\w+)$/i', trim($h))) {
+		return 'android';
+	}
 	if (preg_match('/iphone|ipad|ipod/i', $h)) {
 		return 'ios';
 	}
@@ -1396,14 +1405,34 @@ function nc_os_family($mac, $hostname, $vendor, $type) {
 
 	/* then the vendor */
 	if (strpos($v, 'apple') !== false)   { return 'ios'; }
-	if (strpos($v, 'xiaomi') !== false
-	    || strpos($v, 'samsung') !== false
-	    || strpos($v, 'google') !== false) { return 'android'; }
+	/*
+	 * Every handset maker the OUI table can name. The list used to stop at
+	 * xiaomi/samsung/google, so a vivo or realme phone fell through to
+	 * 'unknown' and the mobile speed cap skipped it entirely.
+	 */
+	foreach (array('xiaomi', 'samsung', 'google', 'vivo', 'realme', 'oppo',
+	               'huawei', 'honor', 'oneplus', 'infinix', 'tecno',
+	               'redmi', 'motorola', 'nokia', 'transsion') as $brand) {
+		if (strpos($v, $brand) !== false) {
+			return 'android';
+		}
+	}
 	if (strpos($v, 'raspberry') !== false) { return 'linux'; }
 
-	/* a device type we already classified */
+	/*
+	 * The type detection already answered this question, using the same
+	 * hostname and vendor plus the OUI table. Where it says phone, the
+	 * family is a phone - working it out again and disagreeing is how a
+	 * vivo handset ended up as 'unknown' and dodged the mobile cap.
+	 */
 	if ($type === 'camera' || $type === 'iot' || $type === 'printer') {
 		return 'iot';
+	}
+	if ($type === 'phone') {
+		return 'android';
+	}
+	if ($type === 'apple') {
+		return 'ios';
 	}
 	if ($type === 'pc') {
 		return 'windows';
