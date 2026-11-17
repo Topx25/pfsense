@@ -568,6 +568,94 @@ function nc_dhcp_reservations() {
  * an upload pipe masks on src-ip and the device is the SOURCE column. Take
  * whichever column is not the 0.0.0.0 wildcard.
  */
+/*
+ * Bytes per device, read from pf's own state table.
+ *
+ * nc_pipe_usage() can only see devices that have a dummynet pipe, which
+ * means devices with a speed limit - 18 of 35 online devices here. The
+ * rest showed 0 B while they were actively downloading, which made the
+ * column look broken because it was.
+ *
+ * Every connection has a state, and `pfctl -vvss` prints its byte
+ * counters, so this sees every device on every managed subnet.
+ *
+ * The number is the traffic on states that are open right now, not a
+ * lifetime total: pf drops a state when the connection closes. That suits
+ * the "what is moving now" column; totals over time come from the daily
+ * tally instead.
+ */
+function nc_state_usage() {
+	$out  = array();
+	$raw  = (string)shell_exec('/sbin/pfctl -vvss 2>/dev/null');
+	$subs = nc_lan_subnets();
+	$ip   = null;
+
+	foreach (explode("\n", $raw) as $line) {
+		/*
+		 * A state header names both ends. Take whichever side is one of
+		 * our LAN addresses; the NAT form "(192.168.1.9:1234)" carries the
+		 * real client, so read that too.
+		 */
+		if (strpos($line, ' <- ') !== false || strpos($line, ' -> ') !== false) {
+			$ip = null;
+			if (preg_match_all('/(\d{1,3}(?:\.\d{1,3}){3})/', $line, $m)) {
+				foreach ($m[1] as $cand) {
+					foreach ($subs as $pre) {
+						if (strpos($cand, $pre) === 0 && $cand !== nc_cfg('lan_ip')) {
+							$ip = $cand;
+							break 2;
+						}
+					}
+				}
+			}
+			continue;
+		}
+		if ($ip === null) {
+			continue;
+		}
+		/* "57:56 pkts, 7185:14809 bytes" - in:out on this state */
+		if (preg_match('/(\d+):(\d+)\s+pkts,\s*(\d+):(\d+)\s+bytes/', $line, $m)) {
+			if (!isset($out[$ip])) {
+				$out[$ip] = array('pkts' => 0, 'bytes' => 0);
+			}
+			$out[$ip]['pkts']  += (int)$m[1] + (int)$m[2];
+			$out[$ip]['bytes'] += (int)$m[3] + (int)$m[4];
+			$ip = null;            /* one counter line per state */
+		}
+	}
+	return $out;
+}
+
+/*
+ * The LAN-side address prefixes we manage.
+ *
+ * The usage readers used to test a single hardcoded prefix, so a device on
+ * a second LAN was skipped and always read 0 B. Derive the prefixes from
+ * the firewall's own interfaces instead.
+ */
+function nc_lan_subnets() {
+	static $cache = null;
+	if ($cache !== null) {
+		return $cache;
+	}
+	$out = array();
+	$raw = (string)shell_exec("/sbin/ifconfig 2>/dev/null | /usr/bin/awk '/^\tinet /{print $2}'");
+	foreach (preg_split('/\s+/', trim($raw)) as $a) {
+		if (!filter_var($a, FILTER_VALIDATE_IP) || $a === '127.0.0.1') {
+			continue;
+		}
+		if (preg_match('/^(\d+\.\d+\.\d+\.)\d+$/', $a, $m)) {
+			$out[] = $m[1];
+		}
+	}
+	$lan = nc_cfg('lan_subnet', '192.168.1.');
+	if ($lan) {
+		$out[] = $lan;
+	}
+	$cache = array_values(array_unique($out));
+	return $cache;
+}
+
 function nc_pipe_usage() {
 	$out   = array();
 	$pipes = array();
@@ -599,7 +687,18 @@ function nc_pipe_usage() {
 			 * WAN address, which would otherwise top the list every time and
 			 * look like one enormous client.
 			 */
-			if (strpos($ip, nc_cfg('lan_subnet', '192.168.1.')) !== 0) {
+			/*
+			 * Any address on a subnet we manage, not just the first LAN -
+			 * a device on a second LAN used to be dropped here and read 0 B.
+			 */
+			$ours = false;
+			foreach (nc_lan_subnets() as $pre) {
+				if (strpos($ip, $pre) === 0) {
+					$ours = true;
+					break;
+				}
+			}
+			if (!$ours) {
 				continue;
 			}
 			if (!isset($out[$ip])) {
@@ -620,7 +719,17 @@ function nc_devices() {
 	$store = nc_store_load();
 	$arp   = nc_arp_table();
 	$res   = nc_dhcp_reservations();
+	/*
+	 * Pipe counters where they exist (precise, for shaped devices), and
+	 * pf state counters for everyone else - otherwise a device without a
+	 * speed limit reads 0 B however much it is pulling.
+	 */
 	$usage = nc_pipe_usage();
+	foreach (nc_state_usage() as $sip => $su) {
+		if (!isset($usage[$sip]) || ($usage[$sip]['bytes'] ?? 0) <= 0) {
+			$usage[$sip] = $su;
+		}
+	}
 	$rates = nc_rate_sample($usage);
 	$names = nc_lease_names();
 	$cp    = nc_portal_sessions();

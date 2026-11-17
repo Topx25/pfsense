@@ -42,14 +42,24 @@ if ($miss) issue('HIGH', "$miss blocked device(s) are not in the pf table");
 
 /* 2. every limited device needs a pipe AND a rule */
 $anchor = (string)shell_exec("/sbin/pfctl -a 'userrules/netcontrol' -sr 2>/dev/null");
-$nopipe = $norule = 0;
+$nopipe = $norule = $offline = 0;
 foreach ($store['devices'] as $mac => $d) {
 	if (empty($d['limit']) || !empty($d['blocked'])) continue;
-	$p = NC_PIPE_BASE + (crc32($mac) % 500);
-	if (trim((string)shell_exec("/sbin/dnctl pipe $p show 2>/dev/null")) === '') $nopipe++;
-	if (!empty($d['ip']) && strpos($anchor, $d['ip']) === false) $norule++;
+	/*
+	 * No address means no rule and therefore no pipe. The limit still
+	 * stands and applies again on reconnect, so this is not a fault.
+	 */
+	if (empty($d['ip'])) { $offline++; continue; }
+	/* the number the allocator assigned, not the retired crc32 scheme */
+	$p = (int)($d['pipe'] ?? 0);
+	if ($p <= 0 ||
+	    trim((string)shell_exec("/sbin/dnctl pipe $p show 2>/dev/null")) === '') {
+		$nopipe++;
+	}
+	if (strpos($anchor, $d['ip']) === false) $norule++;
 }
-printf("  limited devices without a pipe: %d · without a rule: %d\n", $nopipe, $norule);
+printf("  limited devices without a pipe: %d · without a rule: %d · offline (skipped): %d\n",
+	$nopipe, $norule, $offline);
 if ($nopipe) issue('HIGH', "$nopipe limit(s) have no dummynet pipe");
 if ($norule) issue('HIGH', "$norule limit(s) have a pipe but no rule feeding it");
 

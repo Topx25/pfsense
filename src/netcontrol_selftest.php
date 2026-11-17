@@ -83,8 +83,28 @@ foreach ($store['devices'] as $mac => $d) {
 echo "  " . count($lim) . " device(s) carry a per-device limit\n";
 
 $pipes = shell_exec('/sbin/dnctl pipe list 2>/dev/null');
+$ncstore = nc_store_load();
+$offline = 0;
 foreach ($lim as $mac => $d) {
-	$p = NC_PIPE_BASE + (crc32($mac) % 500);
+	/*
+	 * A device with no address has no rule and so no pipe. The limit is
+	 * still recorded and applies again the moment it reconnects, so this
+	 * is not a failure - there is nothing to enforce against yet.
+	 */
+	if (empty($d['ip'])) {
+		$offline++;
+		continue;
+	}
+	/*
+	 * Ask the store for the pipe number. crc32(mac) % 500 was the old
+	 * scheme and was replaced because it collided, so computing it here
+	 * checked a pipe nobody uses.
+	 */
+	$p = (int)($ncstore['devices'][$mac]['pipe'] ?? 0);
+	if ($p <= 0) {
+		bad("no pipe allocated for {$d['ip']} - limit not enforced");
+		continue;
+	}
 	$shown = shell_exec("/sbin/dnctl pipe {$p} show 2>/dev/null");
 	(trim((string)$shown) !== '')
 		? ok("pipe {$p} exists for {$d['ip']}")
