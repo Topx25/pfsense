@@ -371,6 +371,22 @@ function nc_arp_table() {
  */
 function nc_oui_table() {
 	return array(
+		/* verified against the IEEE registry */
+		'ac:7b:a1' => array('Intel',     'pc'),
+		'68:ec:c5' => array('Intel',     'pc'),
+		'c8:8a:9a' => array('Intel',     'pc'),
+		'4c:eb:42' => array('Intel',     'pc'),
+		'10:02:b5' => array('Intel',     'pc'),
+		'70:a6:cc' => array('Intel',     'pc'),
+		'5c:80:b6' => array('Intel',     'pc'),
+		'6c:94:66' => array('Intel',     'pc'),
+		'b8:08:cf' => array('Intel',     'pc'),
+		'9c:c7:d3' => array('AzureWave', 'pc'),
+		'2c:44:fd' => array('HP',        'pc'),
+		'60:3e:5f' => array('Apple',     'apple'),
+		'e0:4c:12' => array('Realme',    'phone'),
+		'48:8a:e8' => array('vivo',      'phone'),
+		'f4:f6:47' => array('ZTE',       'router'),
 		/* seen on this network */
 		'00:0c:29' => array('VMware',    'vm'),
 		'00:50:56' => array('VMware',    'vm'),
@@ -384,10 +400,10 @@ function nc_oui_table() {
 		'80:7c:62' => array('Hikvision', 'camera'),
 		'bc:ad:28' => array('Hikvision', 'camera'),
 		'4c:bd:8f' => array('Dahua',     'camera'),
-		'e8:9c:25' => array('Liteon',    'pc'),
-		'74:56:3c' => array('Dell',      'pc'),
-		'04:42:1a' => array('Dell',      'pc'),
-		'10:7c:61' => array('Dell',      'pc'),
+		'e8:9c:25' => array('ASUSTek',   'pc'),
+		'74:56:3c' => array('GIGA-BYTE', 'pc'),
+		'04:42:1a' => array('ASUSTek',   'pc'),
+		'10:7c:61' => array('ASUSTek',   'pc'),
 		'bc:c7:46' => array('Foxconn',   'pc'),
 		'00:28:f8' => array('Intel',     'pc'),
 		'34:f3:9a' => array('Intel',     'pc'),
@@ -470,8 +486,15 @@ function nc_device_type($mac, $hostname, $descr) {
 	}
 
 	if (nc_mac_is_random($mac)) {
-		/* iOS and modern Android randomise; almost always a phone or laptop */
-		return array('mobile', 'موبايل/لابتوب');
+		/*
+		 * A randomized address carries no vendor, so there is nothing to
+		 * read a type from. This used to answer "phone/laptop", which put
+		 * 53 of 89 devices under one label and hid that most of them are
+		 * Intel Wi-Fi PCs while a few are genuinely phones. Say what is
+		 * actually known instead: the hostname checks above already ran,
+		 * so if we are here the device told us nothing either.
+		 */
+		return array('anon', 'MAC عشوائي — نوعه مش معروف');
 	}
 
 	$p = strtolower(substr($mac, 0, 8));
@@ -659,6 +682,12 @@ function nc_devices() {
 			'expires'   => $rule['expires'] ?? null,
 			'random'    => nc_mac_is_random($mac),
 			'reserved'  => isset($res[$mac]),
+			/*
+			 * The reserved address itself, so the page can say which
+			 * address is fixed - and notice when the device is not
+			 * actually on it, which a yes/no flag hides completely.
+			 */
+			'res_ip'    => $res[$mac]['ip'] ?? '',
 			'online'    => $live,
 			/* by address or by MAC: protection follows the device */
 			'protected' => in_array($ip, $prot) || isset($prot_macs[$mac]),
@@ -2684,6 +2713,63 @@ function nc_login_summary($limit = 600) {
 	return array_values($by);
 }
 
+/* ------------------------------------------------------ work hours */
+
+/*
+ * The site's working hours.
+ *
+ * Statistics are wanted both over the whole day and over working hours
+ * only, which answer different questions: what the line carried, versus
+ * what the work cost. Defaults are 09:00-17:00 Saturday to Thursday - the
+ * common Egyptian working week - and every value is overridable, because
+ * no two sites keep the same hours.
+ *
+ * 'days' uses PHP's own numbering, 0 = Sunday ... 6 = Saturday.
+ */
+function nc_work_hours() {
+	$from = defined('NC_WORK_FROM') ? (int)constant('NC_WORK_FROM') : 9;
+	$to   = defined('NC_WORK_TO')   ? (int)constant('NC_WORK_TO')   : 17;
+	$days = defined('NC_WORK_DAYS')
+		? (string)constant('NC_WORK_DAYS')
+		: '6,0,1,2,3,4';                  /* Sat, Sun, Mon, Tue, Wed, Thu */
+
+	$list = array();
+	foreach (explode(',', $days) as $d) {
+		$d = trim($d);
+		if ($d !== '' && is_numeric($d)) {
+			$list[] = ((int)$d) % 7;
+		}
+	}
+	return array(
+		'from' => max(0, min(23, $from)),
+		'to'   => max(1, min(24, $to)),
+		'days' => $list ?: array(6, 0, 1, 2, 3, 4),
+	);
+}
+
+/* Is this moment inside working hours? */
+function nc_in_work_hours($at = null) {
+	$at = $at ?: time();
+	$w  = nc_work_hours();
+	if (!in_array((int)date('w', $at), $w['days'], true)) {
+		return false;
+	}
+	$h = (int)date('G', $at);
+	return ($h >= $w['from'] && $h < $w['to']);
+}
+
+/*
+ * Which half of the day this moment falls in.
+ *
+ * A snapshot every 12 hours was asked for; rather than a separate timer
+ * that can drift or be missed, the half is derived from the clock, so the
+ * split is always exact and a missed tick loses nothing.
+ */
+function nc_day_half($at = null) {
+	$at = $at ?: time();
+	return ((int)date('G', $at) < 12) ? 'am' : 'pm';
+}
+
 /* ---------------------------------------------------- usage history */
 
 /*
@@ -2722,8 +2808,10 @@ function nc_usage_record() {
 		}
 	}
 
-	$prev = $hist['_last'] ?? array();
-	$now  = array();
+	$prev  = $hist['_last'] ?? array();
+	$split = $hist['_split'] ?? array();
+	$t_now = time();
+	$now   = array();
 	foreach (nc_pipe_usage() as $ip => $u) {
 		$mac = $byip[$ip] ?? null;
 		if (!$mac) {
@@ -2786,16 +2874,34 @@ function nc_usage_record() {
 			$hist[$day] = array();
 		}
 		$hist[$day][$mac] = (int)($hist[$day][$mac] ?? 0) + $d;
+
+		/*
+		 * The same delta, also filed under the working-hours split and the
+		 * half of the day it happened in. Done here rather than worked out
+		 * later because only right now do we know when this traffic
+		 * happened - reading the daily total afterwards cannot tell.
+		 */
+		$bucket = nc_in_work_hours($t_now) ? 'work' : 'off';
+		$half   = nc_day_half($t_now);
+		foreach (array($bucket, $half) as $slot) {
+			if (!isset($split[$day][$slot])) {
+				$split[$day][$slot] = array();
+			}
+			$split[$day][$slot][$mac] =
+				(int)($split[$day][$slot][$mac] ?? 0) + $d;
+		}
 	}
-	$hist['_last'] = $now;
+	$hist['_last']  = $now;
+	$hist['_split'] = $split;
 
 	/* keep two weeks; anything older is noise nobody acts on */
 	foreach (array_keys($hist) as $k) {
-		if ($k === '_last' || $k === '_who') {
+		if ($k === '_last' || $k === '_who' || $k === '_split') {
 			continue;
 		}
 		if (strtotime($k) < strtotime('-14 days')) {
 			unset($hist[$k]);
+			unset($hist['_split'][$k]);
 		}
 	}
 	@file_put_contents($file, json_encode($hist), LOCK_EX);
@@ -2813,7 +2919,7 @@ function nc_usage_history($days = 7) {
 		return array();
 	}
 	$who = $hist['_who'] ?? array();
-	unset($hist['_last'], $hist['_who']);
+	unset($hist['_last'], $hist['_who'], $hist['_split']);
 
 	/* name and current address for each MAC, so the table reads properly */
 	$name = array();

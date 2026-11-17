@@ -21,7 +21,7 @@ function nc_report_days() {
 	if (!is_array($hist)) {
 		return array();
 	}
-	unset($hist['_last'], $hist['_who']);
+	unset($hist['_last'], $hist['_who'], $hist['_split']);
 	$days = array_keys($hist);
 	rsort($days);
 	return $days;
@@ -89,7 +89,25 @@ function nc_report($day = null) {
 			);
 		}
 	}
-	$r['usage'] = array('total' => $total, 'devices' => count($rows), 'top' => $top);
+	/*
+	 * The same day seen three ways: the whole 24 hours, working hours only,
+	 * and the two halves of the day. They answer different questions - what
+	 * the line carried, what the work cost, and when it happened - so the
+	 * report gives all three rather than picking one.
+	 */
+	$sp = (is_array($hist) && isset($hist['_split'][$day]))
+		? $hist['_split'][$day] : array();
+	$w  = nc_work_hours();
+	$r['usage'] = array(
+		'total'   => $total,
+		'devices' => count($rows),
+		'top'     => $top,
+		'work'    => array_sum($sp['work'] ?? array()),
+		'off'     => array_sum($sp['off']  ?? array()),
+		'am'      => array_sum($sp['am']   ?? array()),
+		'pm'      => array_sum($sp['pm']   ?? array()),
+		'hours'   => sprintf('%02d:00-%02d:00', $w['from'], $w['to']),
+	);
 
 	/* ---- the portal's own record of the day ---- */
 	$acc = $fail = $kick = 0;
@@ -162,6 +180,87 @@ function nc_report($day = null) {
 	$r['actions'] = $acts;
 
 	return $r;
+}
+
+/*
+ * The last seven days, for the weekly file.
+ *
+ * Built from the same stored history as the daily report - nothing extra
+ * is recorded for it - so a week can be produced for as far back as the
+ * history reaches.
+ */
+function nc_report_week($end = null) {
+	$end  = $end ?: date('Y-m-d');
+	$hist = @json_decode(@file_get_contents('/var/db/netcontrol_usage.json'), true);
+	$who  = (is_array($hist) && isset($hist['_who'])) ? $hist['_who'] : array();
+	$split = (is_array($hist) && isset($hist['_split'])) ? $hist['_split'] : array();
+	if (!is_array($hist)) {
+		$hist = array();
+	}
+	unset($hist['_last'], $hist['_who'], $hist['_split']);
+
+	/* name and address for whatever is still present */
+	$name = $ipof = array();
+	foreach (nc_devices() as $d) {
+		if (!empty($d['mac'])) {
+			$name[$d['mac']] = $d['name'] ?: ($d['hostname'] ?: '');
+			$ipof[$d['mac']] = $d['ip'] ?? '';
+		}
+	}
+
+	$days  = array();
+	$byMac = array();
+	$total = $work = $off = 0;
+	for ($i = 6; $i >= 0; $i--) {
+		$d = date('Y-m-d', strtotime($end . " -$i days"));
+		$rows = $hist[$d] ?? array();
+		$t = array_sum($rows);
+		$wv = array_sum($split[$d]['work'] ?? array());
+		$ov = array_sum($split[$d]['off']  ?? array());
+		$days[] = array(
+			'day'     => $d,
+			'dow'     => (int)date('w', strtotime($d)),
+			'total'   => $t,
+			'work'    => $wv,
+			'off'     => $ov,
+			'devices' => count($rows),
+			'workday' => in_array((int)date('w', strtotime($d)),
+			                      nc_work_hours()['days'], true),
+		);
+		$total += $t;
+		$work  += $wv;
+		$off   += $ov;
+		foreach ($rows as $mac => $b) {
+			$byMac[$mac] = ($byMac[$mac] ?? 0) + $b;
+		}
+	}
+	arsort($byMac);
+
+	$top = array();
+	foreach (array_slice($byMac, 0, 25, true) as $mac => $b) {
+		$top[] = array(
+			'mac'   => $mac,
+			'ip'    => ($ipof[$mac] ?? '') ?: ($who[$mac]['ip']   ?? ''),
+			'name'  => ($name[$mac] ?? '') ?: ($who[$mac]['name'] ?? ''),
+			'user'  => $who[$mac]['user'] ?? '',
+			'gone'  => !isset($name[$mac]),
+			'bytes' => (int)$b,
+		);
+	}
+
+	$wh = nc_work_hours();
+	return array(
+		'from'      => $days[0]['day'],
+		'to'        => $end,
+		'generated' => time(),
+		'total'     => $total,
+		'work'      => $work,
+		'off'       => $off,
+		'devices'   => count($byMac),
+		'days'      => $days,
+		'top'       => $top,
+		'hours'     => sprintf('%02d:00-%02d:00', $wh['from'], $wh['to']),
+	);
 }
 
 /* ----------------------------------------------------------- rendering */
@@ -337,4 +436,118 @@ CSS;
 		. "<div class=\"foot\">netcontrol · pfSense</div>\n</div>\n</body>\n</html>";
 
 	return $html;
+}
+
+/*
+ * The week as one self-contained HTML file.
+ *
+ * Same rules as the daily one: no external stylesheet, font or script, so
+ * it survives being saved, emailed, or opened on a machine that cannot
+ * reach this firewall, and it prints cleanly.
+ */
+function nc_report_week_html($r) {
+	$h  = 'nc_rep_h';
+	$mb = 'nc_rep_mb';
+	$gen = date('Y-m-d H:i', $r['generated']);
+	$DOW = array('الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء',
+	             'الخميس', 'الجمعة', 'السبت');
+
+	$peak = 1;
+	foreach ($r['days'] as $d) {
+		$peak = max($peak, $d['total']);
+	}
+
+	$rowsHtml = '';
+	foreach ($r['days'] as $d) {
+		$pct = round($d['total'] / $peak * 100);
+		$rowsHtml .= '<tr' . ($d['workday'] ? '' : ' class="off"') . '>'
+			. '<td><b>' . $DOW[$d['dow']] . '</b><div class="m">' . $h($d['day']) . '</div></td>'
+			. '<td class="r">' . $mb($d['total']) . '</td>'
+			. '<td class="r">' . ($d['work'] ? $mb($d['work']) : '—') . '</td>'
+			. '<td class="r">' . ($d['off'] ? $mb($d['off']) : '—') . '</td>'
+			. '<td class="r">' . ($d['devices'] ?: '—') . '</td>'
+			. '<td class="bar"><i style="width:' . max(1, $pct) . '%"></i></td></tr>';
+	}
+
+	$topHtml = '';
+	$rank = 0;
+	foreach ($r['top'] as $x) {
+		$rank++;
+		$who = $x['name'] ?: ($x['user'] ?: ($x['ip'] ?: $x['mac']));
+		if (!empty($x['gone'])) {
+			$who .= ' (خرج من الشبكة)';
+		}
+		$sub = trim(($x['ip'] ?? '') . ' · ' . ($x['mac'] ?? ''), ' ·');
+		if (!empty($x['user']) && $x['user'] !== $x['name']) {
+			$sub .= ' · ' . $x['user'];
+		}
+		$pct = $r['total'] ? round($x['bytes'] / $r['total'] * 100, 1) : 0;
+		$topHtml .= '<tr><td class="n">' . $rank . '</td>'
+			. '<td><b>' . $h($who) . '</b><div class="m">' . $h($sub) . '</div></td>'
+			. '<td class="r">' . $mb($x['bytes']) . '</td>'
+			. '<td class="r">' . $pct . '%</td>'
+			. '<td class="bar"><i style="width:' . min(100, $pct * 2) . '%"></i></td></tr>';
+	}
+
+	$css = <<<'CSS'
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif;
+  background:#f1f5f9;color:#0f172a;margin:0;padding:24px;direction:rtl;line-height:1.7}
+.wrap{max-width:900px;margin:0 auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:#64748b;font-size:13px;margin-bottom:20px}
+.card{background:#fff;border:1px solid #e8edf3;border-radius:13px;
+  padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+.card h2{font-size:15px;margin:0 0 14px;padding-bottom:10px;
+  border-bottom:1px solid #e8edf3}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.k{background:#f8fafc;border:1px solid #e8edf3;border-radius:10px;padding:13px}
+.k .v{font-size:23px;font-weight:700;letter-spacing:-.5px;
+  font-variant-numeric:tabular-nums}
+.k .t{font-size:11.5px;color:#64748b;margin-top:3px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:right;font-size:11.5px;color:#64748b;font-weight:600;
+  padding:7px 8px;border-bottom:2px solid #e8edf3}
+td{padding:8px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+td.r{text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.n{color:#94a3b8;width:28px}
+tr.off{background:#fafbfc;color:#64748b}
+.m{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;
+  color:#94a3b8;direction:ltr;text-align:right}
+td.bar{width:110px}
+td.bar i{display:block;height:6px;border-radius:99px;background:#2563eb}
+.foot{text-align:center;color:#94a3b8;font-size:11.5px;margin-top:20px}
+@media print{body{background:#fff;padding:0}.card{box-shadow:none;break-inside:avoid}}
+CSS;
+
+	return "<!DOCTYPE html>\n<html lang=\"ar\" dir=\"rtl\">\n<head>\n"
+		. "<meta charset=\"utf-8\">\n"
+		. "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+		. "<title>تقرير الأسبوع — {$h($r['from'])} إلى {$h($r['to'])}</title>\n"
+		. "<style>\n{$css}\n</style>\n</head>\n<body>\n<div class=\"wrap\">\n"
+		. "<h1>تقرير الأسبوع</h1>\n"
+		. "<div class=\"sub\">" . $h($r['from']) . " إلى " . $h($r['to'])
+		. " · اتعمل في {$gen} · ساعات العمل " . $h($r['hours']) . "</div>\n"
+
+		. "<div class=\"card\"><h2>الإجمالي</h2><div class=\"kpi\">"
+		. "<div class=\"k\"><div class=\"v\">" . $mb($r['total']) . "</div>"
+		. "<div class=\"t\">الأسبوع كله</div></div>"
+		. "<div class=\"k\"><div class=\"v\">" . $mb($r['work']) . "</div>"
+		. "<div class=\"t\">في ساعات العمل</div></div>"
+		. "<div class=\"k\"><div class=\"v\">" . $mb($r['off']) . "</div>"
+		. "<div class=\"t\">بره ساعات العمل</div></div>"
+		. "<div class=\"k\"><div class=\"v\">{$r['devices']}</div>"
+		. "<div class=\"t\">جهاز استهلك</div></div>"
+		. "</div></div>\n"
+
+		. "<div class=\"card\"><h2>كل يوم</h2><table><tr><th>اليوم</th>"
+		. "<th class=\"r\">الإجمالي</th><th class=\"r\">ساعات العمل</th>"
+		. "<th class=\"r\">بره الساعات</th><th class=\"r\">أجهزة</th><th></th></tr>"
+		. $rowsHtml . "</table></div>\n"
+
+		. "<div class=\"card\"><h2>أعلى الأجهزة في الأسبوع</h2><table><tr><th></th>"
+		. "<th>الجهاز</th><th class=\"r\">الاستهلاك</th><th class=\"r\">النسبة</th>"
+		. "<th></th></tr>" . $topHtml . "</table></div>\n"
+
+		. "<div class=\"foot\">netcontrol · pfSense</div>\n</div>\n</body>\n</html>";
 }

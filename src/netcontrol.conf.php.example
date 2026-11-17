@@ -37,3 +37,10 @@
  * and never touches a protected address.
  */
 // define('NC_MOBILE_LIMIT', 1);
+
+// Working hours, used to split the daily statistics into "during work" and
+// "outside work". Defaults below are 09:00-17:00, Saturday to Thursday.
+// Days use PHP numbering: 0 = Sunday ... 6 = Saturday.
+// define('NC_WORK_FROM', 9);
+// define('NC_WORK_TO',   17);
+// define('NC_WORK_DAYS', '6,0,1,2,3,4');

@@ -127,6 +127,23 @@ if ($action === 'reporthtml') {
 	exit;
 }
 
+if ($action === 'weekreport') {
+	nc_out(array('ok' => true, 'week' => nc_report_week()));
+}
+
+/* The week as a file to save. */
+if ($action === 'weekhtml') {
+	$r = nc_report_week();
+	$html = nc_report_week_html($r);
+	header_remove('Content-Type');
+	header('Content-Type: text/html; charset=utf-8');
+	header('Content-Disposition: attachment; filename="network-week-'
+		. $r['from'] . '_' . $r['to'] . '.html"');
+	header('X-Content-Type-Options: nosniff');
+	echo $html;
+	exit;
+}
+
 if ($action === 'policy') {
 	$cp = nc_portal_sessions();
 	nc_out(array(
