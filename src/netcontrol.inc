@@ -222,7 +222,8 @@ function nc_protected_macs() {
 	}
 	/* and whatever we recorded earlier */
 	$store = nc_store_load();
-	foreach (($store['protected_macs'] ?? array()) as $mac => $when) {
+	foreach (($store['protected_macs'] ?? array()) as $mac => $rec) {
+		/* older records were a bare timestamp; newer ones carry the address */
 		$out[nc_norm_mac($mac)] = true;
 	}
 	$cache = $out;
@@ -239,9 +240,40 @@ function nc_protect_learn(&$store) {
 			continue;
 		}
 		if (isset($known[$mac])) {
+			/*
+			 * Still here: keep the stamp current, and upgrade a record
+			 * written before these carried an address - otherwise a device
+			 * that later goes quiet shows with a blank IP.
+			 */
+			$was = $known[$mac];
+			$changed = !is_array($was) || ($was['ip'] ?? '') !== $a['ip'];
+			$known[$mac] = array(
+				'ip'   => $a['ip'],
+				'at'   => is_array($was) ? ($was['at'] ?? time()) : (int)$was,
+				/*
+				 * The stamp moves every minute, but writing the store for
+				 * that alone would mean a write a minute forever. Record it
+				 * only alongside a change worth saving.
+				 */
+				'seen' => $changed ? time() : ($was['seen'] ?? time()),
+			);
+			if ($changed) {
+				$store['protected_macs'] = $known;
+				$dirty = true;
+			}
 			continue;
 		}
-		$known[$mac] = time();
+		/*
+		 * Keep the address and the time, not just a marker: when this
+		 * device goes quiet its ARP entry ages out, and without these the
+		 * panel loses the device completely - which is when an admin most
+		 * wants to see it.
+		 */
+		$known[$mac] = array(
+			'ip'   => $a['ip'],
+			'at'   => time(),
+			'seen' => time(),
+		);
 		nc_log(sprintf('PROTECT-LEARN %s (%s): جهاز شبكة — محمي من الإيقاف والتحديد',
 			$mac, $a['ip']));
 		$dirty = true;
@@ -736,15 +768,44 @@ function nc_devices() {
 	$prot      = nc_protected_ips();
 	$prot_macs = nc_protected_macs();
 
+	/*
+	 * Infrastructure stays listed even when it has gone silent. Without
+	 * this a switch that stops answering drops out of the panel the moment
+	 * its ARP entry expires, so the device an admin is looking for is the
+	 * one they cannot see.
+	 */
+	$quiet = array();
+	foreach (($store['protected_macs'] ?? array()) as $pm => $rec) {
+		$pm = nc_norm_mac($pm);
+		if ($pm === '' || isset($arp[$pm])) {
+			continue;
+		}
+		$quiet[$pm] = is_array($rec) ? $rec : array();
+		/*
+		 * A device that was already silent when the record format changed
+		 * never gets the chance to upgrade, because that happens only when
+		 * it answers ARP. Recover its address from the store's own device
+		 * record if one exists - otherwise the panel shows it with no
+		 * address, which is the switch this was written for.
+		 */
+		if (empty($quiet[$pm]['ip'])) {
+			$quiet[$pm]['ip'] = $store['devices'][$pm]['ip'] ?? '';
+		}
+	}
+
 	$macs = array_unique(array_merge(
 		array_keys($arp), array_keys($res), array_keys($store['devices']),
-		array_keys($names)));
+		array_keys($names), array_keys($quiet)));
 
 	$list = array();
 	foreach ($macs as $mac) {
 		$rule    = $store['devices'][$mac] ?? array();
 		$live    = isset($arp[$mac]);
 		$ip      = $arp[$mac]['ip'] ?? ($res[$mac]['ip'] ?? ($rule['ip'] ?? ''));
+		/* a protected device that has gone quiet keeps the address it held */
+		if ($ip === '' && isset($quiet[$mac]['ip'])) {
+			$ip = $quiet[$mac]['ip'];
+		}
 		$known_ip = $rule['ip'] ?? '';
 
 		/* The IP moved under this MAC — the rules follow the MAC. */
