@@ -114,16 +114,73 @@ define('NC_WAN_IF',   nc_cfg('wan_if',  'em2'));
 /* Devices that must never be blockable, whatever the UI sends. */
 function nc_protected_ips() {
 	/*
-	 * The firewall itself is always protected. Anything else an installation
-	 * wants to keep untouchable - a switch, an access point, a hypervisor -
-	 * goes in netcontrol.conf.php as NC_OVERRIDE_PROTECTED, because those
-	 * addresses differ on every network.
+	 * Infrastructure is worked out from the running system, not from a list
+	 * someone has to keep up to date.
+	 *
+	 * The list used to be the LAN address plus whatever an admin had
+	 * remembered to add. On a box with a second LAN that left the
+	 * firewall's own em2 address and the gateway on that segment
+	 * blockable - and blocking either takes the network down with no
+	 * warning. The firewall knows its own addresses and its own gateways,
+	 * so ask it.
+	 *
+	 * NC_OVERRIDE_PROTECTED still adds to this, for what the system cannot
+	 * know: a switch, an access point, a hypervisor.
 	 */
+	static $cache = null;
+	if ($cache !== null) {
+		return $cache;              /* called per device during a sweep */
+	}
+
 	$list = array();
+
+	/* 1. every address configured on this firewall, on every interface */
+	$raw = (string)shell_exec("/sbin/ifconfig 2>/dev/null | /usr/bin/awk '/^\tinet /{print $2}'");
+	foreach (preg_split('/\s+/', trim($raw)) as $ip) {
+		if (filter_var($ip, FILTER_VALIDATE_IP) && $ip !== '127.0.0.1') {
+			$list[] = $ip;
+		}
+	}
+
+	/* the configured LAN address, in case ifconfig told us nothing */
 	$self = nc_cfg('lan_ip');
 	if ($self) {
 		$list[] = $self;
 	}
+
+	/*
+	 * 2. every gateway pfSense holds, and the default route.
+	 *
+	 * A gateway on a LAN-side segment is the router for the devices behind
+	 * it; cutting it off strands all of them.
+	 */
+	global $config;
+	foreach (($config['gateways']['gateway_item'] ?? array()) as $gw) {
+		$ip = trim((string)($gw['gateway'] ?? ''));
+		if (filter_var($ip, FILTER_VALIDATE_IP)) {
+			$list[] = $ip;
+		}
+	}
+	$dr = trim((string)shell_exec(
+		"/usr/bin/netstat -rn -f inet 2>/dev/null | /usr/bin/awk '/^default/{print $2; exit}'"));
+	if (filter_var($dr, FILTER_VALIDATE_IP)) {
+		$list[] = $dr;
+	}
+
+	/*
+	 * 3. the first address of each subnet we manage.
+	 *
+	 * That is the router on the segment by convention, and on a second LAN
+	 * it is a device upstream of us that we would otherwise treat as an
+	 * ordinary client.
+	 */
+	foreach ($list as $ip) {
+		if (preg_match('/^(\d+\.\d+\.\d+\.)\d+$/', $ip, $m)) {
+			$list[] = $m[1] . '1';
+		}
+	}
+
+	/* 4. whatever this installation declared by hand */
 	if (defined('NC_OVERRIDE_PROTECTED')) {
 		foreach (explode(',', constant('NC_OVERRIDE_PROTECTED')) as $ip) {
 			$ip = trim($ip);
@@ -132,7 +189,76 @@ function nc_protected_ips() {
 			}
 		}
 	}
-	return array_values(array_unique($list));
+
+	$cache = array_values(array_unique(array_filter($list)));
+	return $cache;
+}
+
+/*
+ * The MACs of infrastructure, so protection follows the device.
+ *
+ * nc_protected_ips() answers by address, which is right while these
+ * devices keep the address they have. If one ever moves - a reservation
+ * edited, DHCP handing out something else - protection by address alone
+ * silently stops applying to it. So remember the MAC seen at each
+ * protected address and treat that as protected too.
+ *
+ * The record is kept in the store rather than recomputed, because the
+ * point is to still know the MAC after the device has changed address.
+ */
+function nc_protected_macs() {
+	static $cache = null;
+	if ($cache !== null) {
+		return $cache;
+	}
+	$out  = array();
+	$prot = array_flip(nc_protected_ips());
+
+	/* whatever is at a protected address right now */
+	foreach (nc_arp_table() as $mac => $a) {
+		if (isset($prot[$a['ip'] ?? ''])) {
+			$out[$mac] = true;
+		}
+	}
+	/* and whatever we recorded earlier */
+	$store = nc_store_load();
+	foreach (($store['protected_macs'] ?? array()) as $mac => $when) {
+		$out[nc_norm_mac($mac)] = true;
+	}
+	$cache = $out;
+	return $cache;
+}
+
+/* Learn the MAC of anything sitting at a protected address. */
+function nc_protect_learn(&$store) {
+	$prot  = array_flip(nc_protected_ips());
+	$known = $store['protected_macs'] ?? array();
+	$dirty = false;
+	foreach (nc_arp_table() as $mac => $a) {
+		if (!isset($prot[$a['ip'] ?? ''])) {
+			continue;
+		}
+		if (isset($known[$mac])) {
+			continue;
+		}
+		$known[$mac] = time();
+		nc_log(sprintf('PROTECT-LEARN %s (%s): جهاز شبكة — محمي من الإيقاف والتحديد',
+			$mac, $a['ip']));
+		$dirty = true;
+	}
+	if ($dirty) {
+		$store['protected_macs'] = $known;
+	}
+	return $dirty;
+}
+
+/* Is this device infrastructure, by address or by MAC? */
+function nc_is_protected($mac, $ip = '') {
+	if ($ip !== '' && in_array($ip, nc_protected_ips(), true)) {
+		return true;
+	}
+	$macs = nc_protected_macs();
+	return isset($macs[nc_norm_mac($mac)]);
 }
 
 /* ------------------------------------------------------------------ store */
@@ -475,7 +601,8 @@ function nc_devices() {
 	$rates = nc_rate_sample($usage);
 	$names = nc_lease_names();
 	$cp    = nc_portal_sessions();
-	$prot  = nc_protected_ips();
+	$prot      = nc_protected_ips();
+	$prot_macs = nc_protected_macs();
 
 	$macs = array_unique(array_merge(
 		array_keys($arp), array_keys($res), array_keys($store['devices']),
@@ -533,7 +660,8 @@ function nc_devices() {
 			'random'    => nc_mac_is_random($mac),
 			'reserved'  => isset($res[$mac]),
 			'online'    => $live,
-			'protected' => in_array($ip, $prot),
+			/* by address or by MAC: protection follows the device */
+			'protected' => in_array($ip, $prot) || isset($prot_macs[$mac]),
 			'bytes'     => $usage[$ip]['bytes'] ?? 0,
 			'moved'     => $moved,
 			'prev_ip'   => $moved ? $known_ip : null,
@@ -1894,6 +2022,7 @@ function nc_tick() {
 		$dirty = true;
 	}
 
+	$dirty = nc_protect_learn($store) || $dirty;
 	$dirty = nc_mobile_limits($store) || $dirty;
 	$dirty = nc_video_limits($store) || $dirty;
 	$dirty = nc_reattach_rules($store) || $dirty;

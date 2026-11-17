@@ -647,6 +647,38 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
   border-radius:3px 3px 0 0;min-height:2px}
 #nc .rhb>span{font-size:9px;color:var(--dim);margin-top:3px}
 
+/* ---- progress ---------------------------------------------------- */
+/* a determinate-looking sweep across the top while work is in flight */
+#nc .prog{position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;
+  background:transparent;pointer-events:none;opacity:0;
+  transition:opacity .18s ease}
+#nc .prog.on{opacity:1}
+#nc .prog>i{display:block;height:100%;width:40%;border-radius:0 2px 2px 0;
+  background:linear-gradient(90deg,transparent,var(--acc));
+  animation:ncsweep 1.1s ease-in-out infinite}
+@keyframes ncsweep{
+  0%{transform:translateX(-100%)}
+  100%{transform:translateX(350%)}
+}
+
+/* the button that was clicked: keep its label, add a spinner, lock it */
+#nc .btn.working{position:relative;pointer-events:none;opacity:.72}
+#nc .btn.working>.spin{display:inline-block;width:11px;height:11px;
+  margin-inline-end:6px;vertical-align:-1px;border-radius:50%;
+  border:2px solid currentColor;border-top-color:transparent;
+  animation:ncspin .6s linear infinite}
+@keyframes ncspin{to{transform:rotate(360deg)}}
+
+/* a row whose action is running: mark it rather than dim the whole table */
+#nc table.ncgrid tbody tr.working{background:var(--accb)}
+#nc table.ncgrid tbody tr.working td:first-child{
+  box-shadow:inset 3px 0 0 var(--acc)}
+
+@media (prefers-reduced-motion:reduce){
+  #nc .prog>i,#nc .btn.working>.spin{animation-duration:0s}
+  #nc .prog>i{width:100%}
+}
+
 /* ---- filter segment --------------------------------------------- */
 #nc .seg{display:flex;gap:4px;flex-wrap:wrap}
 #nc .seg button{border:1px solid var(--line);background:var(--card);
@@ -778,7 +810,6 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
 #nc .pb .l{font-size:9.5px;color:var(--faint);text-transform:uppercase}
 #nc .pb .v{font-family:var(--mono);font-size:13px;font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #nc .empty{text-align:center;padding:24px;color:var(--faint);font-size:13px}
-#nc .busy{opacity:.5;pointer-events:none}
 
 /* ---- bilingual ---------------------------------------------------- */
 #nc .langsw{display:inline-flex;border:1px solid var(--line);border-radius:8px;
@@ -1077,6 +1108,84 @@ function spdBar(v){
   return '<span class="sbar'+hot+'"><i style="width:'+pct.toFixed(1)+'%"></i></span>';
 }
 const sel = () => S.devices.filter(d=>picked.has(d.mac));
+
+/* ---------------- progress ----------------
+ *
+ * An action is not finished when its POST returns: load(1) and loadLog()
+ * run afterwards, and that is most of the wait. So the bar is driven by a
+ * counter around whatever the caller considers the whole job - nested or
+ * overlapping calls keep it up until the last one is done.
+ */
+let busyN = 0;
+
+function progOn(){
+  busyN++;
+  let el = $('#prog');
+  if (!el){
+    el = document.createElement('div');
+    el.className = 'prog'; el.id = 'prog';
+    el.setAttribute('role','progressbar');
+    el.setAttribute('aria-label','\u0628\u064a\u062d\u0645\u0651\u0644\u2026');
+    el.innerHTML = '<i></i>';
+    (document.getElementById('nc')||document.body).appendChild(el);
+  }
+  el.classList.add('on');
+}
+
+function progOff(){
+  busyN = Math.max(0, busyN - 1);
+  if (busyN === 0){
+    const el = $('#prog');
+    if (el) el.classList.remove('on');
+  }
+}
+
+/*
+ * Mark the control that was clicked, so the feedback is where the eye
+ * already is. Returns a function that puts it back exactly as it was -
+ * including a label we replaced - so a failed action leaves no trace.
+ */
+function working(btn){
+  const row = btn && btn.closest ? btn.closest('tr') : null;
+  let undo = [];
+  progOn();
+  if (btn){
+    const had = btn.classList.contains('working');
+    if (!had){
+      btn.classList.add('working');
+      const sp = document.createElement('span');
+      sp.className = 'spin'; sp.setAttribute('aria-hidden','true');
+      btn.prepend(sp);
+      undo.push(()=>{ btn.classList.remove('working');
+                      try{ sp.remove(); }catch(e){} });
+    }
+    if (btn.tagName === 'BUTTON' && !btn.disabled){
+      btn.disabled = true;
+      undo.push(()=>{ btn.disabled = false; });
+    }
+  }
+  if (row && !row.classList.contains('working')){
+    row.classList.add('working');
+    undo.push(()=>row.classList.remove('working'));
+  }
+  let done = false;
+  return function(){
+    if (done) return;            /* idempotent: a caller may finish twice */
+    done = true;
+    undo.forEach(f=>{ try{ f(); }catch(e){} });
+    progOff();
+  };
+}
+
+/*
+ * Run an async job with the progress showing, and always clear it.
+ * Errors are re-thrown: the caller still decides what to tell the user.
+ */
+async function withProgress(btn, job){
+  const stop = working(btn);
+  try{ return await job(); }
+  finally{ stop(); }
+}
 
 async function api(action, body){
   const o = {method: body?'POST':'GET'};
@@ -1897,7 +2006,8 @@ $('#tb').addEventListener('click',e=>{
     const curName=(d.name&&d.name!==(d.hostname||''))?d.name:'';
     if(v===curName){ nm.innerHTML=prev; return; }
     try{
-      const r=await api('rename',{mac:mac,name:v});
+      const r=await withProgress(inp, ()=>
+        api('rename',{mac:mac,name:v}));
       /* api() resolves on ok:false too, so check the payload, not just throws */
       if(!r||!r.ok) throw new Error(r&&r.error?r.error:'الحفظ فشل');
       await load();
@@ -1940,7 +2050,9 @@ $('#all').onchange=e=>{
   devices();
 };
 $('#q').addEventListener('input',devices);
-$('#refresh').onclick=()=>{load(2);loadLog();};
+$('#refresh').onclick=e=>withProgress(e.currentTarget, async()=>{
+  await load(2); loadLog();
+});
 $$('#t-dev .seg [data-f]').forEach(b=>b.onclick=()=>{
   $$('#t-dev .seg [data-f]').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); filt=b.dataset.f; devices();
@@ -2014,13 +2126,15 @@ function sched(){
 }
 $('#sched').addEventListener('change',async e=>{
   if(e.target.dataset.sch===undefined) return;
-  await api('schedule',{op:'toggle',index:e.target.dataset.sch});
+  await withProgress(e.target, ()=>
+    api('schedule',{op:'toggle',index:e.target.dataset.sch}));
   load(1); loadLog();
 });
 $('#sched').addEventListener('click',async e=>{
   const b=e.target.closest('[data-dsch]'); if(!b) return;
   if(!confirm('تحذف القاعدة دي؟')) return;
-  await api('schedule',{op:'delete',index:b.dataset.dsch});
+  await withProgress(b, ()=>
+    api('schedule',{op:'delete',index:b.dataset.dsch}));
   load(1); loadLog();
 });
 
@@ -2044,13 +2158,15 @@ function sites(){
 }
 $('#rules').addEventListener('change',async e=>{
   if(e.target.dataset.site===undefined) return;
-  await api('site',{op:'toggle',index:e.target.dataset.site});
+  await withProgress(e.target, ()=>
+    api('site',{op:'toggle',index:e.target.dataset.site}));
   load(1); loadLog();
 });
 $('#rules').addEventListener('click',async e=>{
   const b=e.target.closest('[data-dsite]'); if(!b) return;
   if(!confirm('تشيل الحظر ده؟')) return;
-  await api('site',{op:'delete',index:b.dataset.dsite});
+  await withProgress(b, ()=>
+    api('site',{op:'delete',index:b.dataset.dsite}));
   load(1); loadLog();
 });
 $$('[data-sc]').forEach(b=>b.onclick=()=>{
@@ -2343,14 +2459,21 @@ function askGroup(){
     '','',false,true);
   $('#sheet').addEventListener('click',async ev=>{
     const b=ev.target.closest('[data-mg]'); if(!b) return;
-    await api('group',{group:b.dataset.mg,macs:items.map(d=>d.mac)});
+    await withProgress(b, ()=>
+      api('group',{group:b.dataset.mg,macs:items.map(d=>d.mac)}));
     picked.clear(); closeSheet(); load(1); loadLog();
   });
 }
 
 async function apply(){
   const p=pend; if(!p) return;
-  const bx=$('#sheet .bx'); if(bx) bx.classList.add('busy');
+  /*
+   * The spinner goes in the confirm button, not over the whole dialog:
+   * the label stays readable, and the control that was pressed is where
+   * the eye already is. progOff() happens in the finally below, after
+   * the reload, because that is most of the wait.
+   */
+  const stop = working($('#sheet #yes'));
   try{
     let r;
     if(p.kind==='block'||p.kind==='unblock')
@@ -2386,8 +2509,10 @@ async function apply(){
     picked.clear();
     await load(1); loadLog();
   }catch(e){
-    alert('خطأ في الاتصال: '+e.message);
+    apiFail('خطأ في الاتصال: '+e.message);
     closeSheet();
+  }finally{
+    stop();
   }
 }
 
@@ -2827,8 +2952,10 @@ function drawPolicy(){
 
   $('#polbox').querySelectorAll('[data-forget]').forEach(b=>b.onclick=async()=>{
     if(!confirm('تسمح للجهاز ده وتشيل القيود؟')) return;
-    await api('policyforget',{mac:b.dataset.forget});
-    loadPolicy(); load(1); loadLog();
+    await withProgress(b, async()=>{
+      await api('policyforget',{mac:b.dataset.forget});
+      loadPolicy(); await load(1); loadLog();
+    });
   });
 
   $('#polsave').onclick=()=>{
@@ -3047,7 +3174,7 @@ setInterval(()=>{ if(!$('#sheet')) load(1); }, 10000);
  * broken screen.
  * ===================================================================== */
 (function(){
-  var PAIRS = [["فيديو يوتيوب وتيك توك بياكل معظم الخط. امنعه أو حدده — على الكل أو على أجهزة محددة.", "YouTube and TikTok video eat most of the line. Block or limit it — network-wide or for chosen devices."], ["ومطابق للشروط بيتصرف فيه مرة واحدة بس — بعدها يبقى معروف ومايتصرفش فيه تاني.", "and matching the rules is acted on once — after that it is known and left alone."], ["الرابط الكامل للفيديو مشفّر جوه الاتصال ومايظهرش لأي فايروول من غير", "The full video URL is encrypted inside the connection and is invisible to any firewall without"], ["مفيش محاولات مسجّلة — بيتسجّل هنا أول ما حد يحاول يفتح موقع محظور", "No attempts logged — one appears here as soon as someone tries a blocked site"], ["طبّق قاعدة على مجموعة كاملة. الضم بيتم من تبويب الأجهزة (حدد ثم", "Apply a rule to a whole group. Membership is set from the Devices tab (select, then"], ["قواعد بتشتغل وتقف لوحدها على السيرفر — مش محتاج تفتح الصفحة.", "Rules that start and stop by themselves on the firewall — no need to keep this page open."], ["البوابة · السويتش · الأكسس بوينت · المضيف) مستثناة دائمًا.", "gateway · switch · access point · host) are always exempt."], ["انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5) وحاول تاني", "Session expired — refresh the page (F5) and try again"], ["السياسة بتفحص الشبكة كل دقيقة. أي جهاز مش متشاف قبل كده", "The policy scans the network every minute. Any device not seen before"], ["هيترفع الحظر، والحدود اللي اتحطت بسبب الخدمة دي هتتشال.", "The block is lifted, and limits applied because of this service are removed."], ["تحكّم لحظي في استهلاك الإنترنت وإدارة الأجهزة المتصلة", "Live control over internet usage and connected devices"], ["الأسماء دي هي السيرفرات اللي الجهاز متصل بيها فعلاً.", "These are the servers the device is actually connected to."], ["جهاز موقوف ولسه بيسحب داتا — الحظر مش بيتنفّذ عليه", "blocked device(s) still pulling data — the block is not being enforced"], ["بيتحدد من اسم الجهاز والمصنّع — تخمين مش تأكيد.", "Guessed from the device name and vendor — a guess, not a certainty."], ["بتاعه اتغير — القواعد اتنقلت تلقائيًا معاه بالـ", "changed — the rules moved with it automatically by"], ["الجهاز ده من البنية الأساسية ومايتوقفش من هنا", "This device is infrastructure and cannot be blocked here"], ["الجهاز بيغير الـ MAC كل مرة — مش مشاركة حساب", "The device changes its MAC each time - not account sharing"], ["شغالة — بتتطبق على أي جهاز جديد يدخل الشبكة", "On — applies to any new device joining the network"], ["نسخة احتياطية بتتاخد أوتوماتيك قبل التنفيذ", "A backup is taken automatically before applying"], ["الكابتيف بورتال موقوف — الخيار ده مش هيفرق", "Captive portal is off — this option makes no difference"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص —", "Applies to every device without its own limit —"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص", "Applies to every device without its own limit"], ["اليوم لسه ماخلصش — الأرقام لغاية دلوقتي", "The day is not over yet — figures are up to now"], ["كل إجراء اتعمل على الشبكة، الأحدث فوق", "Every action taken on the network, newest first"], ["معاينة — دول اللي هيتأثروا لو فعّلتها", "Preview — these would be affected if you enable it"], ["أجهزة هتتأثر دلوقتي لو السياسة اشتغلت", "Devices that would be affected right now if the policy ran"], ["MAC عشوائي ومافيش اسم ثابت نتابعه بيه", "Random MAC with no stable name to follow it by"], ["الحد الأقصى لكل جهاز مامعاهوش حد خاص", "Maximum for each device without its own limit"], ["ابحث باسم الجهاز أو عنوان IP او MAC", "Search by device name, IP or MAC"], ["كل ما تتصل، فهتظهر كجهاز جديد تاني.", "on every connection, so they appear as a new device each time."], ["عشوائي ومافيش اسم ثابت نتابعه بيه —", "random MAC with no stable name to follow it by —"], ["كل أجهزة المجموعة هيتقطع عنها النت.", "Every device in the group will lose internet."], ["الأجهزة اللي ليها حد خاص مش هتتأثر.", "Devices with their own limit are unaffected."], ["كل نطاقات الخدمة هتتحظر مش واحد بس.", "Every domain the service uses is blocked, not just one."], ["لسه مافيش بيانات — بتتجمع كل دقيقة", "No data yet — it is collected every minute"], ["الأجهزة دي هترجع تتصل بالنت فورًا.", "These devices will reconnect immediately."], ["بس — مافيش طريقة تحدّ خدمة لوحدها.", "— there is no way to throttle one service on its own."], ["الجهاز ده مابقاش ظاهر — اعمل تحديث", "That device is no longer visible — refresh"], ["مافيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["عشوائي ومافيش اسم ثابت نتابعه بيه", "random MAC with no stable name to follow it by"], ["، وأي حد يبدأ بعد كده هيتحد كمان.", ", and anyone who starts afterwards is limited too."], ["حدد أجهزة من تبويب الأجهزة الأول", "Select devices from the Devices tab first"], ["مفيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["مين حاول يفتح موقع محظور وإمتى.", "Who tried to open a blocked site, and when."], ["كل الأجهزة دي هيتقطع عنها النت.", "All these devices will lose internet."], ["الرفع بيزاحم النزول، فخليه أقل", "Upload competes with download, so keep it lower"], ["مفيش أجهزة جديدة مطابقة دلوقتي", "No new matching devices right now"], ["جهاز متصل دلوقتي هيتأثر فورًا.", "connected device(s) will be affected immediately."], ["موقوفة — مفيش أي إجراء تلقائي", "Off — no automatic action"], ["عشوائي، بس الجهاز متابَع باسم", "random MAC, but the device is tracked by the name"], ["وممكن يفلت لو الجهاز غيّر الـ", "and it may escape if the device changes its"], ["جديد، الحظر بيتابعه تلقائيًا.", "the block follows it automatically."], ["حد النزول هيبقى 2 ميجا لكلها.", "The download limit becomes 2 Mb for all of them."], ["الجهاز هياخد الخط بلا حد (كان", "The device gets the line with no limit (was"], ["جهاز متصل دلوقتي هيتأثر فورًا", "connected device(s) affected immediately"], ["اختار نوع جهاز واحد على الأقل", "Choose at least one device type"], ["مفيش أجهزة على الحد ده دلوقتي", "No devices at that limit right now"], ["الموبايلات الحديثة بتغير الـ", "Modern phones change their"], ["اعتراض الشهادات على كل جهاز.", "installing an intercepting certificate on every device."], ["القواعد اتنقلت تلقائيًا بالـ", "the rules moved automatically by"], ["تسمح للجهاز ده وتشيل القيود؟", "Allow this device and remove the restrictions?"], ["الحد الجديد هيتطبق على كلها.", "The new limit applies to all of them."], ["كل نطاقات الخدمة مش واحد بس.", "every domain the service uses, not just one."], ["السياسة هتتحفظ بس مش هتشتغل.", "The policy is saved but will not run."], ["استثنِ اللي سجّل دخول بيوزر", "Exempt anyone signed in with an account"], ["هيتحظر على كل أجهزة الشبكة.", "It will be blocked for every device on the network."], ["تفعيل سياسة الأجهزة الجديدة", "Enable the new-device policy"], ["سرعة النزول (تصفّح وتنزيل)", "Download speed (browsing & downloads)"], ["الجهاز هيرجع بحده الحالي (", "The device returns to its current limit ("], ["أي جهاز جديد مطابق هيتعمله", "Any matching new device will be"], ["نزول / رفع — مرجع المقارنة", "down / up — the comparison baseline"], ["الحد العام نزول/رفع (ميجا)", "Global limit down/up (Mb)"], ["شغّالة في مواعيد محددة بس", "Only active during set hours"], ["الحظر بيتنقل معاه تلقائي.", "the block follows it automatically."], ["يحظر الخدمة على كل الشبكة", "Blocks the service network-wide"], ["مافيش فيديو مفتوح دلوقتي", "No video open right now"], ["موقوف ومع ذلك بيمرر داتا", "blocked yet still passing data"], ["اللي اتصرف فيه قبل كده ·", "Previously acted on ·"], ["ماقدرش يقرا البث المفتوح", "Could not read the open streams"], ["الحد أعلى من الخط بكتير", "far above what the line can carry"], ["عشوائي: الحظر بيتم بالـ", "random MAC: the block is applied by"], ["مفيش فيديو مفتوح دلوقتي", "No video open right now"], ["مقروء من الفايروول نفسه", "Read from the firewall itself"], ["مراقبة الشبكة والأجهزة", "Network & Device Monitor"], ["بحث باسم أو IP أو MAC…", "Search by name, IP or MAC…"], ["الفيديو المفتوح دلوقتي", "Video Open Now"], ["اللي اتصرف فيه قبل كده", "Previously acted on"], ["جهاز محظور ممكن يفلت —", "blocked device(s) may escape —"], ["هيترفع الحظر عنهم كلهم", "The block will be lifted from all of them"], ["تحديد النزول بـ 2 ميجا", "Limit download to 2 Mb"], ["مسح حجوزات غير مستخدمة", "Delete unused reservations"], ["جاري تحميل حالة الشبكة", "Loading network state"], ["اسحب لتغيير عرض العمود", "Drag to resize the column"], ["جهاز مسجّل دخول دلوقتي", "device(s) signed in right now"], ["الكابتيف بورتال شغال ·", "Captive portal is on ·"], ["الجهاز مش معروف للنظام", "The device is unknown to the system"], ["سياسة الأجهزة الجديدة", "New-Device Policy"], ["إيقاف الأجهزة المحددة", "Block selected devices"], ["شيل الجهاز من الأنبوب", "Remove the device from its pipe"], ["حركة الشبكة الداخلية", "Internal Traffic"], ["النزول (تصفح وتنزيل)", "Download (browsing & downloads)"], ["إيقاف النت عن الجهاز", "Cut internet from device"], ["حفظ السياسة (موقوفة)", "Save policy (disabled)"], ["الحجوزات هتتمسح والـ", "The reservations are deleted and the"], ["الحد العام لكل جهاز", "Global Per-Device Limit"], ["مفيش نتايج للبحث ده", "No results for that search"], ["عشوائي — الحظر بالـ", "random MAC — blocked by"], ["قاعدة مؤقتة شغالة —", "temporary rule(s) active —"], ["روح لتبويب الموقوفة", "Go to the Blocked tab"], ["ماقدرش يقرا التقرير", "Could not read the report"], ["الاستهلاك الإجمالي", "Total Usage"], ["مفيش قواعد بمواعيد", "No scheduled rules"], ["بحث باسم الجهاز أو", "Search by device name or"], ["إعفاء من حد السرعة", "Exempt from the speed limit"], ["ماقدرش يحفظ الاسم:", "Could not save the name:"], ["اتخطى أجهزة محمية:", "Skipped protected devices:"], ["الدخول والاستهلاك", "Logins & Usage"], ["الجهاز · IP · MAC", "Device · IP · MAC"], ["ماقدرش يقرا السجل", "Could not read the history"], ["مفيش أجهزة مطابقة", "No matching devices"], ["مفيش أجهزة موقوفة", "No blocked devices"], ["إرجاع النت للجهاز", "Restore internet to device"], ["كل جهاز هياخد لحد", "Each device gets up to"], ["كل استخدام الجهاز", "everything the device does"], ["لو جهاز رجع، ياخد", "If a device returns it gets a"], ["مفيش مواقع محظورة", "No blocked sites"], ["مفيش خدمات مطابقة", "No matching services"], ["عنوان محطور فعلًا", "address actually blocked"], ["استهلاك الإنترنت", "Internet Usage"], ["الاستهلاك اليومي", "Daily Usage"], ["مفيش إجراءات لسه", "No actions yet"], ["أو سمّيه يدوياً.", "or give it a name manually."], ["أضعف وممكن يفلت.", "which is weaker and may be escaped."], ["تحذف القاعدة دي؟", "Delete this rule?"], ["تغيير الحد العام", "Change the global limit"], ["الأجهزة الموقوفة", "Blocked devices"], ["داخل من الإنترنت", "inbound from the internet"], ["على فيديو دلوقتي", "video right now"], ["مفيش فيديو مفتوح", "No video open"], ["قاعدة تحديد سرعة", "speed-limit rule"], ["الأجهزة المتصلة", "Connected Devices"], ["اكتب اسم الجهاز", "Enter a device name"], ["سماح (تسجيل بس)", "Allow (log only)"], ["مفيش حد بيتفرّج", "Nobody is watching"], ["تغيير حد النزول", "Change download limit"], ["الحد بيتطبق على", "The limit applies to"], ["اختار المجموعة:", "Choose the group:"], ["البنية الأساسية", "Infrastructure"], ["مفيش حاجة غائبة", "Nothing stale"], ["بحث في الموقوفة", "Search blocked"], ["موقوفة / محدودة", "blocked / limited"], ["عشوائي · متابَع", "random · tracked"], ["الشبكة الداخلية", "Internal network"], ["خطأ في الاتصال:", "Connection error:"], ["قاعدة Temporary", "Temporary rule"], ["المفتوح دلوقتي", "Live Now"], ["تحديث البيانات", "Refresh"], ["إعدادات الشبكة", "Network Settings"], ["استهلاك كبير —", "Heavy usage —"], ["تشيل الحظر ده؟", "Remove this block?"], ["المجموعة فاضية", "The group is empty"], ["اكتب نطاق صحيح", "Enter a valid domain"], ["إجراءات النظام", "System Actions"], ["التنفيذ الفعلي", "Actually Enforced"], ["جلسات الاتصال", "Connection States"], ["حفظ التغييرات", "Save Changes"], ["السرعة دلوقتي", "Current Speed"], ["الصفحة مفتوحة", "Page open"], ["على كل الشبكة", "network-wide"], ["كل الموبايلات", "All phones"], ["بمواعيد محددة", "On a schedule"], ["سجل الإجراءات", "Action Log"], ["هيعدي. احجزله", "it will get through. Reserve it an"], ["كلهم متابَعين", "all tracked"], ["بيتفرّج فعلاً", "actually watching"], ["إلغاء التحديد", "Clear selection"], ["بحث بالاسم أو", "Search by name or"], ["إلغاء التصفية", "Clear filter"], ["تفاصيل الجهاز", "Device details"], ["خارج للإنترنت", "outbound to the internet"], ["لو الجهاز أخد", "If the device takes"], ["سياسة الجديد", "New-Device Policy"], ["غالبًا فيديو", "Probably video"], ["فيديو فيسبوك", "Facebook Video"], ["فلترة السجل…", "Filter the log…"], ["أجهزة النظام", "System devices"], ["ازاي بتشتغل:", "How it works:"], ["نظام التشغيل", "Operating system"], ["بنتابعه باسم", "tracked by the name"], ["الأجهزة اللي", "The devices"], ["إيقاف مجموعة", "Block group"], ["تحديد مجموعة", "Limit group"], ["مع تثبيت حجز", "with a reservation pinned"], ["فشل التحميل:", "Load failed:"], ["عليه حد سرعة", "speed-limited"], ["محاولة فاشلة", "failed attempt"], ["سرعة المصدر", "Line Speed"], ["الخط يستحمل", "the line can carry this"], ["شغال دلوقتي", "Active now"], ["سمّي الجهاز", "Rename device"], ["حدّه 1 ميجا", "Limit to 1 Mb"], ["الحد الحالي", "Current limit"], ["لو غيّر الـ", "if it changes its"], ["بتتفرّج على", "watching"], ["ضمّ لمجموعة", "Add to group"], ["أجهزة محددة", "selected devices"], ["يوم أو أكتر", "days or more"], ["فلترة السجل", "Filter the log"], ["آيفون/آيباد", "iPhone/iPad"], ["جهاز دلوقتي", "devices now"], ["فيديو مفتوح", "video open"], ["قاعدة مؤقتة", "Temporary rule"], ["متصل دلوقتي", "online now"], ["جلسة اتقطعت", "session dropped"], ["جهاز استهلك", "devices used data"], ["سرعة الرفع", "Upload speed"], ["تنافس عادي", "normal contention"], ["مسجّل دخول", "Signed in"], ["MAC عشوائي", "Random MAC"], ["اسم الهوست", "Hostname"], ["تحديد سرعة", "Limit speed"], ["لآخر اليوم", "Until end of day"], ["أيام العمل", "Workdays"], ["المستخدمين", "Users"], ["سجل الدخول", "Login History"], ["مفيش نتايج", "No results"], ["هيتحظر على", "Will be blocked on"], ["هياخدوا حد", "will get a limit of"], ["جديد عادي.", "new one normally."], ["شيل القيود", "Remove restrictions"], ["تحديد الكل", "Select all"], ["مسح المحدد", "Delete selected"], ["جهاز محدد.", "selected device(s)."], ["حذف حجوزات", "Delete reservations"], ["حسب الجهاز", "By device"], ["حسب الخدمة", "By service"], ["بالسياسة ·", "by policy ·"], ["الموبايلات", "Phones"], ["أونلاين من", "online of"], ["جهاز متأثر", "device affected"], ["الحد هيبقى", "The limit becomes"], ["الحظر بالـ", "blocked by"], ["مدة الجلسة", "Session"], ["تنزيل HTML", "Download HTML"], ["موقع محطور", "site blocked"], ["المجموعات", "Groups"], ["حظر مواقع", "Site Blocking"], ["تنظيف MAC", "MAC Cleanup"], ["عنوان MAC", "MAC Address"], ["الاستهلاك", "Data"], ["حد النزول", "Download Limit"], ["الاتصالات", "Conns"], ["ممكن يفلت", "Can escape"], ["شغّل الكل", "Unblock all"], ["يتطبق على", "Applies to"], ["استثناءات", "Exceptions"], ["هترجع للـ", "return to the"], ["جهاز محدد", "selected device"], ["الكاميرات", "Cameras"], ["غير معروف", "Unknown"], ["للأجهزة ·", "to devices ·"], ["حد 2 ميجا", "2 Mb limit"], ["ميجا (كان", "Mb (was"], ["كل الشبكة", "the whole network"], ["الحفظ فشل", "Save failed"], ["على فيديو", "video"], ["دخول ناجح", "successful login"], ["MAC متغير", "MAC rotating"], ["الموقوفة", "Blocked"], ["المواعيد", "Schedules"], ["عنوان IP", "IP Address"], ["الإجمالي", "Total"], ["المجموعة", "Group"], ["مش مسجّل", "Not signed in"], ["IP اتغير", "IP changed"], ["بالسياسة", "By policy"], ["التفاصيل", "Details"], ["مسجّل بـ", "Signed in as"], ["حجز DHCP", "DHCP reservation"], ["آخر ظهور", "Last seen"], ["انستغرام", "Instagram"], ["منع كامل", "Block fully"], ["اتغير من", "changed from"], ["جهاز الـ", "device whose"], ["متربط بـ", "bound to"], ["حظر موقع", "Block a site"], ["متابَع ·", "tracked ·"], ["موبايل (", "phone ("], ["جهاز على", "device on"], ["تسجيل بس", "log only"], ["المستخدم", "User"], ["التقارير", "Reports"], ["الأجهزة", "Devices"], ["الفيديو", "Video"], ["محاولات", "Attempts"], ["أوفلاين", "Offline"], ["اسمح له", "Allow"], ["المصنّع", "Vendor"], ["بيتفرّج", "Watching"], ["تيك توك", "TikTok"], ["نتفليكس", "Netflix"], ["أندرويد", "Android"], ["أي جهاز", "Any device"], ["الإجراء", "Action"], ["٣ ساعات", "3 hours"], ["بيحمّل…", "Loading…"], ["ملحوظة:", "Note:"], ["الإدارة", "Management"], ["المكاتب", "Offices"], ["أو خدمة", "or service"], ["موقوف ·", "blocked ·"], ["عشوائي)", "random)"], ["اتصال ·", "connections ·"], ["حدّها 2", "Limit to 2"], ["تشغيلهم", "Unblock them"], ["الخدمات", "Services"], ["من أصل", "of"], ["الجهاز", "Device"], ["النشاط", "Signed in as"], ["الحالة", "Status"], ["حظر بـ", "Blocked by"], ["بينزّل", "Downloading"], ["الأعلى", "Heaviest"], ["محدودة", "Limited"], ["موقوفة", "Blocked"], ["عشوائي", "Random"], ["متابَع", "Tracked"], ["بلا حد", "No limit"], ["بيعدّي", "LEAKING"], ["تفاصيل", "Details"], ["أوقفها", "Block"], ["احظرها", "Block service"], ["يوتيوب", "YouTube"], ["فيسبوك", "Facebook"], ["واتساب", "WhatsApp"], ["ويندوز", "Windows"], ["كل يوم", "Every day"], ["العطلة", "Weekend"], ["مستخدم", "users"], ["مش على", "not only"], ["الضيوف", "Guests"], ["بيحمّل", "Loading"], ["نزول و", "down and"], ["الجلسة", "Session"], ["محاولة", "attempt"], ["جهاز ×", "devices ×"], ["جهاز ·", "devices ·"], ["دلوقتي", "now"], ["هيعدي.", "it will get through."], ["النسبة", "Share"], ["الدخول", "Logins"], ["السجل", "Log"], ["موقوف", "Blocked"], ["الرفع", "Upload"], ["النوع", "Type"], ["إجراء", "Actions"], ["مؤقتة", "Temporary"], ["تحديث", "Refresh"], ["اتصال", "conns"], ["أجهزة", "devices"], ["إيقاف", "Block"], ["تشغيل", "Unblock"], ["تطبيق", "Apply"], ["إلغاء", "Cancel"], ["إغلاق", "Close"], ["عرضهم", "Show them"], ["أوقفه", "Block"], ["حدّها", "Limit"], ["تويتش", "Twitch"], ["مسموح", "Allowed"], ["محدود", "Limited"], ["ممنوع", "Blocked"], ["آيفون", "iPhone"], ["لينكس", "Linux"], ["المدة", "Duration"], ["لغاية", "to"], ["تحديد", "Limit"], ["تسجيل", "Log"], ["اتقطع", "Disconnected"], ["ساعات", "hours"], ["دقيقة", "min"], ["غيرهم", "Others"], ["محمية", "protected"], ["إضافة", "Add"], ["احظره", "Block it"], ["اعرضه", "Show it"], ["مثال:", "e.g."], ["الوصف", "Description"], ["عنوان", "Address"], ["تنظيف", "Cleanup"], ["محجوز", "reserved"], ["مسجّل", "registered"], ["الحد:", "Limit:"], ["تفعيل", "Enable"], ["تنفيذ", "Run"], ["جلسات", "sessions"], ["من 31", "of 31"], ["هيعدي", "will get through"], ["اتغير", "changed"], ["شغّله", "Unblock"], ["شغّال", "On"], ["اليوم", "Day"], ["نزول", "down"], ["الكل", "All"], ["بحث…", "Search…"], ["نظام", "System"], ["ثابت", "Reserved"], ["معفى", "Exempt"], ["محمي", "Protected"], ["ساكن", "Idle"], ["جهاز", "device"], ["يدوي", "Manual"], ["اعرض", "View"], ["دائم", "Permanent"], ["ساعة", "1 hour"], ["دخول", "logins"], ["ميجا", "Mb"], ["احظر", "Block"], ["خدمة", "service"], ["منها", "of which"], ["لمدة", "for"], ["أيام", "days"], ["رجوع", "Back"], ["رفع.", "up."], ["حدّه", "Limit it"], ["عنصر", "item"], ["فاضي", "empty"], ["شغال", "active"], ["محدد", "selected"], ["فشل:", "Failed:"], ["الحد", "Limit"], ["مرات", "times"], ["رفع", "upload"], ["ألف", "K"], ["حفظ", "Save"], ["بحث", "Search"], ["نشط", "Active"], ["حظر", "Block"], ["نعم", "Yes"], ["ماك", "Mac"], ["منع", "Block"], ["حدث", "events"], ["دخل", "Signed in"], ["يوم", "days"], ["حذف", "Delete"], ["مسح", "Clear"], ["حجز", "Reserve"], ["حتى", "until"], ["على", "on"], ["لا", "No"], ["من", "from"], ["أو", "or"], ["بـ", "by "]];
+  var PAIRS = [["فيديو يوتيوب وتيك توك بياكل معظم الخط. امنعه أو حدده — على الكل أو على أجهزة محددة.", "YouTube and TikTok video eat most of the line. Block or limit it — network-wide or for chosen devices."], ["ومطابق للشروط بيتصرف فيه مرة واحدة بس — بعدها يبقى معروف ومايتصرفش فيه تاني.", "and matching the rules is acted on once — after that it is known and left alone."], ["الرابط الكامل للفيديو مشفّر جوه الاتصال ومايظهرش لأي فايروول من غير", "The full video URL is encrypted inside the connection and is invisible to any firewall without"], ["مفيش محاولات مسجّلة — بيتسجّل هنا أول ما حد يحاول يفتح موقع محظور", "No attempts logged — one appears here as soon as someone tries a blocked site"], ["طبّق قاعدة على مجموعة كاملة. الضم بيتم من تبويب الأجهزة (حدد ثم", "Apply a rule to a whole group. Membership is set from the Devices tab (select, then"], ["قواعد بتشتغل وتقف لوحدها على السيرفر — مش محتاج تفتح الصفحة.", "Rules that start and stop by themselves on the firewall — no need to keep this page open."], ["البوابة · السويتش · الأكسس بوينت · المضيف) مستثناة دائمًا.", "gateway · switch · access point · host) are always exempt."], ["انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5) وحاول تاني", "Session expired — refresh the page (F5) and try again"], ["السياسة بتفحص الشبكة كل دقيقة. أي جهاز مش متشاف قبل كده", "The policy scans the network every minute. Any device not seen before"], ["هيترفع الحظر، والحدود اللي اتحطت بسبب الخدمة دي هتتشال.", "The block is lifted, and limits applied because of this service are removed."], ["تحكّم لحظي في استهلاك الإنترنت وإدارة الأجهزة المتصلة", "Live control over internet usage and connected devices"], ["الأسماء دي هي السيرفرات اللي الجهاز متصل بيها فعلاً.", "These are the servers the device is actually connected to."], ["جهاز موقوف ولسه بيسحب داتا — الحظر مش بيتنفّذ عليه", "blocked device(s) still pulling data — the block is not being enforced"], ["بيتحدد من اسم الجهاز والمصنّع — تخمين مش تأكيد.", "Guessed from the device name and vendor — a guess, not a certainty."], ["بتاعه اتغير — القواعد اتنقلت تلقائيًا معاه بالـ", "changed — the rules moved with it automatically by"], ["الجهاز ده من البنية الأساسية ومايتوقفش من هنا", "This device is infrastructure and cannot be blocked here"], ["الجهاز ده من البنية الأساسية ومايتحددش من هنا", "This device is infrastructure and cannot be limited here"], ["الجهاز بيغير الـ MAC كل مرة — مش مشاركة حساب", "The device changes its MAC each time - not account sharing"], ["شغالة — بتتطبق على أي جهاز جديد يدخل الشبكة", "On — applies to any new device joining the network"], ["نسخة احتياطية بتتاخد أوتوماتيك قبل التنفيذ", "A backup is taken automatically before applying"], ["الكابتيف بورتال موقوف — الخيار ده مش هيفرق", "Captive portal is off — this option makes no difference"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص —", "Applies to every device without its own limit —"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص", "Applies to every device without its own limit"], ["اليوم لسه ماخلصش — الأرقام لغاية دلوقتي", "The day is not over yet — figures are up to now"], ["كل إجراء اتعمل على الشبكة، الأحدث فوق", "Every action taken on the network, newest first"], ["معاينة — دول اللي هيتأثروا لو فعّلتها", "Preview — these would be affected if you enable it"], ["أجهزة هتتأثر دلوقتي لو السياسة اشتغلت", "Devices that would be affected right now if the policy ran"], ["MAC عشوائي ومافيش اسم ثابت نتابعه بيه", "Random MAC with no stable name to follow it by"], ["الحد الأقصى لكل جهاز مامعاهوش حد خاص", "Maximum for each device without its own limit"], ["جهاز شبكة — محمي من الإيقاف والتحديد", "Network device - protected from blocking and limiting"], ["ابحث باسم الجهاز أو عنوان IP او MAC", "Search by device name, IP or MAC"], ["كل ما تتصل، فهتظهر كجهاز جديد تاني.", "on every connection, so they appear as a new device each time."], ["عشوائي ومافيش اسم ثابت نتابعه بيه —", "random MAC with no stable name to follow it by —"], ["كل أجهزة المجموعة هيتقطع عنها النت.", "Every device in the group will lose internet."], ["الأجهزة اللي ليها حد خاص مش هتتأثر.", "Devices with their own limit are unaffected."], ["كل نطاقات الخدمة هتتحظر مش واحد بس.", "Every domain the service uses is blocked, not just one."], ["لسه مافيش بيانات — بتتجمع كل دقيقة", "No data yet — it is collected every minute"], ["الأجهزة دي هترجع تتصل بالنت فورًا.", "These devices will reconnect immediately."], ["بس — مافيش طريقة تحدّ خدمة لوحدها.", "— there is no way to throttle one service on its own."], ["الجهاز ده مابقاش ظاهر — اعمل تحديث", "That device is no longer visible — refresh"], ["مافيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["عشوائي ومافيش اسم ثابت نتابعه بيه", "random MAC with no stable name to follow it by"], ["، وأي حد يبدأ بعد كده هيتحد كمان.", ", and anyone who starts afterwards is limited too."], ["حدد أجهزة من تبويب الأجهزة الأول", "Select devices from the Devices tab first"], ["مفيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["مين حاول يفتح موقع محظور وإمتى.", "Who tried to open a blocked site, and when."], ["كل الأجهزة دي هيتقطع عنها النت.", "All these devices will lose internet."], ["الرفع بيزاحم النزول، فخليه أقل", "Upload competes with download, so keep it lower"], ["مفيش أجهزة جديدة مطابقة دلوقتي", "No new matching devices right now"], ["جهاز متصل دلوقتي هيتأثر فورًا.", "connected device(s) will be affected immediately."], ["موقوفة — مفيش أي إجراء تلقائي", "Off — no automatic action"], ["عشوائي، بس الجهاز متابَع باسم", "random MAC, but the device is tracked by the name"], ["وممكن يفلت لو الجهاز غيّر الـ", "and it may escape if the device changes its"], ["جديد، الحظر بيتابعه تلقائيًا.", "the block follows it automatically."], ["حد النزول هيبقى 2 ميجا لكلها.", "The download limit becomes 2 Mb for all of them."], ["الجهاز هياخد الخط بلا حد (كان", "The device gets the line with no limit (was"], ["جهاز متصل دلوقتي هيتأثر فورًا", "connected device(s) affected immediately"], ["اختار نوع جهاز واحد على الأقل", "Choose at least one device type"], ["مفيش أجهزة على الحد ده دلوقتي", "No devices at that limit right now"], ["الموبايلات الحديثة بتغير الـ", "Modern phones change their"], ["اعتراض الشهادات على كل جهاز.", "installing an intercepting certificate on every device."], ["القواعد اتنقلت تلقائيًا بالـ", "the rules moved automatically by"], ["تسمح للجهاز ده وتشيل القيود؟", "Allow this device and remove the restrictions?"], ["الحد الجديد هيتطبق على كلها.", "The new limit applies to all of them."], ["كل نطاقات الخدمة مش واحد بس.", "every domain the service uses, not just one."], ["السياسة هتتحفظ بس مش هتشتغل.", "The policy is saved but will not run."], ["استثنِ اللي سجّل دخول بيوزر", "Exempt anyone signed in with an account"], ["هيتحظر على كل أجهزة الشبكة.", "It will be blocked for every device on the network."], ["تفعيل سياسة الأجهزة الجديدة", "Enable the new-device policy"], ["سرعة النزول (تصفّح وتنزيل)", "Download speed (browsing & downloads)"], ["الجهاز هيرجع بحده الحالي (", "The device returns to its current limit ("], ["أي جهاز جديد مطابق هيتعمله", "Any matching new device will be"], ["نزول / رفع — مرجع المقارنة", "down / up — the comparison baseline"], ["الحد العام نزول/رفع (ميجا)", "Global limit down/up (Mb)"], ["شغّالة في مواعيد محددة بس", "Only active during set hours"], ["الحظر بيتنقل معاه تلقائي.", "the block follows it automatically."], ["يحظر الخدمة على كل الشبكة", "Blocks the service network-wide"], ["مافيش فيديو مفتوح دلوقتي", "No video open right now"], ["موقوف ومع ذلك بيمرر داتا", "blocked yet still passing data"], ["اللي اتصرف فيه قبل كده ·", "Previously acted on ·"], ["ماقدرش يقرا البث المفتوح", "Could not read the open streams"], ["الحد أعلى من الخط بكتير", "far above what the line can carry"], ["عشوائي: الحظر بيتم بالـ", "random MAC: the block is applied by"], ["مفيش فيديو مفتوح دلوقتي", "No video open right now"], ["مقروء من الفايروول نفسه", "Read from the firewall itself"], ["مراقبة الشبكة والأجهزة", "Network & Device Monitor"], ["بحث باسم أو IP أو MAC…", "Search by name, IP or MAC…"], ["الفيديو المفتوح دلوقتي", "Video Open Now"], ["اللي اتصرف فيه قبل كده", "Previously acted on"], ["جهاز محظور ممكن يفلت —", "blocked device(s) may escape —"], ["هيترفع الحظر عنهم كلهم", "The block will be lifted from all of them"], ["تحديد النزول بـ 2 ميجا", "Limit download to 2 Mb"], ["مسح حجوزات غير مستخدمة", "Delete unused reservations"], ["جاري تحميل حالة الشبكة", "Loading network state"], ["اسحب لتغيير عرض العمود", "Drag to resize the column"], ["جهاز مسجّل دخول دلوقتي", "device(s) signed in right now"], ["الكابتيف بورتال شغال ·", "Captive portal is on ·"], ["الجهاز مش معروف للنظام", "The device is unknown to the system"], ["سياسة الأجهزة الجديدة", "New-Device Policy"], ["إيقاف الأجهزة المحددة", "Block selected devices"], ["شيل الجهاز من الأنبوب", "Remove the device from its pipe"], ["حركة الشبكة الداخلية", "Internal Traffic"], ["النزول (تصفح وتنزيل)", "Download (browsing & downloads)"], ["إيقاف النت عن الجهاز", "Cut internet from device"], ["حفظ السياسة (موقوفة)", "Save policy (disabled)"], ["الحجوزات هتتمسح والـ", "The reservations are deleted and the"], ["الحد العام لكل جهاز", "Global Per-Device Limit"], ["مفيش نتايج للبحث ده", "No results for that search"], ["عشوائي — الحظر بالـ", "random MAC — blocked by"], ["قاعدة مؤقتة شغالة —", "temporary rule(s) active —"], ["روح لتبويب الموقوفة", "Go to the Blocked tab"], ["ماقدرش يقرا التقرير", "Could not read the report"], ["الاستهلاك الإجمالي", "Total Usage"], ["مفيش قواعد بمواعيد", "No scheduled rules"], ["بحث باسم الجهاز أو", "Search by device name or"], ["إعفاء من حد السرعة", "Exempt from the speed limit"], ["ماقدرش يحفظ الاسم:", "Could not save the name:"], ["اتخطى أجهزة محمية:", "Skipped protected devices:"], ["الدخول والاستهلاك", "Logins & Usage"], ["الجهاز · IP · MAC", "Device · IP · MAC"], ["ماقدرش يقرا السجل", "Could not read the history"], ["مفيش أجهزة مطابقة", "No matching devices"], ["مفيش أجهزة موقوفة", "No blocked devices"], ["إرجاع النت للجهاز", "Restore internet to device"], ["كل جهاز هياخد لحد", "Each device gets up to"], ["كل استخدام الجهاز", "everything the device does"], ["لو جهاز رجع، ياخد", "If a device returns it gets a"], ["مفيش مواقع محظورة", "No blocked sites"], ["مفيش خدمات مطابقة", "No matching services"], ["عنوان محطور فعلًا", "address actually blocked"], ["استهلاك الإنترنت", "Internet Usage"], ["الاستهلاك اليومي", "Daily Usage"], ["مفيش إجراءات لسه", "No actions yet"], ["أو سمّيه يدوياً.", "or give it a name manually."], ["أضعف وممكن يفلت.", "which is weaker and may be escaped."], ["تحذف القاعدة دي؟", "Delete this rule?"], ["تغيير الحد العام", "Change the global limit"], ["الأجهزة الموقوفة", "Blocked devices"], ["داخل من الإنترنت", "inbound from the internet"], ["على فيديو دلوقتي", "video right now"], ["مفيش فيديو مفتوح", "No video open"], ["قاعدة تحديد سرعة", "speed-limit rule"], ["الأجهزة المتصلة", "Connected Devices"], ["اكتب اسم الجهاز", "Enter a device name"], ["سماح (تسجيل بس)", "Allow (log only)"], ["مفيش حد بيتفرّج", "Nobody is watching"], ["تغيير حد النزول", "Change download limit"], ["الحد بيتطبق على", "The limit applies to"], ["اختار المجموعة:", "Choose the group:"], ["البنية الأساسية", "Infrastructure"], ["مفيش حاجة غائبة", "Nothing stale"], ["بحث في الموقوفة", "Search blocked"], ["موقوفة / محدودة", "blocked / limited"], ["عشوائي · متابَع", "random · tracked"], ["الشبكة الداخلية", "Internal network"], ["خطأ في الاتصال:", "Connection error:"], ["قاعدة Temporary", "Temporary rule"], ["المفتوح دلوقتي", "Live Now"], ["تحديث البيانات", "Refresh"], ["إعدادات الشبكة", "Network Settings"], ["استهلاك كبير —", "Heavy usage —"], ["تشيل الحظر ده؟", "Remove this block?"], ["المجموعة فاضية", "The group is empty"], ["اكتب نطاق صحيح", "Enter a valid domain"], ["إجراءات النظام", "System Actions"], ["التنفيذ الفعلي", "Actually Enforced"], ["جلسات الاتصال", "Connection States"], ["حفظ التغييرات", "Save Changes"], ["السرعة دلوقتي", "Current Speed"], ["الصفحة مفتوحة", "Page open"], ["على كل الشبكة", "network-wide"], ["كل الموبايلات", "All phones"], ["بمواعيد محددة", "On a schedule"], ["سجل الإجراءات", "Action Log"], ["هيعدي. احجزله", "it will get through. Reserve it an"], ["كلهم متابَعين", "all tracked"], ["بيتفرّج فعلاً", "actually watching"], ["إلغاء التحديد", "Clear selection"], ["بحث بالاسم أو", "Search by name or"], ["إلغاء التصفية", "Clear filter"], ["تفاصيل الجهاز", "Device details"], ["خارج للإنترنت", "outbound to the internet"], ["لو الجهاز أخد", "If the device takes"], ["سياسة الجديد", "New-Device Policy"], ["غالبًا فيديو", "Probably video"], ["فيديو فيسبوك", "Facebook Video"], ["فلترة السجل…", "Filter the log…"], ["أجهزة النظام", "System devices"], ["ازاي بتشتغل:", "How it works:"], ["نظام التشغيل", "Operating system"], ["بنتابعه باسم", "tracked by the name"], ["الأجهزة اللي", "The devices"], ["إيقاف مجموعة", "Block group"], ["تحديد مجموعة", "Limit group"], ["مع تثبيت حجز", "with a reservation pinned"], ["فشل التحميل:", "Load failed:"], ["عليه حد سرعة", "speed-limited"], ["محاولة فاشلة", "failed attempt"], ["سرعة المصدر", "Line Speed"], ["الخط يستحمل", "the line can carry this"], ["شغال دلوقتي", "Active now"], ["سمّي الجهاز", "Rename device"], ["حدّه 1 ميجا", "Limit to 1 Mb"], ["الحد الحالي", "Current limit"], ["لو غيّر الـ", "if it changes its"], ["بتتفرّج على", "watching"], ["ضمّ لمجموعة", "Add to group"], ["أجهزة محددة", "selected devices"], ["يوم أو أكتر", "days or more"], ["فلترة السجل", "Filter the log"], ["آيفون/آيباد", "iPhone/iPad"], ["جهاز دلوقتي", "devices now"], ["فيديو مفتوح", "video open"], ["قاعدة مؤقتة", "Temporary rule"], ["متصل دلوقتي", "online now"], ["جلسة اتقطعت", "session dropped"], ["جهاز استهلك", "devices used data"], ["سرعة الرفع", "Upload speed"], ["تنافس عادي", "normal contention"], ["مسجّل دخول", "Signed in"], ["MAC عشوائي", "Random MAC"], ["اسم الهوست", "Hostname"], ["تحديد سرعة", "Limit speed"], ["لآخر اليوم", "Until end of day"], ["أيام العمل", "Workdays"], ["المستخدمين", "Users"], ["سجل الدخول", "Login History"], ["مفيش نتايج", "No results"], ["هيتحظر على", "Will be blocked on"], ["هياخدوا حد", "will get a limit of"], ["جديد عادي.", "new one normally."], ["شيل القيود", "Remove restrictions"], ["تحديد الكل", "Select all"], ["مسح المحدد", "Delete selected"], ["جهاز محدد.", "selected device(s)."], ["حذف حجوزات", "Delete reservations"], ["حسب الجهاز", "By device"], ["حسب الخدمة", "By service"], ["بالسياسة ·", "by policy ·"], ["الموبايلات", "Phones"], ["أونلاين من", "online of"], ["جهاز متأثر", "device affected"], ["الحد هيبقى", "The limit becomes"], ["الحظر بالـ", "blocked by"], ["مدة الجلسة", "Session"], ["تنزيل HTML", "Download HTML"], ["موقع محطور", "site blocked"], ["المجموعات", "Groups"], ["حظر مواقع", "Site Blocking"], ["تنظيف MAC", "MAC Cleanup"], ["عنوان MAC", "MAC Address"], ["الاستهلاك", "Data"], ["حد النزول", "Download Limit"], ["الاتصالات", "Conns"], ["ممكن يفلت", "Can escape"], ["شغّل الكل", "Unblock all"], ["يتطبق على", "Applies to"], ["استثناءات", "Exceptions"], ["هترجع للـ", "return to the"], ["جهاز محدد", "selected device"], ["الكاميرات", "Cameras"], ["غير معروف", "Unknown"], ["للأجهزة ·", "to devices ·"], ["حد 2 ميجا", "2 Mb limit"], ["ميجا (كان", "Mb (was"], ["كل الشبكة", "the whole network"], ["الحفظ فشل", "Save failed"], ["على فيديو", "video"], ["دخول ناجح", "successful login"], ["MAC متغير", "MAC rotating"], ["الموقوفة", "Blocked"], ["المواعيد", "Schedules"], ["عنوان IP", "IP Address"], ["الإجمالي", "Total"], ["المجموعة", "Group"], ["مش مسجّل", "Not signed in"], ["IP اتغير", "IP changed"], ["بالسياسة", "By policy"], ["التفاصيل", "Details"], ["مسجّل بـ", "Signed in as"], ["حجز DHCP", "DHCP reservation"], ["آخر ظهور", "Last seen"], ["انستغرام", "Instagram"], ["منع كامل", "Block fully"], ["اتغير من", "changed from"], ["جهاز الـ", "device whose"], ["متربط بـ", "bound to"], ["حظر موقع", "Block a site"], ["متابَع ·", "tracked ·"], ["موبايل (", "phone ("], ["جهاز على", "device on"], ["تسجيل بس", "log only"], ["المستخدم", "User"], ["التقارير", "Reports"], ["الأجهزة", "Devices"], ["الفيديو", "Video"], ["محاولات", "Attempts"], ["أوفلاين", "Offline"], ["اسمح له", "Allow"], ["المصنّع", "Vendor"], ["بيتفرّج", "Watching"], ["تيك توك", "TikTok"], ["نتفليكس", "Netflix"], ["أندرويد", "Android"], ["أي جهاز", "Any device"], ["الإجراء", "Action"], ["٣ ساعات", "3 hours"], ["بيحمّل…", "Loading…"], ["ملحوظة:", "Note:"], ["الإدارة", "Management"], ["المكاتب", "Offices"], ["أو خدمة", "or service"], ["موقوف ·", "blocked ·"], ["عشوائي)", "random)"], ["اتصال ·", "connections ·"], ["حدّها 2", "Limit to 2"], ["تشغيلهم", "Unblock them"], ["الخدمات", "Services"], ["من أصل", "of"], ["الجهاز", "Device"], ["النشاط", "Signed in as"], ["الحالة", "Status"], ["حظر بـ", "Blocked by"], ["بينزّل", "Downloading"], ["الأعلى", "Heaviest"], ["محدودة", "Limited"], ["موقوفة", "Blocked"], ["عشوائي", "Random"], ["متابَع", "Tracked"], ["بلا حد", "No limit"], ["بيعدّي", "LEAKING"], ["تفاصيل", "Details"], ["أوقفها", "Block"], ["احظرها", "Block service"], ["يوتيوب", "YouTube"], ["فيسبوك", "Facebook"], ["واتساب", "WhatsApp"], ["ويندوز", "Windows"], ["كل يوم", "Every day"], ["العطلة", "Weekend"], ["مستخدم", "users"], ["مش على", "not only"], ["الضيوف", "Guests"], ["بيحمّل", "Loading"], ["نزول و", "down and"], ["الجلسة", "Session"], ["محاولة", "attempt"], ["جهاز ×", "devices ×"], ["جهاز ·", "devices ·"], ["دلوقتي", "now"], ["هيعدي.", "it will get through."], ["النسبة", "Share"], ["الدخول", "Logins"], ["السجل", "Log"], ["موقوف", "Blocked"], ["الرفع", "Upload"], ["النوع", "Type"], ["إجراء", "Actions"], ["مؤقتة", "Temporary"], ["تحديث", "Refresh"], ["اتصال", "conns"], ["أجهزة", "devices"], ["إيقاف", "Block"], ["تشغيل", "Unblock"], ["تطبيق", "Apply"], ["إلغاء", "Cancel"], ["إغلاق", "Close"], ["عرضهم", "Show them"], ["أوقفه", "Block"], ["حدّها", "Limit"], ["تويتش", "Twitch"], ["مسموح", "Allowed"], ["محدود", "Limited"], ["ممنوع", "Blocked"], ["آيفون", "iPhone"], ["لينكس", "Linux"], ["المدة", "Duration"], ["لغاية", "to"], ["تحديد", "Limit"], ["تسجيل", "Log"], ["اتقطع", "Disconnected"], ["ساعات", "hours"], ["دقيقة", "min"], ["غيرهم", "Others"], ["محمية", "protected"], ["إضافة", "Add"], ["احظره", "Block it"], ["اعرضه", "Show it"], ["مثال:", "e.g."], ["الوصف", "Description"], ["عنوان", "Address"], ["تنظيف", "Cleanup"], ["محجوز", "reserved"], ["مسجّل", "registered"], ["الحد:", "Limit:"], ["تفعيل", "Enable"], ["تنفيذ", "Run"], ["جلسات", "sessions"], ["من 31", "of 31"], ["هيعدي", "will get through"], ["اتغير", "changed"], ["شغّله", "Unblock"], ["شغّال", "On"], ["اليوم", "Day"], ["نزول", "down"], ["الكل", "All"], ["بحث…", "Search…"], ["نظام", "System"], ["ثابت", "Reserved"], ["معفى", "Exempt"], ["محمي", "Protected"], ["ساكن", "Idle"], ["جهاز", "device"], ["يدوي", "Manual"], ["اعرض", "View"], ["دائم", "Permanent"], ["ساعة", "1 hour"], ["دخول", "logins"], ["ميجا", "Mb"], ["احظر", "Block"], ["خدمة", "service"], ["منها", "of which"], ["لمدة", "for"], ["أيام", "days"], ["رجوع", "Back"], ["رفع.", "up."], ["حدّه", "Limit it"], ["عنصر", "item"], ["فاضي", "empty"], ["شغال", "active"], ["محدد", "selected"], ["فشل:", "Failed:"], ["الحد", "Limit"], ["مرات", "times"], ["رفع", "upload"], ["ألف", "K"], ["حفظ", "Save"], ["بحث", "Search"], ["نشط", "Active"], ["حظر", "Block"], ["نعم", "Yes"], ["ماك", "Mac"], ["منع", "Block"], ["حدث", "events"], ["دخل", "Signed in"], ["يوم", "days"], ["حذف", "Delete"], ["مسح", "Clear"], ["حجز", "Reserve"], ["حتى", "until"], ["على", "on"], ["لا", "No"], ["من", "from"], ["أو", "or"], ["بـ", "by "]];
   var lang = 'ar';
   try { lang = localStorage.getItem('nc_lang') || 'ar'; } catch(e){}
 

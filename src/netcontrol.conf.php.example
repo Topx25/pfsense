@@ -13,6 +13,12 @@
 /* Addresses that must never be blocked or throttled, comma separated.
    The firewall's own LAN address is always protected and need not be
    listed. Add switches, access points, hypervisors, NAS, printers. */
+// Addresses that must never be blocked or speed-limited.
+//
+// The firewall's own interface addresses, every gateway it holds, and the
+// first address of each managed subnet are protected automatically - you do
+// not need to list those. Use this only for what the system cannot work out
+// for itself: a switch, an access point, a hypervisor, a server.
 // define('NC_OVERRIDE_PROTECTED', '10.0.0.20,10.0.0.250');
 
 /* Uncomment any of these if detection picks the wrong interface. */

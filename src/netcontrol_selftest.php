@@ -178,10 +178,27 @@ $n = $CP_SNAPSHOT;
 $direct = $CP_DB;
 echo "  $n via nc_portal_sessions() | $direct in the portal db
 ";
-if ($direct !== $n) {
-	bad("session count mismatch ($n vs $direct)");
+/*
+ * These two numbers are not meant to be equal.
+ *
+ * by_mac is keyed by MAC, so a device holding several rows counts once,
+ * and the database keeps a row after its device has gone until the portal
+ * reaps it. Requiring equality failed on 35 rows vs 25 devices, which was
+ * correct on both sides.
+ *
+ * What this check exists to catch is the helper going blind - returning
+ * nothing while the database holds rows, which happened when mwexec()
+ * reset the config globals it reads. Test for that, and treat a surplus
+ * of rows as the ordinary state it is.
+ */
+if ($direct > 0 && $n === 0) {
+	bad("nc_portal_sessions() sees nothing while the db holds $direct row(s)");
+} elseif ($n > $direct) {
+	bad("more sessions than rows ($n vs $direct) - impossible");
 } elseif ($n > 0) {
-	ok("portal sessions readable ($n)");
+	$stale = $direct - $n;
+	ok("portal sessions readable ($n device(s)" .
+	   ($stale ? ", $stale row(s) awaiting reap" : '') . ')');
 } else {
 	note('no portal sessions right now');
 }

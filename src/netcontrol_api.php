@@ -297,6 +297,16 @@ case 'unblock': {
 
 case 'limit': {
 	$d   = nc_require_device($_POST['mac'] ?? '');
+	/*
+	 * Infrastructure must not be throttled either. Only 'block' checked
+	 * this before, so the firewall's own interface or a gateway could be
+	 * capped to 1 Mb - nearly as damaging as blocking it, and much easier
+	 * to miss.
+	 */
+	if (!empty($d['protected'])) {
+		nc_out(array('ok' => false,
+			'error' => 'الجهاز ده من البنية الأساسية ومايتحددش من هنا'), 403);
+	}
 	$mb  = (int)($_POST['mb'] ?? 0);
 	if ($mb < 0 || $mb > 50) {
 		nc_out(array('ok' => false, 'error' => 'الحد لازم يكون بين 0 و 50'), 400);
@@ -333,8 +343,12 @@ case 'bulk': {
 			if ($x['mac'] === $mac) { $dev = $x; break; }
 		}
 		if (!$dev) { continue; }
-		if ($op === 'block' && $dev['protected']) {
-			$skipped[] = $dev['ip'];
+		/*
+		 * Skip infrastructure for anything that restricts it, not just
+		 * for a block: a limit on a gateway strands everyone behind it.
+		 */
+		if (($op === 'block' || $op === 'limit') && $dev['protected']) {
+			$skipped[] = $dev['ip'] ?: $dev['mac'];
 			continue;
 		}
 		$cur = $store['devices'][$mac] ?? array();
