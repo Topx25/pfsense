@@ -178,6 +178,105 @@ foreach ($gs as $x) {
 	if ($x['count'] < 1) { bad("group {$x['kind']} has no devices"); }
 }
 
+/* ------------------------------------------------- address integrity */
+head('address integrity');
+/*
+ * Every one of these compares the store against ARP, never against
+ * itself. A stale record that still claims an address someone else holds
+ * is how "who is at this address" started returning a device that had
+ * left - and an operator acting on that answer acts on the wrong device.
+ */
+$arp_now = nc_arp_table();
+$holder  = array();
+foreach ($arp_now as $m => $a) {
+	if (!empty($a['ip'])) {
+		$holder[$a['ip']] = $m;
+	}
+}
+
+$devs_now = nc_devices();
+
+/* 1. no offline record may claim an address a live device holds */
+$shadow = array();
+foreach ($devs_now as $d) {
+	$ip = $d['ip'] ?? '';
+	if ($ip === '' || !empty($d['online']) || !empty($d['protected'])) {
+		continue;
+	}
+	if (isset($holder[$ip]) && $holder[$ip] !== $d['mac']) {
+		$shadow[] = $ip . ' (' . $d['mac'] . ')';
+	}
+}
+count($shadow) === 0
+	? ok('no offline record shadows a live address')
+	: bad(count($shadow) . ' offline record(s) claim an address in use: ' .
+	      implode(', ', array_slice($shadow, 0, 4)));
+
+/* 2. one address, one device - among devices reported as online */
+$seen = array();
+$dupes = array();
+foreach ($devs_now as $d) {
+	$ip = $d['ip'] ?? '';
+	if ($ip === '' || empty($d['online'])) {
+		continue;
+	}
+	if (isset($seen[$ip]) && $seen[$ip] !== $d['mac']) {
+		$dupes[] = $ip;
+	}
+	$seen[$ip] = $d['mac'];
+}
+count($dupes) === 0
+	? ok('each address is claimed by one online device')
+	: bad('address claimed twice: ' . implode(', ', array_unique($dupes)));
+
+/* 3. what the panel says is online must be in ARP */
+$ghost = 0;
+foreach ($devs_now as $d) {
+	if (!empty($d['online']) && !isset($arp_now[$d['mac']])) {
+		$ghost++;
+	}
+}
+$ghost === 0
+	? ok('every device marked online is present in ARP')
+	: bad($ghost . ' device(s) marked online are not in ARP');
+
+/* 4. a block in the store must reach the kernel, or be explainable */
+$store_blk = nc_store_load();
+$tbl_now = array_filter(preg_split('/\s+/',
+	trim((string)shell_exec('/sbin/pfctl -t ' . NC_TABLE . ' -T show 2>/dev/null'))));
+$tbl_idx = array_flip($tbl_now);
+$unenforced = array();
+foreach ($store_blk['devices'] as $m => $r) {
+	if (empty($r['blocked'])) {
+		continue;
+	}
+	$ip = $arp_now[$m]['ip'] ?? '';
+	if ($ip === '') {
+		continue;              /* offline: nothing to enforce against */
+	}
+	if (!isset($tbl_idx[$ip])) {
+		$unenforced[] = $ip;
+	}
+}
+count($unenforced) === 0
+	? ok('every block whose device is present is enforced')
+	: bad(count($unenforced) . ' online blocked device(s) missing from the table: ' .
+	      implode(', ', array_slice($unenforced, 0, 4)));
+
+/* 5. nothing protected may carry a limit or a block */
+$viol = array();
+foreach ($devs_now as $d) {
+	if (empty($d['protected'])) {
+		continue;
+	}
+	if (!empty($d['blocked']) || !empty($d['limit'])) {
+		$viol[] = ($d['ip'] ?: $d['mac']);
+	}
+}
+count($viol) === 0
+	? ok('no protected device carries a block or a limit')
+	: bad('protected device restricted: ' . implode(', ', $viol));
+
 /* ---------------------------------------------------------- portal */
 head('captive portal');
 /*

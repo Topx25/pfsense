@@ -769,6 +769,18 @@ function nc_devices() {
 	$prot_macs = nc_protected_macs();
 
 	/*
+	 * Which MAC holds each address right now. The DHCP pool recycles, so a
+	 * stored address goes stale quickly, and an offline record that still
+	 * claims it shadows the device actually sitting there.
+	 */
+	$holder = array();
+	foreach ($arp as $m => $a) {
+		if (!empty($a['ip'])) {
+			$holder[$a['ip']] = $m;
+		}
+	}
+
+	/*
 	 * Infrastructure stays listed even when it has gone silent. Without
 	 * this a switch that stops answering drops out of the panel the moment
 	 * its ARP entry expires, so the device an admin is looking for is the
@@ -805,6 +817,23 @@ function nc_devices() {
 		/* a protected device that has gone quiet keeps the address it held */
 		if ($ip === '' && isset($quiet[$mac]['ip'])) {
 			$ip = $quiet[$mac]['ip'];
+		}
+		/*
+		 * An offline device does not get to keep an address someone else is
+		 * using. Without this, searching for an address can return a device
+		 * that left yesterday rather than the one sitting there now - and an
+		 * operator acting on that answer acts on the wrong device.
+		 *
+		 * Infrastructure is exempt: it stays findable by its address even
+		 * when quiet, which is why those records are kept at all. The
+		 * reservation and ARP cases above are untouched, so a device holding
+		 * its own address is unaffected.
+		 */
+		$last_ip = $ip;
+		if ($ip !== '' && !isset($arp[$mac]) && !isset($res[$mac]) &&
+		    isset($holder[$ip]) && $holder[$ip] !== $mac &&
+		    !isset($prot_macs[$mac])) {
+			$ip = '';
 		}
 		$known_ip = $rule['ip'] ?? '';
 
@@ -864,6 +893,12 @@ function nc_devices() {
 			'bytes'     => $usage[$ip]['bytes'] ?? 0,
 			'moved'     => $moved,
 			'prev_ip'   => $moved ? $known_ip : null,
+			/*
+			 * Where this device was last seen, even when the address has
+			 * since been taken by someone else. 'ip' answers "where is it
+			 * now"; this answers "where was it".
+			 */
+			'last_ip'   => $last_ip,
 			'last_seen' => $rule['last_seen'] ?? ($live ? time() : null),
 		);
 	}
