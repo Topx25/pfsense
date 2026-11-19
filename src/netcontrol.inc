@@ -648,10 +648,17 @@ function nc_state_usage() {
 		/* "57:56 pkts, 7185:14809 bytes" - in:out on this state */
 		if (preg_match('/(\d+):(\d+)\s+pkts,\s*(\d+):(\d+)\s+bytes/', $line, $m)) {
 			if (!isset($out[$ip])) {
-				$out[$ip] = array('pkts' => 0, 'bytes' => 0);
+				$out[$ip] = array('pkts' => 0, 'bytes' => 0, 'up' => 0, 'dn' => 0);
 			}
 			$out[$ip]['pkts']  += (int)$m[1] + (int)$m[2];
 			$out[$ip]['bytes'] += (int)$m[3] + (int)$m[4];
+			/*
+			 * The pair is initiator:responder. A LAN client starts nearly
+			 * every connection, so the first figure is what it sent and the
+			 * second what it received - upload and download.
+			 */
+			$out[$ip]['up'] += (int)$m[3];
+			$out[$ip]['dn'] += (int)$m[4];
 			$ip = null;            /* one counter line per state */
 		}
 	}
@@ -757,7 +764,10 @@ function nc_devices() {
 	 * speed limit reads 0 B however much it is pulling.
 	 */
 	$usage = nc_pipe_usage();
-	foreach (nc_state_usage() as $sip => $su) {
+	$st_usage = nc_state_usage();
+	/* per-direction rates come from the state counters, for every device */
+	$dir_rates = nc_rate_dir($st_usage);
+	foreach ($st_usage as $sip => $su) {
 		if (!isset($usage[$sip]) || ($usage[$sip]['bytes'] ?? 0) <= 0) {
 			$usage[$sip] = $su;
 		}
@@ -863,6 +873,8 @@ function nc_devices() {
 			'ip'        => $ip,
 			'name'      => $name,
 			'rate'      => $ip ? ($rates[$ip] ?? 0.0) : 0.0,
+			'rate_dn'   => $ip ? ($dir_rates[$ip]['dn'] ?? 0.0) : 0.0,
+			'rate_up'   => $ip ? ($dir_rates[$ip]['up'] ?? 0.0) : 0.0,
 			/*
 			 * A randomized MAC is only a real risk when we have no
 			 * fingerprint to follow it by; with one, nc_reattach_rules()
@@ -1271,6 +1283,45 @@ function nc_rate_sample($usage) {
 		$out[$ip] = round($db * 8 / $dt / 1000000, 2);
 	}
 
+	@file_put_contents($file, json_encode($snap), LOCK_EX);
+	return $out;
+}
+
+/*
+ * Download and upload separately, from the pf state counters.
+ *
+ * Same sampling idea as nc_rate_sample(): store the counters with a time and
+ * compare with the previous store. Kept in its own file so the two samplers
+ * never overwrite each other's baseline.
+ */
+function nc_rate_dir($usage) {
+	$file = '/var/db/netcontrol_rate_dir.json';
+	$now  = microtime(true);
+	$prev = array();
+	if (is_readable($file)) {
+		$j = @json_decode(@file_get_contents($file), true);
+		if (is_array($j)) {
+			$prev = $j;
+		}
+	}
+	$snap = array('t' => $now, 'up' => array(), 'dn' => array());
+	$out  = array();
+	$pt   = (float)($prev['t'] ?? 0);
+	$dt   = $now - $pt;
+	$ok   = ($pt > 0 && $dt >= 1.0 && $dt <= 120.0);
+	foreach ($usage as $ip => $u) {
+		$row = array('up' => 0.0, 'dn' => 0.0);
+		foreach (array('up', 'dn') as $k) {
+			$b = (int)($u[$k] ?? 0);
+			$snap[$k][$ip] = $b;
+			$pb = $prev[$k][$ip] ?? null;
+			if (!$ok || $pb === null || $b < (int)$pb) {
+				continue;         /* no baseline, or states expired: say 0 */
+			}
+			$row[$k] = round(($b - (int)$pb) * 8 / $dt / 1000000, 2);
+		}
+		$out[$ip] = $row;
+	}
 	@file_put_contents($file, json_encode($snap), LOCK_EX);
 	return $out;
 }

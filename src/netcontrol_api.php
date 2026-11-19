@@ -352,19 +352,31 @@ case 'bulk': {
 	if (count($macs) > 60) {
 		nc_out(array('ok' => false, 'error' => 'أكتر من 60 جهاز في المرة'), 400);
 	}
+	if (!in_array($op, array('block', 'unblock', 'lim2', 'lim', 'unl'), true)) {
+		nc_out(array('ok' => false, 'error' => 'عملية غير معروفة'), 400);
+	}
+	/* a chosen speed for 'lim' (the group-limit button) */
+	$bmb = max(1, min(50, (int)($_POST['mb'] ?? 0)));
+	if ($op === 'lim' && (int)($_POST['mb'] ?? 0) <= 0) {
+		nc_out(array('ok' => false, 'error' => 'السرعة ناقصة'), 400);
+	}
+	/* one scan, not one per device */
+	$bydev = array();
+	foreach (nc_devices() as $x) {
+		$bydev[$x['mac']] = $x;
+	}
 	$done = 0; $skipped = array();
 	foreach ($macs as $m) {
 		$mac = nc_norm_mac($m);
-		$dev = null;
-		foreach (nc_devices() as $x) {
-			if ($x['mac'] === $mac) { $dev = $x; break; }
-		}
+		$dev = $bydev[$mac] ?? null;
 		if (!$dev) { continue; }
 		/*
 		 * Skip infrastructure for anything that restricts it, not just
 		 * for a block: a limit on a gateway strands everyone behind it.
+		 * The ops are named lim2/lim on the wire - testing for 'limit'
+		 * here never matched, so a bulk limit used to reach them.
 		 */
-		if (($op === 'block' || $op === 'limit') && $dev['protected']) {
+		if (in_array($op, array('block', 'lim2', 'lim'), true) && !empty($dev['protected'])) {
 			$skipped[] = $dev['ip'] ?: $dev['mac'];
 			continue;
 		}
@@ -387,6 +399,7 @@ case 'bulk': {
 			$store['policy_seen'] = $seen;
 		}
 		if ($op === 'lim2')    { $cur['limit'] = 2;       $cur['expires'] = $exp; }
+		if ($op === 'lim')     { $cur['limit'] = $bmb;    $cur['expires'] = $exp; }
 		if ($op === 'unl')     { $cur['limit'] = null;    $cur['expires'] = $exp; }
 		$store['devices'][$mac] = $cur;
 		$done++;

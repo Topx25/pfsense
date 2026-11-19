@@ -848,6 +848,180 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
 #nc[data-lang="en"] .polf{grid-template-columns:150px 1fr}
 #nc[data-lang="en"] .hdh span,#nc[data-lang="en"] .vgb,
 #nc[data-lang="en"] .hb{text-align:right}
+
+/* ==== dashboard layout ============================================= */
+#nc{background:#f4f6fa;padding:22px 24px}
+#nc [hidden]{display:none!important}
+#nc .faint{color:var(--faint)}
+#nc .nc-bar.hd2{display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;margin-bottom:16px}
+#nc .hd2 h1{font-size:22px;font-weight:700;margin:0;color:var(--ink)}
+#nc .hd2 .sub{font-size:12.5px;color:var(--dim);margin-top:4px}
+#nc .hd2 .sub b{color:var(--ink)}
+#nc .hd2 .sp-r{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#nc .livepill{display:inline-flex;align-items:center;gap:7px;background:#e8f7ee;
+  color:#15803d;font-size:12px;font-weight:600;padding:6px 12px;border-radius:99px}
+#nc .livepill i{width:7px;height:7px;border-radius:50%;background:#22c55e}
+#nc .livepill.bad{background:var(--critb);color:var(--crit)}
+#nc .livepill.bad i{background:var(--crit)}
+#nc .btn2{display:inline-flex;align-items:center;gap:7px;background:#fff;
+  border:1px solid #dfe4ec;border-radius:9px;padding:7px 14px;font-size:13px;
+  font-weight:600;color:var(--ink);cursor:pointer;line-height:1.2;font-family:inherit;
+  white-space:nowrap}
+#nc .btn2:hover{background:#f8fafc;border-color:#cbd3de}
+#nc .btn2.pri{color:var(--acc);border-color:#c7d7fb}
+#nc .btn2:disabled{opacity:.6;cursor:default}
+
+#nc .sp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}
+@media (max-width:1250px){#nc .sp{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:640px){#nc .sp{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#nc .sp .k{background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:14px 16px;min-width:0}
+#nc .sp .k .l{font-size:12.5px;color:#475569;font-weight:600;margin-bottom:8px;
+  text-transform:none;letter-spacing:0}
+#nc .sp .k .v{font-size:26px;font-weight:700;color:var(--ink);font-family:inherit;
+  line-height:1.1;white-space:nowrap}
+#nc .sp .k .v small{font-size:13px;color:var(--dim);font-weight:500;margin-inline-start:5px}
+#nc .sp .k .v .sl{color:#94a3b8;font-weight:400}
+#nc .sp .k .br{display:flex;align-items:center;gap:8px;margin-top:10px}
+#nc .sp .k .tr2{flex:1;height:5px;background:#eef1f5;border-radius:99px;overflow:hidden}
+#nc .sp .k .tr2 i{display:block;height:100%;border-radius:99px}
+#nc .sp .k .pc{font-size:11.5px;font-weight:700}
+#nc .sp .k .s{font-size:12px;color:var(--dim);margin-top:7px;font-family:inherit}
+
+#nc .glim{background:#fff;border:1px solid #e6eaf0;border-radius:12px;padding:12px 14px;margin-bottom:16px}
+#nc .gl2{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#nc .gl2 .gic{width:36px;height:36px;border-radius:9px;background:var(--accb);
+  color:var(--acc);display:flex;align-items:center;justify-content:center;flex:none;font-size:15px}
+#nc .gl2 .gtx{flex:1;min-width:220px}
+#nc .gl2 h4{margin:0 0 2px;font-size:14px;font-weight:700}
+#nc .gl2 .sub{font-size:12px;color:var(--dim)}
+#nc .gchip{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;
+  border-radius:8px;padding:7px 12px;font-size:13.5px;font-weight:700;white-space:nowrap}
+#nc .gchip.dn b{color:var(--acc)}
+#nc .gchip.up b{color:#c2410c}
+#nc .glim .gr{margin-top:12px;padding-top:12px;border-top:1px solid #eef1f5}
+
+#nc .tabs{overflow:visible;flex-wrap:wrap;border-bottom:1px solid #e3e8ef;
+  margin-bottom:14px;gap:2px;align-items:flex-end}
+#nc .tabs button{padding:10px 14px;font-size:14px;font-weight:500;color:#475569;
+  border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;white-space:nowrap}
+#nc .tabs button.on{color:var(--acc);border-bottom-color:var(--acc);font-weight:600}
+#nc .tabs .c{font-size:11px;background:#eef1f5;color:#475569;border-radius:99px;
+  padding:1px 7px;margin-inline-start:6px;font-family:inherit;font-weight:600}
+#nc .tabs #c-blk{background:#fee2e2;color:#dc2626}
+#nc .tmore{position:relative}
+#nc .tmenu,#nc .ddm{position:absolute;top:calc(100% + 4px);inset-inline-end:0;z-index:40;
+  background:#fff;border:1px solid #e3e8ef;border-radius:10px;
+  box-shadow:0 10px 28px rgba(15,23,42,.14);padding:6px;min-width:190px;
+  display:flex;flex-direction:column;gap:1px}
+#nc .tabs .tmenu button,#nc .ddm button{text-align:start;border:0;border-radius:7px;padding:8px 10px;
+  margin:0;font-size:13px;color:#334155;background:none;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;gap:10px}
+#nc .tabs .tmenu button:hover,#nc .ddm button:hover{background:#f1f5f9}
+#nc .tabs .tmenu button.on,#nc .ddm button.on{background:var(--accb);color:var(--acc);font-weight:600}
+
+#nc .tb2{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+#nc .srch{flex:1 1 260px;display:flex;align-items:center;gap:8px;background:#fff;
+  border:1px solid #dfe4ec;border-radius:9px;padding:0 12px;height:38px;margin:0;font-weight:400}
+#nc .srch i{color:#94a3b8}
+#nc .srch input{border:0;outline:0;flex:1;height:100%;font-size:13.5px;background:none;min-width:0;padding:0}
+#nc .seg2{display:flex;background:#eef1f5;border-radius:9px;padding:3px;gap:2px}
+#nc .seg2 button{border:0;background:none;padding:6px 13px;font-size:13px;font-weight:500;
+  color:#475569;border-radius:7px;cursor:pointer;white-space:nowrap}
+#nc .seg2 button.on{background:#fff;color:var(--acc);font-weight:600;
+  box-shadow:0 1px 2px rgba(15,23,42,.1)}
+#nc .dd{position:relative;min-width:0}
+#nc .ddb{display:inline-flex;align-items:center;gap:8px;height:38px;background:#fff;
+  border:1px solid #dfe4ec;border-radius:9px;padding:0 13px;font-size:13px;
+  color:var(--ink);cursor:pointer;white-space:nowrap;max-width:100%}
+#nc .ddb.on{border-color:var(--acc);background:#f5f8ff}
+#nc .ddb b{font-weight:600}
+#nc .ddh{color:#64748b;font-size:12px;overflow:hidden;text-overflow:ellipsis;max-width:330px}
+
+#nc .dcard{background:#fff;border:1px solid #e6eaf0;border-radius:12px;overflow:hidden}
+#nc .chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 14px;
+  border-bottom:1px solid #eef1f5}
+#nc .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #dfe4ec;
+  background:#fff;border-radius:9px;padding:7px 12px;font-size:13.5px;font-weight:600;
+  color:#334155;cursor:pointer;white-space:nowrap}
+#nc .chip i{font-style:normal;font-size:11px;background:#eef1f5;color:#475569;
+  border-radius:99px;padding:1px 7px}
+#nc .chip.on{background:#eef4ff;border-color:#9dbbf8;color:var(--acc)}
+#nc .chip.on i{background:#dbe7fe;color:var(--acc)}
+#nc .chips .cs{margin-inline-start:auto;display:flex;align-items:center;gap:12px;
+  font-size:12.5px;color:var(--dim)}
+#nc .chips .cs b{color:#15803d;font-weight:600}
+#nc .dcard .table-responsive{border:0;margin:0}
+#nc .dcard table.ncgrid{border:0;margin:0;box-shadow:none;border-radius:0}
+#nc .dcard table.ncgrid thead th{background:#fff;font-size:12px;font-weight:600;color:#475569;
+  padding:12px 10px;border-bottom:1px solid #eef1f5;text-transform:none;letter-spacing:0}
+#nc .dcard table.ncgrid thead th.sorted{color:var(--acc)}
+#nc .dcard table.ncgrid tbody td{padding:11px 10px;border-bottom:1px solid #f1f4f8;
+  vertical-align:middle;font-size:13.5px}
+#nc .dcard table.ncgrid tbody tr[data-mac]{cursor:pointer}
+#nc .dcard table.ncgrid tbody tr[data-mac]:hover td{background:#fafbfd}
+#nc .dcard .dv{min-width:0}
+#nc .dcard .dv .t{font-weight:600;color:var(--ink);font-size:14px}
+#nc .mac2{font-family:var(--mono);font-size:11.5px;color:#64748b;display:flex;gap:6px;
+  align-items:center;flex-wrap:wrap;margin-top:3px}
+#nc .mac2 .tg{font-family:inherit}
+#nc .tg.rnd{background:#f3e8ff;color:#7e22ce}
+#nc .tg.fix{background:#e0f2fe;color:#0369a1}
+#nc .sp2{display:inline-flex;flex-direction:column;line-height:1.4;font-size:12.5px;
+  align-items:flex-start;white-space:nowrap}
+#nc .sp2 .dn{color:#334155}
+#nc .sp2 .dn.on{color:var(--acc);font-weight:700}
+#nc .sp2 .up{color:#64748b}
+#nc .pl{display:inline-flex;align-items:center;gap:6px;border-radius:99px;padding:3px 10px;
+  font-size:12px;font-weight:600;text-transform:capitalize;white-space:nowrap}
+#nc .pl:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+#nc .pl.dl{background:#e8f0ff;color:#1d4ed8}
+#nc .pl.on{background:#e8f7ee;color:#15803d}
+#nc .pl.lim{background:#fef3c7;color:#b45309}
+#nc .pl.blk{background:#fee2e2;color:#dc2626}
+#nc .pl.off{background:#f1f5f9;color:#64748b}
+#nc td.act{white-space:nowrap}
+#nc .ib{width:30px;height:30px;border:0;background:none;border-radius:7px;color:#475569;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+#nc .ib:hover{background:#f1f5f9}
+#nc .ib:disabled{opacity:.35;cursor:default}
+#nc .ib.red{color:#dc2626}
+#nc .ib.grn{color:#15803d}
+#nc .more2{text-align:center}
+#nc .more2 button{border:0;background:none;color:var(--acc);font-weight:600;font-size:13px;
+  cursor:pointer;padding:13px;width:100%}
+#nc .more2 button:hover{background:#fafbfd}
+#nc .more2:empty{display:none}
+
+#nc .lpop{position:fixed;z-index:1000;background:#fff;border:1px solid #e3e8ef;border-radius:10px;
+  box-shadow:0 12px 32px rgba(15,23,42,.18);padding:10px;width:236px}
+#nc .lph{font-size:12px;font-weight:700;color:#475569;margin-bottom:8px}
+#nc .lpo{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+#nc .lpo button,#nc .lpc button{border:1px solid #dfe4ec;background:#fff;border-radius:7px;
+  padding:6px 0;font-size:12.5px;cursor:pointer;color:#334155}
+#nc .lpo button:hover,#nc .lpc button:hover{border-color:var(--acc);color:var(--acc)}
+#nc .lpo button.on{border-color:var(--acc);color:var(--acc);background:#f5f8ff;font-weight:600}
+#nc .lpc{display:flex;gap:6px;margin-top:8px}
+#nc .lpc input{flex:1;min-width:0;border:1px solid #dfe4ec;border-radius:7px;padding:5px 8px;font-size:12.5px}
+#nc .lpc button{padding:6px 12px}
+/* the older pill-style tab strip and monospace cells, undone for this layout */
+#nc .tabs{background:none;padding:0;border-radius:0;box-shadow:none;border:0;
+  border-bottom:1px solid #e3e8ef;gap:2px;margin-bottom:14px}
+#nc .tabs>button,#nc .tmore>#tmore{border:0;border-bottom:2px solid transparent;border-radius:0;
+  box-shadow:none;background:none;color:#475569;padding:10px 14px;font-size:14px;
+  font-weight:500;margin-bottom:-1px;display:inline-flex;align-items:center;gap:0;cursor:pointer}
+#nc .tabs>button:hover,#nc .tmore>#tmore:hover{background:none;color:var(--ink)}
+#nc .tabs>button.on,#nc .tmore>#tmore.on{background:none;color:var(--acc);box-shadow:none;
+  border-bottom-color:var(--acc);font-weight:600}
+#nc .tabs>button.on .c{background:var(--accb);color:var(--acc)}
+#nc .tmore>#tmore i{margin-inline-start:6px}
+#nc .dcard table.ncgrid td,#nc .dcard table.ncgrid td.num{font-family:inherit}
+#nc .dcard table.ncgrid .m{font-family:inherit;font-size:13.5px;color:var(--ink)}
+#nc .dcard table.ncgrid thead th{position:static}
+/* a number and its unit read left to right in both languages ("23 Mb", never "Mb 23") */
+#nc .gchip,#nc .sp2 span,#nc .gl3,#nc .lpo button,#nc .dcard td.num,#nc .dcard td.c b,
+#nc .sp .k .s,#nc .sp .k .v{direction:ltr;unicode-bidi:isolate}
+#nc:not([data-lang="en"]) .sp .k .v,#nc:not([data-lang="en"]) .sp .k .s{text-align:right}
 </style>
 
 <div id="nc">
@@ -856,12 +1030,15 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
     without this the switch fell back to the end of #nc, where it rendered
     below the log and was effectively invisible.
   -->
-  <div class="nc-bar">
-    <div class="sp-r"></div>
-  </div>
-
-  <div class="nc-note" id="live">
-    <strong>جاري تحميل حالة الشبكة…</strong>
+  <div class="nc-bar hd2">
+    <div>
+      <h1>التحكم في الشبكة</h1>
+      <div class="sub" id="live">جاري تحميل حالة الشبكة…</div>
+    </div>
+    <div class="sp-r">
+      <span class="livepill" id="livepill"><i></i><span>بيحمّل…</span></span>
+      <button type="button" class="btn2" id="refresh"><i class="fa fa-refresh"></i> تحديث</button>
+    </div>
   </div>
 
   <div id="alerts"></div>
@@ -873,16 +1050,21 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
     <button class="on" data-t="live">المفتوح دلوقتي <span class="c" id="c-live">—</span></button>
     <button data-t="dev">الأجهزة <span class="c" id="c-dev">—</span></button>
     <button data-t="blocked">الموقوفة <span class="c" id="c-blk">—</span></button>
-    <button data-t="policy">سياسة الجديد <span class="c" id="c-pol">—</span></button>
     <button data-t="groups">المجموعات <span class="c" id="c-grp">—</span></button>
     <button data-t="sched">المواعيد <span class="c" id="c-sch">—</span></button>
     <button data-t="sites">حظر مواقع <span class="c" id="c-sites">—</span></button>
-    <button data-t="video">الفيديو</button>
-    <button data-t="att">محاولات <span class="c" id="c-att">—</span></button>
-    <button data-t="clean">تنظيف MAC <span class="c" id="c-clean">—</span></button>
-    <button data-t="hist">الدخول والاستهلاك</button>
-    <button data-t="report">التقارير</button>
-    <button data-t="log">السجل</button>
+    <button data-t="policy">سياسة الجديد <span class="c" id="c-pol">—</span></button>
+    <div class="tmore">
+      <button type="button" id="tmore">المزيد <i class="fa fa-angle-down"></i></button>
+      <div class="tmenu" id="tmenu" hidden>
+        <button data-t="video">الفيديو</button>
+        <button data-t="att">محاولات <span class="c" id="c-att">—</span></button>
+        <button data-t="clean">تنظيف MAC <span class="c" id="c-clean">—</span></button>
+        <button data-t="hist">الدخول والاستهلاك</button>
+        <button data-t="report">التقارير</button>
+        <button data-t="log">السجل</button>
+      </div>
+    </div>
   </div>
 
   <section id="t-live">
@@ -898,23 +1080,33 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
   </section>
 
   <section id="t-dev" hidden>
-    <div class="bar">
-      <button class="btn btn-xs btn-default on" id="grpsw"
-        title="تجميع الأجهزة حسب النوع">☰ تجميع</button>
-      <input type="search" id="q" placeholder="بحث بالاسم أو IP أو MAC…">
-      <div class="seg">
+    <div class="tb2">
+      <label class="srch"><i class="fa fa-search"></i>
+        <input type="search" id="q" placeholder="بحث بالاسم أو IP أو MAC…"></label>
+      <div class="seg2">
         <button class="on" data-f="all">الكل</button>
         <button data-f="now">شغال دلوقتي</button>
-        <button data-f="dl" style="color:#b3261e;font-weight:600">⬇ بينزّل</button>
+        <button data-f="dl">بينزّل</button>
         <button data-f="busy">الأعلى</button>
-        <button data-f="lim">محدودة</button>
-        <button data-f="blk">موقوفة</button>
-        <button data-f="tmp">مؤقتة</button>
-        <button data-f="cp">مسجّل دخول</button>
-        <button data-f="nocp">مش مسجّل</button>
-        <button data-f="rnd">MAC عشوائي</button>
       </div>
-      <button class="btn btn-xs btn-default" id="refresh">تحديث</button>
+      <div class="dd" id="fdd">
+        <button type="button" class="ddb" id="fbtn"><i class="fa fa-filter"></i><b>فلاتر</b><span class="ddh" id="fhint"></span></button>
+        <div class="ddm" id="fmenu" hidden>
+          <button data-f="lim">محدودة</button>
+          <button data-f="blk">موقوفة</button>
+          <button data-f="tmp">مؤقتة</button>
+          <button data-f="cp">مسجّل دخول</button>
+          <button data-f="nocp">مش مسجّل</button>
+          <button data-f="rnd">MAC عشوائي</button>
+        </div>
+      </div>
+      <div class="dd" id="gdd">
+        <button type="button" class="ddb" id="gbtn"><i class="fa fa-bars"></i><b id="glbl">تجميع: النوع</b><i class="fa fa-angle-down"></i></button>
+        <div class="ddm" id="gmenu" hidden>
+          <button data-g="1">حسب النوع</button>
+          <button data-g="0">من غير تجميع</button>
+        </div>
+      </div>
     </div>
     <div class="bulk" id="bulk" style="display:none">
       <span><b id="bn">0</b> جهاز محدد</span>
@@ -924,24 +1116,26 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
       <button class="btn btn-xs btn-default" data-b="group">ضمّ لمجموعة</button>
       <button class="btn btn-xs btn-link" data-b="none" style="margin-left:auto">إلغاء التحديد</button>
     </div>
-    <div class="table-responsive">
-      <table class="ncgrid"><colgroup>
-        <col style="width:34px"><col style="width:30px">
-        <col style="width:auto"><col style="width:118px"><col style="width:134px">
-        <col style="width:116px"><col style="width:94px"><col style="width:88px">
-        <col style="width:142px"><col style="width:164px">
-      </colgroup><thead><tr>
-        <th class="c"><input type="checkbox" id="all"></th>
-        <th class="c"></th>
-        <th class="s" data-sort="name">الجهاز</th>
-        <th class="s" data-sort="ip">عنوان IP</th>
-        <th class="s" data-sort="user">النشاط</th>
-        <th class="num" data-sort="rate">السرعة دلوقتي</th>
-        <th class="num" data-sort="bytes">الإجمالي</th>
-        <th class="c" data-sort="state">الحالة</th>
-        <th class="c" data-sort="limit">حد النزول</th>
-        <th class="c">إجراء</th>
-      </tr></thead><tbody id="tb"></tbody></table>
+    <div class="dcard">
+      <div class="chips" id="chips"></div>
+      <div class="table-responsive">
+        <table class="ncgrid"><colgroup>
+          <col style="width:44px"><col style="width:auto"><col style="width:126px">
+          <col style="width:126px"><col style="width:124px"><col style="width:92px">
+          <col style="width:128px"><col style="width:132px"><col style="width:118px">
+        </colgroup><thead><tr>
+          <th class="c"><input type="checkbox" id="all"></th>
+          <th class="s" data-sort="name">الجهاز</th>
+          <th class="s" data-sort="ip">عنوان IP</th>
+          <th class="s" data-sort="user">مسجّل بـ</th>
+          <th class="num" data-sort="rate">السرعة دلوقتي</th>
+          <th class="num" data-sort="bytes">الإجمالي</th>
+          <th class="c" data-sort="state">الحالة</th>
+          <th class="c" data-sort="limit">حد النزول</th>
+          <th class="c">إجراء</th>
+        </tr></thead><tbody id="tb"></tbody></table>
+      </div>
+      <div class="more2" id="more2"></div>
     </div>
   </section>
 
@@ -1353,14 +1547,20 @@ async function load(sample){
     S = d;
     histD.push(d.rates.wan_in); histU.push(d.rates.wan_out);
     if(histD.length>12){histD.shift();histU.shift();}
-    $('#live').innerHTML =
-      '<strong>'+S.devices.filter(x=>x.online).length+'</strong> أونلاين من '+
-      S.devices.length+' &nbsp;·&nbsp; <strong>'+
-      S.devices.filter(x=>x.random).length+'</strong> بـ MAC عشوائي'+
-      ' &nbsp;·&nbsp; '+hhmm(Date.now()/1000);
+    {
+      const on=S.devices.filter(x=>x.online).length;
+      const rnd=S.devices.filter(x=>x.online&&x.random).length;
+      $('#live').innerHTML = (location.hostname?esc(location.hostname)+' · ':'')+'<b>'+on+'</b> جهاز أونلاين دلوقتي'+
+        (rnd?' · '+rnd+' بـ MAC عشوائي':'');
+      const lp=$('#livepill');
+      if(lp){ lp.className='livepill';
+        lp.querySelector('span').textContent='مباشر · اتحدّث '+hhmm(Date.now()/1000); }
+    }
     paint();
   }catch(e){
     $('#live').innerHTML = '<strong style="color:#b3261e">فشل التحميل:</strong> '+esc(e.message);
+    const lp=$('#livepill');
+    if(lp){ lp.className='livepill bad'; lp.querySelector('span').textContent='فشل التحميل'; }
   }
 }
 async function loadStale(){
@@ -1511,7 +1711,7 @@ async function loadLog(){
 function paint(){ glim(); speed(); alerts(); devices(); groups(); sched(); sites(); video(); att(); }
 
 /* ---- network-wide per-device ceiling ---- */
-let gD=null, gU=null;
+let gD=null, gU=null, gEdit=false;
 function glim(){
   const g=S.global||{}, r=S.rates||{};
   if(gD===null){ gD=g.down||5; gU=g.up||2; }
@@ -1527,12 +1727,17 @@ function glim(){
   };
   const [cD,tD]=hint(gD,nD,cap), [cU,tU]=hint(gU,nU,capU);
   const dirty = (gD!==(g.down||5) || gU!==(g.up||2));
+  const openEd = gEdit || dirty;
   $('#glim').innerHTML=`
-    <div class="gh">
-      <h4>الحد العام لكل جهاز</h4>
-      <span class="sub">بيتطبق على كل الأجهزة اللي مالهاش حد خاص — ${nD} جهاز دلوقتي</span>
+    <div class="gl2">
+      <span class="gic"><i class="fa fa-sliders"></i></span>
+      <div class="gtx"><h4>الحد العام لكل جهاز</h4>
+        <span class="sub">بيتطبق على كل الأجهزة اللي مالهاش حد خاص · ${nD} جهاز على الحد دلوقتي</span></div>
+      <span class="gchip dn"><b>↓</b> ${g.down?g.down+' Mb':'بلا حد'}</span>
+      <span class="gchip up"><b>↑</b> ${g.up?g.up+' Mb':'بلا حد'}</span>
+      <button type="button" class="btn2" id="gedit">${openEd?'إغلاق':'تعديل'}</button>
     </div>
-    <div class="gr">
+    <div class="gr"${openEd?'':' hidden'}>
       <div class="gf">
         <label>النزول (تصفح وتنزيل)</label>
         <div class="gin">
@@ -1562,6 +1767,11 @@ function glim(){
     const h=$('#gh'+which); h.className='ghint '+c; h.textContent=t;
     $('#gsave').disabled = (gD===(g.down||5) && gU===(g.up||2));
   };
+  $('#gedit').onclick=()=>{
+    gEdit=!openEd;
+    if(!gEdit){ gD=g.down||5; gU=g.up||2; }
+    glim();
+  };
   $('#grD').oninput=()=>upd('D');
   $('#grU').oninput=()=>upd('U');
   $('#gsave').onclick=()=>{
@@ -1580,34 +1790,36 @@ function glim(){
 
 function speed(){
   const r=S.rates||{}, sd=r.src_down||31, su=r.src_up||5;
-  const pd=Math.min(100,(r.wan_in||0)/sd*100), pu=Math.min(100,(r.wan_out||0)/su*100);
-  const col=p=>p>=88?'#b3261e':p>=60?'#9a6508':'#1a7f4b';
-  const sp=a=>{const m=Math.max(...a,1);
-    return a.map(v=>'<i style="height:'+Math.max(6,v/m*100)+'%"></i>').join('');};
+  const win=+r.wan_in||0, wout=+r.wan_out||0;
+  const pd=Math.min(100,win/sd*100), pu=Math.min(100,wout/su*100);
+  const col=p=>p>=88?'#dc2626':p>=60?'#c2410c':'#15803d';
+  const bar=p=>'<div class="br"><div class="tr2"><i style="width:'+Math.max(p,1).toFixed(1)+
+    '%;background:'+col(p)+'"></i></div><span class="pc" style="color:'+col(p)+'">'+
+    p.toFixed(0)+'%</span></div>';
+  const nb=S.devices.filter(d=>d.blocked).length;
+  const nl=S.devices.filter(d=>d.limit&&!d.blocked).length;
+  const nt=S.devices.filter(d=>d.expires).length;
+  const st=S.system||{};
   $('#sp').innerHTML=`
-   <div class="spc src"><div class="l">سرعة المصدر</div>
-     <div class="v">${sd.toFixed(0)}<small> / ${su.toFixed(0)} Mb</small></div>
-     <div class="s">نزول / رفع — مرجع المقارنة</div></div>
-   <div class="spc"><div class="l">داخل من الإنترنت</div>
-     <div class="v">${(r.wan_in||0).toFixed(1)}<small> Mb</small></div>
-     <div class="trk"><i style="width:${pd}%;background:${col(pd)}"></i></div>
-     <div class="s">${pd.toFixed(0)}% · فاضي ${(sd-(r.wan_in||0)).toFixed(1)}</div>
-     <div class="spark">${sp(histD)}</div></div>
-   <div class="spc"><div class="l">خارج للإنترنت</div>
-     <div class="v">${(r.wan_out||0).toFixed(1)}<small> Mb</small></div>
-     <div class="trk"><i style="width:${pu}%;background:${col(pu)}"></i></div>
-     <div class="s">${pu.toFixed(0)}% · فاضي ${(su-(r.wan_out||0)).toFixed(1)}</div>
-     <div class="spark">${sp(histU)}</div></div>
-   <div class="spc src"><div class="l">الشبكة الداخلية</div>
-     <div class="v">${(r.lan_out||0).toFixed(1)}<small> Mb</small></div>
-     <div class="s">للأجهزة · ${(r.lan_in||0).toFixed(1)} منها</div></div>
-   <div class="spc"><div class="l">موقوفة / محدودة</div>
-     <div class="v">${S.devices.filter(d=>d.blocked).length} / ${S.devices.filter(d=>d.limit).length}</div>
-     <div class="s">${S.devices.filter(d=>d.expires).length} قاعدة مؤقتة</div></div>
-   <div class="spc"><div class="l">جلسات pf</div>
-     <div class="v">${((S.system.states||0)/1000).toFixed(1)}<small>k</small></div>
-     <div class="s">من ${((S.system.states_limit||98000)/1000).toFixed(0)}k${
-       S.system.rtt!=null?' · '+S.system.rtt.toFixed(1)+'ms':''}</div></div>`;
+   <div class="k"><div class="l">سرعة الخط</div>
+     <div class="v">${sd.toFixed(0)}<small>/ ${su.toFixed(0)} Mb</small></div>
+     <div class="s">سعة النزول / الرفع</div></div>
+   <div class="k"><div class="l">الوارد من الإنترنت</div>
+     <div class="v">${win.toFixed(1)}<small>Mb</small></div>${bar(pd)}
+     <div class="s">${Math.max(0,sd-win).toFixed(1)} Mb متاح</div></div>
+   <div class="k"><div class="l">الصادر للإنترنت</div>
+     <div class="v">${wout.toFixed(1)}<small>Mb</small></div>${bar(pu)}
+     <div class="s">${Math.max(0,su-wout).toFixed(1)} Mb متاح</div></div>
+   <div class="k"><div class="l">الشبكة الداخلية</div>
+     <div class="v">${(+r.lan_out||0).toFixed(1)}<small>Mb</small></div>
+     <div class="s">${(+r.lan_in||0).toFixed(1)} Mb منها رايح للأجهزة</div></div>
+   <div class="k"><div class="l">موقوف / محدود</div>
+     <div class="v">${nb} <span class="sl">/</span> ${nl}</div>
+     <div class="s">${nt} قواعد مؤقتة</div></div>
+   <div class="k"><div class="l">جلسات (PF)</div>
+     <div class="v">${((st.states||0)/1000).toFixed(1)}<small>k</small></div>
+     <div class="s">من ${((st.states_limit||98000)/1000).toFixed(0)}k${
+       st.rtt!=null?' · '+(+st.rtt).toFixed(1)+' ms':''}</div></div>`;
 }
 
 function alerts(){
@@ -1685,20 +1897,22 @@ $('#alerts').addEventListener('click',e=>{
   const b=e.target.closest('[data-a]'); if(!b) return;
   if(b.dataset.a==='leak'){
     showTab('dev'); filt='leak'; $('#q').value='';
-    $$('#t-dev .seg [data-f]').forEach(x=>x.classList.remove('on'));
+    $$('#t-dev [data-f]').forEach(x=>x.classList.remove('on'));
     devices();
     return;
   }
   if(b.dataset.a==='weak'){
     showTab('dev'); filt='weak'; $('#q').value='';
-    $$('#t-dev .seg [data-f]').forEach(x=>x.classList.remove('on'));
+    $$('#t-dev [data-f]').forEach(x=>x.classList.remove('on'));
     devices();
     return;
   }
   const d=S.devices.find(x=>x.mac===b.dataset.m); if(!d) return;
   if(b.dataset.a==='goto'){
     showTab('dev'); filt='all'; $('#q').value='';
-    $$('#t-dev .seg [data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='all'));
+    if(grouping) curG=grpOf(d);
+    pageAll.add(grouping?curG:'*');
+    $$('#t-dev [data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='all'));
     devices();
     const tr=$('#tb').querySelector('[data-mac="'+CSS.escape(d.mac)+'"]');
     if(tr){tr.scrollIntoView({block:'center',behavior:'smooth'});
@@ -1779,7 +1993,7 @@ const SORTV={
   name:  d=>(devLabel(d)||'').toLowerCase(),
   ip:    d=>(d.ip||'').split('.').reduce((a,x)=>a*256+(+x||0),0),
   user:  d=>(d.cp_user||'').toLowerCase(),
-  rate:  d=>+d.rate||0,
+  rate:  d=>+(d.rate_dn!=null?d.rate_dn:d.rate)||0,
   bytes: d=>+d.bytes||0,
   limit: d=>d.limit?+d.limit:999,   /* "no limit" sorts last, not as zero */
   state: d=>d.blocked?2:(d.online?0:1)
@@ -1821,7 +2035,7 @@ function bindSort(){
 
 /* ---- column resizing ------------------------------------------- */
 function applyWidths(){
-  let w={}; try{ w=JSON.parse(localStorage.getItem('nc_cols')||'{}'); }catch(e){}
+  let w={}; try{ w=JSON.parse(localStorage.getItem('nc_cols2')||'{}'); }catch(e){}
   const cols=$$('#t-dev colgroup col');
   Object.entries(w).forEach(([i,px])=>{
     if(cols[i]) cols[i].style.width=px+'px';
@@ -1850,9 +2064,9 @@ function bindResize(){
         document.removeEventListener('mousemove',move);
         document.removeEventListener('mouseup',up);
         document.body.classList.remove('rszing');
-        let w={}; try{ w=JSON.parse(localStorage.getItem('nc_cols')||'{}'); }catch(e){}
+        let w={}; try{ w=JSON.parse(localStorage.getItem('nc_cols2')||'{}'); }catch(e){}
         if(cols[i]) w[i]=parseInt(cols[i].style.width,10);
-        try{ localStorage.setItem('nc_cols',JSON.stringify(w)); }catch(e){}
+        try{ localStorage.setItem('nc_cols2',JSON.stringify(w)); }catch(e){}
       };
       document.addEventListener('mousemove',move);
       document.addEventListener('mouseup',up);
@@ -1860,9 +2074,9 @@ function bindResize(){
     grip.addEventListener('dblclick', ev=>{
       ev.stopPropagation();
       if(cols[i]) cols[i].style.width='';
-      let w={}; try{ w=JSON.parse(localStorage.getItem('nc_cols')||'{}'); }catch(e){}
+      let w={}; try{ w=JSON.parse(localStorage.getItem('nc_cols2')||'{}'); }catch(e){}
       delete w[i];
-      try{ localStorage.setItem('nc_cols',JSON.stringify(w)); }catch(e){}
+      try{ localStorage.setItem('nc_cols2',JSON.stringify(w)); }catch(e){}
     });
   });
 }
@@ -1926,124 +2140,215 @@ function blocked(){
   $('#c-blk').textContent=S.devices.filter(d=>d.blocked).length;
 }
 
+/*
+ * The device list, laid out like a dashboard: one category at a time, picked
+ * from a row of chips, and only the first PAGE rows of it until asked for
+ * more. Ninety rows on one screen was the complaint; a category is a short
+ * list, and the chip counts still say where everything else is.
+ */
+const PAGE = 10;
+let curG = null, effG = null, lastShown = [];
+const pageAll = new Set();
+try{ curG = localStorage.getItem('nc_cur_grp'); }catch(e){}
+const FMENU = {lim:'محدودة', blk:'موقوفة', tmp:'مؤقتة', cp:'مسجّل دخول',
+               nocp:'مش مسجّل', rnd:'MAC عشوائي'};
+function filtUI(){
+  $$('#t-dev [data-f]').forEach(x=>x.classList.toggle('on', x.dataset.f===filt));
+  const fb=$('#fbtn'); if(!fb) return;
+  const m=FMENU[filt];
+  fb.classList.toggle('on', !!m);
+  $('#fhint').textContent = m ? m : Object.values(FMENU).join(' · ');
+  $('#glbl').textContent = grouping ? 'تجميع: النوع' : 'من غير تجميع';
+  $$('#gmenu [data-g]').forEach(x=>x.classList.toggle('on', (x.dataset.g==='1')===grouping));
+}
+const r1 = v => (+v||0).toFixed(1);
+const dnOf = d => d.rate_dn!=null ? +d.rate_dn : +d.rate||0;
+function stPill(d){
+  if(d.blocked)
+    return '<span class="pl blk">موقوف</span>'+((+d.rate>0.05)
+      ?' <span class="tg hot" title="موقوف ومع ذلك بيمرر داتا">⚠ بيعدّي</span>':'');
+  if(!d.online)          return '<span class="pl off">أوفلاين</span>';
+  if(d.limit)            return '<span class="pl lim">محدود</span>';
+  if(dnOf(d)>=1)         return '<span class="pl dl">بينزّل</span>';
+  return '<span class="pl on">أونلاين</span>';
+}
+function speedCell(d){
+  if(!d.online) return '<span class="faint">—</span>';
+  const dn=dnOf(d), up=+d.rate_up||0;
+  return '<div class="sp2"><span class="dn'+(dn>=1?' on':'')+'">↓ '+r1(dn)+' Mb</span>'+
+         '<span class="up">↑ '+r1(up)+' Mb</span></div>';
+}
+function limCell(d){
+  if(d.protected) return '<span class="faint">معفى</span>';
+  if(d.blocked)   return '<span class="faint">—</span>';
+  if(d.limit)     return '<b>'+d.limit+' Mb</b>';
+  const g=(S.global||{}).down;
+  return g ? '<span class="gl3">'+g+' Mb <span class="faint">(عام)</span></span>'
+           : '<span class="faint">بلا حد</span>';
+}
+function badges(d){
+  let h='';
+  if(d.protected) h+='<span class="tg prot">نظام</span>';
+  if(d.reserved) h+=(d.res_ip&&d.ip&&d.res_ip!==d.ip)
+    ? '<span class="tg ipb" title="المحجوز '+esc(d.res_ip)+
+      ' لكن الجهاز على '+esc(d.ip)+
+      '">ثابت ≠ '+esc(d.res_ip)+'</span>'
+    : '<span class="tg fix" title="عنوان محجوز للجهاز ده">'+
+      'ثابت</span>';
+  if(d.random) h+=d.fp
+    ? '<span class="tg rnd" title="بنتابعه باسم '+esc(d.fp)+'">عشوائي · متابَع</span>'
+    : '<span class="tg rnd">MAC عشوائي</span>';
+  if(d.expires) h+='<span class="tg tmp">⏱ '+hhmm(d.expires)+'</span>';
+  if(d.moved)   h+='<span class="tg ipb">IP اتغير</span>';
+  return h;
+}
+function grpStats(arr, inGroup){
+  const on=arr.filter(d=>d.online).length;
+  const can=arr.some(d=>!d.protected);
+  return '<div class="cs"><span><b>'+on+' أونلاين</b> · '+arr.length+' '+
+    (inGroup?'جهاز في المجموعة دي':'جهاز')+'</span>'+
+    (inGroup&&can?'<button type="button" class="btn2 pri" id="glimbtn">حد للمجموعة</button>':'')+
+    '</div>';
+}
+
 function devices(){
   const tb=$('#tb'); tb.innerHTML='';
+  filtUI();
   const list=sortRows(rows());
   markSort();
 
-  /*
-   * Lay the list out in sections rather than one flat run of ninety-odd
-   * rows: the firewall, the switches and the servers are what an admin
-   * looks for first, and sorting by traffic scattered them among the
-   * phones. The sort still applies inside each section.
-   */
-  let ordered = list, heads = {};
-  if (grouping) {
-    ordered = [];
-    GRP.forEach(([key,label])=>{
-      const part = list.filter(d=>grpOf(d)===key);
-      if (!part.length) return;
-      const on = part.filter(d=>d.online).length;
-      /*
-       * The header carries its own key so the click handler knows what to
-       * fold, and the counts so a closed section still reports whether
-       * anything in it is up.
-       */
-      heads[part[0].mac] = {key, label, n: part.length, on};
-      /* a closed section contributes only its header row */
-      ordered = ordered.concat(openGrp.has(key) ? part : [part[0]]);
-    });
+  let shown=list, gkey='*', glabel='';
+  const chips=$('#chips');
+  if(grouping){
+    const cnt={};
+    list.forEach(d=>{ const k=grpOf(d); cnt[k]=(cnt[k]||0)+1; });
+    const present=GRP.filter(([k])=>cnt[k]);
+    /*
+     * The chosen category may be empty under this search or filter: show the
+     * first one that is not, but keep the choice, so clearing the search
+     * comes back to where the admin was.
+     */
+    effG = present.some(([k])=>k===curG) ? curG : (present.length ? present[0][0] : null);
+    gkey = effG || '*';
+    glabel = (GRP.find(g=>g[0]===effG)||[])[1] || '';
+    shown = effG ? list.filter(d=>grpOf(d)===effG) : [];
+    chips.innerHTML = present.map(([k,l])=>
+      '<button type="button" class="chip'+(k===effG?' on':'')+'" data-chip="'+k+'">'+
+      esc(l)+' <i>'+cnt[k]+'</i></button>').join('') + grpStats(shown, true);
+  } else {
+    chips.innerHTML = grpStats(shown, false);
   }
+  lastShown = shown;
 
-  ordered.forEach(d=>{
-    const hd = heads[d.mac];
-    if (hd) {
-      const open = openGrp.has(hd.key);
-      const hr=document.createElement('tr');
-      hr.className='ghead'+(open?' on':'');
-      hr.dataset.grp=hd.key;
-      hr.innerHTML='<td colspan="9">'+
-        '<span class="gcar">'+(open?'\u25be':'\u25b8')+'</span>'+
-        '<span>'+esc(hd.label)+'</span>'+
-        '<i>'+hd.n+'</i>'+
-        (hd.on?'<b class="gon">'+hd.on+' \u0623\u0648\u0646\u0644\u0627\u064a\u0646</b>':'')+
-        '</td>';
-      tb.appendChild(hr);
-      if (!open) return;          /* closed: skip the rows under it */
-    }
+  const all = pageAll.has(gkey);
+  const view = all ? shown : shown.slice(0, PAGE);
+  view.forEach(d=>{
     const heavy=d.bytes>50*1048576 && !d.blocked && !d.protected;
+    const m=esc(d.mac);
     const tr=document.createElement('tr');
     tr.dataset.mac=d.mac;
     tr.className=(d.blocked?'blk ':'')+(picked.has(d.mac)?'sel ':'')+(heavy?'heavy':'');
     tr.innerHTML=`
-      <td class="c">${d.protected?'':`<input type="checkbox" data-s="${esc(d.mac)}" ${
+      <td class="c">${d.protected?'':`<input type="checkbox" data-s="${m}" ${
         picked.has(d.mac)?'checked':''}>`}</td>
-      <td class="c"><button class="exp" data-exp="${esc(d.mac)}"
-        aria-expanded="${opened.has(d.mac)?'true':'false'}"
-        aria-label="تفاصيل الجهاز">${opened.has(d.mac)?'▾':'▸'}</button></td>
-      <td class="s">
-        <div style="display:flex;align-items:center;gap:9px;min-width:0">
-          <span class="dvbadge">${ICO[d.type]||'<i class="fa fa-desktop"></i>'}</span>
-          <div style="min-width:0;flex:1">
-            <span class="nm"><span class="t">${esc(devLabel(d))}</span>${d.protected?'':
-              `<button class="ren" data-ren="${esc(d.mac)}" title="سمّي الجهاز"
-                 aria-label="سمّي الجهاز">✎</button>`}</span>
-            ${devSub(d)?`<span class="host">${esc(devSub(d))}</span>`:''}
-            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">
-              ${d.protected?'<span class="tg prot">نظام</span>':''}
-              ${d.reserved?(d.res_ip&&d.ip&&d.res_ip!==d.ip
-                ? '<span class="tg ipb" title="\u0627\u0644\u0645\u062d\u062c\u0648\u0632 '
-                  +esc(d.res_ip)+' \u0644\u0643\u0646 \u0627\u0644\u062c\u0647\u0627\u0632 \u0639\u0644\u0649 '+esc(d.ip)
-                  +'">\u062b\u0627\u0628\u062a \u2260 '+esc(d.res_ip)+'</span>'
-                : '<span class="tg" title="\u0639\u0646\u0648\u0627\u0646 \u0645\u062d\u062c\u0648\u0632 \u0644\u0644\u062c\u0647\u0627\u0632 \u062f\u0647">'
-                  +'\u062b\u0627\u0628\u062a '+esc(d.res_ip||d.ip)+'</span>'):''}
-              ${d.random?(d.fp
-                ?'<span class="tg" title="بنتابعه باسم '+esc(d.fp)+'">عشوائي · متابَع</span>'
-                :'<span class="tg ipb">عشوائي</span>'):''}
-              ${d.expires?'<span class="tg tmp">⏱ '+hhmm(d.expires)+'</span>':''}
-              ${d.moved?'<span class="tg ipb">IP اتغير</span>':''}
-            </div>
-          </div>
-        </div>
-      </td>
-      <td class="s"><span class="m">${esc(d.ip)}</span></td>
-      <td class="s">${d.cp_user
-        ? '<span class="tg cpu"><i class="fa fa-user"></i> '+esc(d.cp_user)+'</span>'
-        : '<span style="color:var(--faint)">—</span>'}</td>
-      <td class="num"><div class="rt${(+d.rate>0.5)?' on':''}${
-        (d.blocked && +d.rate>0.05)?' leak':''}">${spd(d.rate)}
-        ${spdBar(d.rate)}${(d.blocked && +d.rate>0.05)
-          ?'<span class="tg hot" title="موقوف ومع ذلك بيمرر داتا">⚠ بيعدّي</span>':''}</div></td>
-      <td class="num ${heavy?'hot':''}">${mb(d.bytes)}${
-        heavy?' <span class="tg hot">⬇</span>':''}</td>
-      <td class="c">${d.blocked
-        ? '<span class="st off"><span class="dot"></span>موقوف</span>'
-        : (d.online?'<span class="st"><span class="dot"></span>نشط</span>'
-                   :'<span class="st idle"><span class="dot"></span>أوفلاين</span>')}</td>
-      <td class="c">${d.protected?'<span style="color:var(--faint);font-size:11px">معفى</span>':`
-        <div class="spd ${!d.limit?'unl':''}">
-          <input type="range" min="0" max="20" step="1" value="${d.limit||0}"
-            data-r="${esc(d.mac)}" ${d.blocked?'disabled':''}>
-          <span class="v">${fmtL(d.limit)}</span></div>`}</td>
-      <td class="c">${d.protected?'<span style="color:var(--faint);font-size:11px">محمي</span>':`
-        <button class="btn btn-xs ${d.blocked?'btn-success':'btn-danger'}"
-          data-act="blk" data-m="${esc(d.mac)}">${d.blocked?'تشغيل':'إيقاف'}</button>
-        <button class="btn btn-xs btn-default" data-act="prof" data-m="${esc(d.mac)}">التفاصيل</button>`}</td>`;
+      <td class="s"><div class="dv"${devSub(d)?` title="${esc(devSub(d))}"`:''}>
+        <span class="nm"><span class="t">${esc(devLabel(d))}</span>${d.protected?'':
+          `<button class="ren" data-ren="${m}" title="سمّي الجهاز" aria-label="سمّي الجهاز">✎</button>`}</span>
+        <div class="mac2"><span class="${d.random?'r':''}">${esc((d.mac||'').toUpperCase())}</span>${badges(d)}</div>
+      </div></td>
+      <td class="s"><span class="m">${esc(d.ip||'—')}</span></td>
+      <td class="s">${d.cp_user?esc(d.cp_user):'<span class="faint">مش مسجّل</span>'}</td>
+      <td class="num">${speedCell(d)}</td>
+      <td class="num${heavy?' hot':''}">${mb(d.bytes)}</td>
+      <td class="c">${stPill(d)}</td>
+      <td class="c">${limCell(d)}</td>
+      <td class="c act">${d.protected
+        ? '<span class="faint" style="font-size:12px">محمي</span>'+
+          `<button class="ib" data-act="prof" data-m="${m}" title="التفاصيل"><i class="fa fa-ellipsis-h"></i></button>`
+        : `<button class="ib" data-act="lim" data-m="${m}" title="حد السرعة" ${d.blocked?'disabled':''}><i class="fa fa-sliders"></i></button>`+
+          `<button class="ib ${d.blocked?'grn':'red'}" data-act="blk" data-m="${m}" title="${d.blocked?'تشغيل':'إيقاف'}"><i class="fa ${d.blocked?'fa-check-circle':'fa-ban'}"></i></button>`+
+          `<button class="ib" data-act="prof" data-m="${m}" title="التفاصيل"><i class="fa fa-ellipsis-h"></i></button>`}</td>`;
     tb.appendChild(tr);
     if(opened.has(d.mac)){
       const dr=document.createElement('tr');
       dr.className='exrow'+(d.blocked?' blk':'');
-      dr.innerHTML='<td colspan="10">'+detailHTML(d)+'</td>';
+      dr.innerHTML='<td colspan="9">'+detailHTML(d)+'</td>';
       tb.appendChild(dr);
     }
   });
-  if(!list.length) tb.innerHTML='<tr><td colspan="10" class="empty">مفيش أجهزة مطابقة</td></tr>';
+  if(!shown.length) tb.innerHTML='<tr><td colspan="9" class="empty">مفيش أجهزة مطابقة</td></tr>';
+
+  const rest = shown.length - view.length;
+  $('#more2').innerHTML = rest>0
+    ? '<button type="button" data-more="1">إظهار '+rest+' كمان في '+esc(glabel||'القائمة')+'</button>'
+    : (all && shown.length>PAGE ? '<button type="button" data-more="0">عرض أقل</button>' : '');
+
   $('#c-dev').textContent=S.devices.length;
   $('#c-blk').textContent=S.devices.filter(d=>d.blocked).length;
   if(tab==='blocked') blocked();
   $('#bulk').style.display=picked.size?'flex':'none';
   $('#bn').textContent=picked.size;
 }
+
+/* a small menu of speeds, used by a row and by the group button */
+function closePop(){ const p=$('#lpop'); if(p) p.remove(); }
+function limPop(anchor, cur, pick){
+  closePop();
+  const p=document.createElement('div'); p.className='lpop'; p.id='lpop';
+  const opts=[0,1,2,3,5,10,15,20,30];
+  p.innerHTML='<div class="lph">حد النزول</div><div class="lpo">'+
+    opts.map(v=>'<button type="button" data-v="'+v+'"'+(cur===v?' class="on"':'')+'>'+
+      (v?v+' Mb':'بلا حد')+'</button>').join('')+
+    '</div><div class="lpc"><input type="number" min="1" max="50" placeholder="رقم تاني">'+
+    '<button type="button" data-v="c">تمام</button></div>';
+  $('#nc').appendChild(p);
+  const r=anchor.getBoundingClientRect(), w=p.offsetWidth, h=p.offsetHeight;
+  const left=Math.min(Math.max(8, r.right-w), innerWidth-w-8);
+  let top=r.bottom+6; if(top+h>innerHeight-8) top=Math.max(8, r.top-h-6);
+  p.style.left=left+'px'; p.style.top=top+'px';
+  const inp=p.querySelector('input');
+  p.addEventListener('click',e=>{
+    const b=e.target.closest('[data-v]'); if(!b) return;
+    const custom=b.dataset.v==='c';
+    const v=custom ? parseInt(inp.value,10) : +b.dataset.v;
+    if(custom && !(v>=1 && v<=50)){ inp.focus(); return; }
+    done(); pick(v);
+  });
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){ e.preventDefault(); p.querySelector('[data-v="c"]').click(); }
+    if(e.key==='Escape') done();
+  });
+  const outside=e=>{ if(!p.contains(e.target)) done(); };
+  function done(){ closePop(); document.removeEventListener('mousedown',outside); }
+  setTimeout(()=>document.addEventListener('mousedown',outside),0);
+}
+
+$('#chips').addEventListener('click',e=>{
+  const c=e.target.closest('[data-chip]');
+  if(c){
+    curG=c.dataset.chip;
+    try{ localStorage.setItem('nc_cur_grp',curG); }catch(_){}
+    devices(); return;
+  }
+  const g=e.target.closest('#glimbtn'); if(!g) return;
+  const items=lastShown.filter(d=>!d.protected);
+  if(!items.length) return;
+  const label=(GRP.find(x=>x[0]===effG)||[])[1]||'';
+  limPop(g, null, v=>{
+    pend={kind:'bulk', op:v?'lim':'unl', mb:v, macs:items.map(d=>d.mac)};
+    sheet('حد للمجموعة: '+label, items.length+' جهاز',
+      v ? 'كل جهاز في المجموعة هياخد لحد <b>'+v+' ميجا</b> نزول.'
+        : 'الحد الخاص هيتشال وكل جهاز يرجع للحد العام.',
+      devList(items), '', 'تطبيق', true);
+  });
+});
+$('#more2').addEventListener('click',e=>{
+  const b=e.target.closest('[data-more]'); if(!b) return;
+  const k=grouping?(effG||'*'):'*';
+  if(b.dataset.more==='1') pageAll.add(k); else pageAll.delete(k);
+  devices();
+});
+
 /*
  * Rename in place. The row re-renders from the server's answer rather than
  * from what was typed, so a name the backend trimmed or rejected is never
@@ -2185,20 +2490,39 @@ $('#tb').addEventListener('change',e=>{
 $('#tb').addEventListener('click',e=>{
   const b=e.target.closest('[data-act]'); if(!b) return;
   const d=S.devices.find(x=>x.mac===b.dataset.m); if(!d) return;
-  if(b.dataset.act==='blk') askBlock(d); else profile(d);
+  if(b.dataset.act==='blk') askBlock(d);
+  else if(b.dataset.act==='lim')
+    limPop(b, d.limit||0, v=>{ if(v!==(d.limit||0)) askLimit(d,v); });
+  else profile(d);
 });
 $('#all').onchange=e=>{
   picked.clear();
-  if(e.target.checked) rows().filter(d=>!d.protected).forEach(d=>picked.add(d.mac));
+  if(e.target.checked) lastShown.filter(d=>!d.protected).forEach(d=>picked.add(d.mac));
   devices();
 };
 $('#q').addEventListener('input',devices);
 $('#refresh').onclick=e=>withProgress(e.currentTarget, async()=>{
   await load(2); loadLog();
 });
-$$('#t-dev .seg [data-f]').forEach(b=>b.onclick=()=>{
-  $$('#t-dev .seg [data-f]').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); filt=b.dataset.f; devices();
+$$('#t-dev [data-f]').forEach(b=>b.onclick=()=>{
+  /* a second click on the active menu filter clears it */
+  filt = (b.closest('#fmenu') && filt===b.dataset.f) ? 'all' : b.dataset.f;
+  $('#fmenu').hidden=true;
+  devices();
+});
+$('#fbtn').onclick=e=>{ e.stopPropagation(); $('#gmenu').hidden=true; $('#fmenu').hidden=!$('#fmenu').hidden; };
+$('#gbtn').onclick=e=>{ e.stopPropagation(); $('#fmenu').hidden=true; $('#gmenu').hidden=!$('#gmenu').hidden; };
+$$('#gmenu [data-g]').forEach(b=>b.onclick=()=>{
+  grouping = b.dataset.g==='1';
+  try{ localStorage.setItem('nc_group', grouping?'1':'0'); }catch(e){}
+  $('#gmenu').hidden=true;
+  devices();
+});
+/* any click elsewhere closes whichever menu is open */
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#fdd'))  $('#fmenu').hidden=true;
+  if(!e.target.closest('#gdd'))  $('#gmenu').hidden=true;
+  if(!e.target.closest('.tmore')) $('#tmenu').hidden=true;
 });
 $('#bulk').addEventListener('click',e=>{
   const b=e.target.closest('[data-b]'); if(!b) return;
@@ -2628,8 +2952,16 @@ async function apply(){
       r=await api(p.kind,{mac:p.mac,duration:dur});
     else if(p.kind==='limit')
       r=await api('limit',{mac:p.mac,mb:p.mb,duration:dur});
-    else if(p.kind==='bulk')
-      r=await api('bulk',{op:p.op,macs:p.macs,duration:dur});
+    else if(p.kind==='bulk'){
+      /* the API takes 60 at a time; a big category goes in slices */
+      const skipped=[];
+      for(let i=0;i<p.macs.length;i+=60){
+        r=await api('bulk',{op:p.op,mb:p.mb||0,macs:p.macs.slice(i,i+60),duration:dur});
+        if(!r || r.ok===false) break;
+        (r.skipped||[]).forEach(x=>skipped.push(x));
+      }
+      if(r && r.ok!==false) r.skipped=skipped;
+    }
     else if(p.kind==='clean')
       r=await api('clean',{macs:p.macs});
     else if(p.kind==='site')
@@ -3286,7 +3618,9 @@ function repRender(){
 
 function showTab(t){
   tab=t;
-  $$('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  $$('.tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  /* a tab living in the More menu lights the menu button instead */
+  $('#tmore').classList.toggle('on', !!$('#tmenu [data-t="'+t+'"]'));
   /* drive this off the sections that exist, so a new tab needs no edit here */
   $$('#nc section[id^="t-"]').forEach(sec=>{
     sec.hidden = sec.id !== 't-'+t;
@@ -3300,7 +3634,8 @@ function showTab(t){
   if(t==='blocked') blocked();
   if(t==='report') loadReport();
 }
-$$('.tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+$$('.tabs button[data-t]').forEach(b=>b.onclick=()=>{ showTab(b.dataset.t); $('#tmenu').hidden=true; });
+$('#tmore').onclick=e=>{ e.stopPropagation(); $('#tmenu').hidden=!$('#tmenu').hidden; };
 
 /* a banner can send you to the tab that holds the detail */
 document.addEventListener('click',e=>{
@@ -3341,7 +3676,7 @@ setInterval(()=>{ if(!$('#sheet')) load(1); }, 10000);
  * broken screen.
  * ===================================================================== */
 (function(){
-  var PAIRS = [["فيديو يوتيوب وتيك توك بياكل معظم الخط. امنعه أو حدده — على الكل أو على أجهزة محددة.", "YouTube and TikTok video eat most of the line. Block or limit it — network-wide or for chosen devices."], ["ومطابق للشروط بيتصرف فيه مرة واحدة بس — بعدها يبقى معروف ومايتصرفش فيه تاني.", "and matching the rules is acted on once — after that it is known and left alone."], ["الرابط الكامل للفيديو مشفّر جوه الاتصال ومايظهرش لأي فايروول من غير", "The full video URL is encrypted inside the connection and is invisible to any firewall without"], ["مفيش محاولات مسجّلة — بيتسجّل هنا أول ما حد يحاول يفتح موقع محظور", "No attempts logged — one appears here as soon as someone tries a blocked site"], ["طبّق قاعدة على مجموعة كاملة. الضم بيتم من تبويب الأجهزة (حدد ثم", "Apply a rule to a whole group. Membership is set from the Devices tab (select, then"], ["قواعد بتشتغل وتقف لوحدها على السيرفر — مش محتاج تفتح الصفحة.", "Rules that start and stop by themselves on the firewall — no need to keep this page open."], ["البوابة · السويتش · الأكسس بوينت · المضيف) مستثناة دائمًا.", "gateway · switch · access point · host) are always exempt."], ["انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5) وحاول تاني", "Session expired — refresh the page (F5) and try again"], ["السياسة بتفحص الشبكة كل دقيقة. أي جهاز مش متشاف قبل كده", "The policy scans the network every minute. Any device not seen before"], ["هيترفع الحظر، والحدود اللي اتحطت بسبب الخدمة دي هتتشال.", "The block is lifted, and limits applied because of this service are removed."], ["تحكّم لحظي في استهلاك الإنترنت وإدارة الأجهزة المتصلة", "Live control over internet usage and connected devices"], ["الأسماء دي هي السيرفرات اللي الجهاز متصل بيها فعلاً.", "These are the servers the device is actually connected to."], ["جهاز موقوف ولسه بيسحب داتا — الحظر مش بيتنفّذ عليه", "blocked device(s) still pulling data — the block is not being enforced"], ["بيتحدد من اسم الجهاز والمصنّع — تخمين مش تأكيد.", "Guessed from the device name and vendor — a guess, not a certainty."], ["بتاعه اتغير — القواعد اتنقلت تلقائيًا معاه بالـ", "changed — the rules moved with it automatically by"], ["الجهاز ده من البنية الأساسية ومايتوقفش من هنا", "This device is infrastructure and cannot be blocked here"], ["الجهاز ده من البنية الأساسية ومايتحددش من هنا", "This device is infrastructure and cannot be limited here"], ["الجهاز بيغير الـ MAC كل مرة — مش مشاركة حساب", "The device changes its MAC each time - not account sharing"], ["انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5)", "Session expired - refresh the page (F5)"], ["شغالة — بتتطبق على أي جهاز جديد يدخل الشبكة", "On — applies to any new device joining the network"], ["الاتصال بالسيرفر انقطع — حاول تاني بعد لحظة", "Lost contact with the firewall - try again in a moment"], ["نسخة احتياطية بتتاخد أوتوماتيك قبل التنفيذ", "A backup is taken automatically before applying"], ["الكابتيف بورتال موقوف — الخيار ده مش هيفرق", "Captive portal is off — this option makes no difference"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص —", "Applies to every device without its own limit —"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص", "Applies to every device without its own limit"], ["اليوم لسه ماخلصش — الأرقام لغاية دلوقتي", "The day is not over yet — figures are up to now"], ["كل إجراء اتعمل على الشبكة، الأحدث فوق", "Every action taken on the network, newest first"], ["معاينة — دول اللي هيتأثروا لو فعّلتها", "Preview — these would be affected if you enable it"], ["أجهزة هتتأثر دلوقتي لو السياسة اشتغلت", "Devices that would be affected right now if the policy ran"], ["MAC عشوائي ومافيش اسم ثابت نتابعه بيه", "Random MAC with no stable name to follow it by"], ["الحد الأقصى لكل جهاز مامعاهوش حد خاص", "Maximum for each device without its own limit"], ["جهاز شبكة — محمي من الإيقاف والتحديد", "Network device - protected from blocking and limiting"], ["ابحث باسم الجهاز أو عنوان IP او MAC", "Search by device name, IP or MAC"], ["كل ما تتصل، فهتظهر كجهاز جديد تاني.", "on every connection, so they appear as a new device each time."], ["عشوائي ومافيش اسم ثابت نتابعه بيه —", "random MAC with no stable name to follow it by —"], ["كل أجهزة المجموعة هيتقطع عنها النت.", "Every device in the group will lose internet."], ["الأجهزة اللي ليها حد خاص مش هتتأثر.", "Devices with their own limit are unaffected."], ["كل نطاقات الخدمة هتتحظر مش واحد بس.", "Every domain the service uses is blocked, not just one."], ["لسه مافيش بيانات — بتتجمع كل دقيقة", "No data yet — it is collected every minute"], ["الأجهزة دي هترجع تتصل بالنت فورًا.", "These devices will reconnect immediately."], ["بس — مافيش طريقة تحدّ خدمة لوحدها.", "— there is no way to throttle one service on its own."], ["الجهاز ده مابقاش ظاهر — اعمل تحديث", "That device is no longer visible — refresh"], ["مافيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["عشوائي ومافيش اسم ثابت نتابعه بيه", "random MAC with no stable name to follow it by"], ["، وأي حد يبدأ بعد كده هيتحد كمان.", ", and anyone who starts afterwards is limited too."], ["حدد أجهزة من تبويب الأجهزة الأول", "Select devices from the Devices tab first"], ["مفيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["مين حاول يفتح موقع محظور وإمتى.", "Who tried to open a blocked site, and when."], ["كل الأجهزة دي هيتقطع عنها النت.", "All these devices will lose internet."], ["الرفع بيزاحم النزول، فخليه أقل", "Upload competes with download, so keep it lower"], ["مفيش أجهزة جديدة مطابقة دلوقتي", "No new matching devices right now"], ["جهاز متصل دلوقتي هيتأثر فورًا.", "connected device(s) will be affected immediately."], ["موقوفة — مفيش أي إجراء تلقائي", "Off — no automatic action"], ["عشوائي، بس الجهاز متابَع باسم", "random MAC, but the device is tracked by the name"], ["وممكن يفلت لو الجهاز غيّر الـ", "and it may escape if the device changes its"], ["جديد، الحظر بيتابعه تلقائيًا.", "the block follows it automatically."], ["حد النزول هيبقى 2 ميجا لكلها.", "The download limit becomes 2 Mb for all of them."], ["الجهاز هياخد الخط بلا حد (كان", "The device gets the line with no limit (was"], ["جهاز متصل دلوقتي هيتأثر فورًا", "connected device(s) affected immediately"], ["اختار نوع جهاز واحد على الأقل", "Choose at least one device type"], ["مفيش أجهزة على الحد ده دلوقتي", "No devices at that limit right now"], ["الموبايلات الحديثة بتغير الـ", "Modern phones change their"], ["اعتراض الشهادات على كل جهاز.", "installing an intercepting certificate on every device."], ["القواعد اتنقلت تلقائيًا بالـ", "the rules moved automatically by"], ["تسمح للجهاز ده وتشيل القيود؟", "Allow this device and remove the restrictions?"], ["الحد الجديد هيتطبق على كلها.", "The new limit applies to all of them."], ["كل نطاقات الخدمة مش واحد بس.", "every domain the service uses, not just one."], ["السياسة هتتحفظ بس مش هتشتغل.", "The policy is saved but will not run."], ["استثنِ اللي سجّل دخول بيوزر", "Exempt anyone signed in with an account"], ["هيتحظر على كل أجهزة الشبكة.", "It will be blocked for every device on the network."], ["تفعيل سياسة الأجهزة الجديدة", "Enable the new-device policy"], ["سرعة النزول (تصفّح وتنزيل)", "Download speed (browsing & downloads)"], ["الجهاز هيرجع بحده الحالي (", "The device returns to its current limit ("], ["أي جهاز جديد مطابق هيتعمله", "Any matching new device will be"], ["نزول / رفع — مرجع المقارنة", "down / up — the comparison baseline"], ["الحد العام نزول/رفع (ميجا)", "Global limit down/up (Mb)"], ["MAC عشوائي — نوعه مش معروف", "Random MAC - type unknown"], ["شغّالة في مواعيد محددة بس", "Only active during set hours"], ["الحظر بيتنقل معاه تلقائي.", "the block follows it automatically."], ["يحظر الخدمة على كل الشبكة", "Blocks the service network-wide"], ["السيرفر رجّع رد غير متوقع", "The firewall returned an unexpected reply"], ["مافيش فيديو مفتوح دلوقتي", "No video open right now"], ["موقوف ومع ذلك بيمرر داتا", "blocked yet still passing data"], ["اللي اتصرف فيه قبل كده ·", "Previously acted on ·"], ["ماقدرش يقرا البث المفتوح", "Could not read the open streams"], ["لا — عنوان متغير من DHCP", "No - dynamic address from DHCP"], ["<span class=\"tg ipb\">حد ", "<span class=\"tg ipb\">limit "], ["الحد أعلى من الخط بكتير", "far above what the line can carry"], ["عشوائي: الحظر بيتم بالـ", "random MAC: the block is applied by"], ["مفيش فيديو مفتوح دلوقتي", "No video open right now"], ["مقروء من الفايروول نفسه", "Read from the firewall itself"], ["تجميع الأجهزة حسب النوع", "Group devices by type"], ["مراقبة الشبكة والأجهزة", "Network & Device Monitor"], ["بحث باسم أو IP أو MAC…", "Search by name, IP or MAC…"], ["الفيديو المفتوح دلوقتي", "Video Open Now"], ["اللي اتصرف فيه قبل كده", "Previously acted on"], ["جهاز محظور ممكن يفلت —", "blocked device(s) may escape —"], ["هيترفع الحظر عنهم كلهم", "The block will be lifted from all of them"], ["تحديد النزول بـ 2 ميجا", "Limit download to 2 Mb"], ["مسح حجوزات غير مستخدمة", "Delete unused reservations"], ["جاري تحميل حالة الشبكة", "Loading network state"], ["اسحب لتغيير عرض العمود", "Drag to resize the column"], ["جهاز مسجّل دخول دلوقتي", "device(s) signed in right now"], ["الكابتيف بورتال شغال ·", "Captive portal is on ·"], ["الجهاز مش معروف للنظام", "The device is unknown to the system"], ["الاتصال بالسيرفر انقطع", "Lost contact with the firewall"], ["سياسة الأجهزة الجديدة", "New-Device Policy"], ["إيقاف الأجهزة المحددة", "Block selected devices"], ["شيل الجهاز من الأنبوب", "Remove the device from its pipe"], ["عنوان محجوز للجهاز ده", "Address reserved for this device"], ["حركة الشبكة الداخلية", "Internal Traffic"], ["النزول (تصفح وتنزيل)", "Download (browsing & downloads)"], ["إيقاف النت عن الجهاز", "Cut internet from device"], ["حفظ السياسة (موقوفة)", "Save policy (disabled)"], ["الحجوزات هتتمسح والـ", "The reservations are deleted and the"], ["ماقدرش يقرا البيانات", "Could not read the data"], ["الحد العام لكل جهاز", "Global Per-Device Limit"], ["مفيش نتايج للبحث ده", "No results for that search"], ["عشوائي — الحظر بالـ", "random MAC — blocked by"], ["قاعدة مؤقتة شغالة —", "temporary rule(s) active —"], ["روح لتبويب الموقوفة", "Go to the Blocked tab"], ["ماقدرش يقرا التقرير", "Could not read the report"], ["الاستهلاك الإجمالي", "Total Usage"], ["مفيش قواعد بمواعيد", "No scheduled rules"], ["بحث باسم الجهاز أو", "Search by device name or"], ["إعفاء من حد السرعة", "Exempt from the speed limit"], ["ماقدرش يحفظ الاسم:", "Could not save the name:"], ["اتخطى أجهزة محمية:", "Skipped protected devices:"], ["الدخول والاستهلاك", "Logins & Usage"], ["الجهاز · IP · MAC", "Device · IP · MAC"], ["ماقدرش يقرا السجل", "Could not read the history"], ["مفيش أجهزة مطابقة", "No matching devices"], ["مفيش أجهزة موقوفة", "No blocked devices"], ["إرجاع النت للجهاز", "Restore internet to device"], ["كل جهاز هياخد لحد", "Each device gets up to"], ["كل استخدام الجهاز", "everything the device does"], ["لو جهاز رجع، ياخد", "If a device returns it gets a"], ["مفيش مواقع محظورة", "No blocked sites"], ["مفيش خدمات مطابقة", "No matching services"], ["عنوان محطور فعلًا", "address actually blocked"], ["الجهاز دلوقتي على", "device is now on"], ["استهلاك الإنترنت", "Internet Usage"], ["الاستهلاك اليومي", "Daily Usage"], ["مفيش إجراءات لسه", "No actions yet"], ["أو سمّيه يدوياً.", "or give it a name manually."], ["أضعف وممكن يفلت.", "which is weaker and may be escaped."], ["تحذف القاعدة دي؟", "Delete this rule?"], ["تغيير الحد العام", "Change the global limit"], ["الأجهزة الموقوفة", "Blocked devices"], ["داخل من الإنترنت", "inbound from the internet"], ["على فيديو دلوقتي", "video right now"], ["مفيش فيديو مفتوح", "No video open"], ["قاعدة تحديد سرعة", "speed-limit rule"], ["الإجمالي 24 ساعة", "24-hour total"], ["لسه مافيش بيانات", "No data yet"], ["الأجهزة المتصلة", "Connected Devices"], ["اكتب اسم الجهاز", "Enter a device name"], ["سماح (تسجيل بس)", "Allow (log only)"], ["مفيش حد بيتفرّج", "Nobody is watching"], ["تغيير حد النزول", "Change download limit"], ["الحد بيتطبق على", "The limit applies to"], ["اختار المجموعة:", "Choose the group:"], ["البنية الأساسية", "Infrastructure"], ["مفيش حاجة غائبة", "Nothing stale"], ["بحث في الموقوفة", "Search blocked"], ["موقوفة / محدودة", "blocked / limited"], ["عشوائي · متابَع", "random · tracked"], ["الشبكة الداخلية", "Internal network"], ["خطأ في الاتصال:", "Connection error:"], ["قاعدة Temporary", "Temporary rule"], ["بره ساعات العمل", "Outside work hours"], ["الـ IP اتغير من", "The IP changed from"], ["المفتوح دلوقتي", "Live Now"], ["تحديث البيانات", "Refresh"], ["إعدادات الشبكة", "Network Settings"], ["استهلاك كبير —", "Heavy usage —"], ["تشيل الحظر ده؟", "Remove this block?"], ["المجموعة فاضية", "The group is empty"], ["اكتب نطاق صحيح", "Enter a valid domain"], ["إجراءات النظام", "System Actions"], ["التنفيذ الفعلي", "Actually Enforced"], ["في ساعات العمل", "Within work hours"], ["صباحًا / مساءً", "AM / PM"], ["سيرفرات وتخزين", "Servers & storage"], ["جلسات الاتصال", "Connection States"], ["حفظ التغييرات", "Save Changes"], ["السرعة دلوقتي", "Current Speed"], ["الصفحة مفتوحة", "Page open"], ["على كل الشبكة", "network-wide"], ["كل الموبايلات", "All phones"], ["بمواعيد محددة", "On a schedule"], ["سجل الإجراءات", "Action Log"], ["هيعدي. احجزله", "it will get through. Reserve it an"], ["كلهم متابَعين", "all tracked"], ["بيتفرّج فعلاً", "actually watching"], ["إلغاء التحديد", "Clear selection"], ["بحث بالاسم أو", "Search by name or"], ["إلغاء التصفية", "Clear filter"], ["تفاصيل الجهاز", "Device details"], ["خارج للإنترنت", "outbound to the internet"], ["لو الجهاز أخد", "If the device takes"], ["مُضيف افتراضي", "Hypervisor"], ["أقربها بتنتهي", "the soonest ends at"], ["مرجع المقارنة", "comparison baseline"], ["مش متعرف عليه", "Unidentified"], ["سياسة الجديد", "New-Device Policy"], ["غالبًا فيديو", "Probably video"], ["فيديو فيسبوك", "Facebook Video"], ["فلترة السجل…", "Filter the log…"], ["أجهزة النظام", "System devices"], ["ازاي بتشتغل:", "How it works:"], ["نظام التشغيل", "Operating system"], ["بنتابعه باسم", "tracked by the name"], ["الأجهزة اللي", "The devices"], ["إيقاف مجموعة", "Block group"], ["تحديد مجموعة", "Limit group"], ["مع تثبيت حجز", "with a reservation pinned"], ["فشل التحميل:", "Load failed:"], ["عليه حد سرعة", "speed-limited"], ["محاولة فاشلة", "failed attempt"], ["جهاز افتراضي", "Virtual machine"], ["قاعدة مخزّنة", "stored rule"], ["أجهزة الشبكة", "Network equipment"], ["عناوين ثابتة", "Fixed addresses"], ["سرعة المصدر", "Line Speed"], ["الخط يستحمل", "the line can carry this"], ["شغال دلوقتي", "Active now"], ["سمّي الجهاز", "Rename device"], ["حدّه 1 ميجا", "Limit to 1 Mb"], ["الحد الحالي", "Current limit"], ["لو غيّر الـ", "if it changes its"], ["بتتفرّج على", "watching"], ["ضمّ لمجموعة", "Add to group"], ["أجهزة محددة", "selected devices"], ["يوم أو أكتر", "days or more"], ["فلترة السجل", "Filter the log"], ["آيفون/آيباد", "iPhone/iPad"], ["جهاز دلوقتي", "devices now"], ["فيديو مفتوح", "video open"], ["قاعدة مؤقتة", "Temporary rule"], ["متصل دلوقتي", "online now"], ["جلسة اتقطعت", "session dropped"], ["جهاز استهلك", "devices used data"], ["ملف الأسبوع", "Weekly file"], ["إدارة سيرفر", "Server mgmt"], ["الطلب اترفض", "The request was refused"], ["سرعة الرفع", "Upload speed"], ["تنافس عادي", "normal contention"], ["مسجّل دخول", "Signed in"], ["MAC عشوائي", "Random MAC"], ["اسم الهوست", "Hostname"], ["تحديد سرعة", "Limit speed"], ["لآخر اليوم", "Until end of day"], ["أيام العمل", "Workdays"], ["المستخدمين", "Users"], ["سجل الدخول", "Login History"], ["مفيش نتايج", "No results"], ["هيتحظر على", "Will be blocked on"], ["هياخدوا حد", "will get a limit of"], ["جديد عادي.", "new one normally."], ["شيل القيود", "Remove restrictions"], ["تحديد الكل", "Select all"], ["مسح المحدد", "Delete selected"], ["جهاز محدد.", "selected device(s)."], ["حذف حجوزات", "Delete reservations"], ["حسب الجهاز", "By device"], ["حسب الخدمة", "By service"], ["بالسياسة ·", "by policy ·"], ["الموبايلات", "Phones"], ["أونلاين من", "online of"], ["جهاز متأثر", "device affected"], ["الحد هيبقى", "The limit becomes"], ["الحظر بالـ", "blocked by"], ["مدة الجلسة", "Session"], ["تنزيل HTML", "Download HTML"], ["موقع محطور", "site blocked"], ["أكسس بوينت", "Access point"], ["جهاز Apple", "Apple device"], ["المجموعات", "Groups"], ["حظر مواقع", "Site Blocking"], ["تنظيف MAC", "MAC Cleanup"], ["عنوان MAC", "MAC Address"], ["الاستهلاك", "Data"], ["حد النزول", "Download Limit"], ["الاتصالات", "Conns"], ["ممكن يفلت", "Can escape"], ["شغّل الكل", "Unblock all"], ["يتطبق على", "Applies to"], ["استثناءات", "Exceptions"], ["هترجع للـ", "return to the"], ["جهاز محدد", "selected device"], ["الكاميرات", "Cameras"], ["غير معروف", "Unknown"], ["للأجهزة ·", "to devices ·"], ["حد 2 ميجا", "2 Mb limit"], ["ميجا (كان", "Mb (was"], ["كل الشبكة", "the whole network"], ["الحفظ فشل", "Save failed"], ["على فيديو", "video"], ["دخول ناجح", "successful login"], ["MAC متغير", "MAC rotating"], ["الموقوفة", "Blocked"], ["المواعيد", "Schedules"], ["عنوان IP", "IP Address"], ["الإجمالي", "Total"], ["المجموعة", "Group"], ["مش مسجّل", "Not signed in"], ["IP اتغير", "IP changed"], ["بالسياسة", "By policy"], ["التفاصيل", "Details"], ["مسجّل بـ", "Signed in as"], ["حجز DHCP", "DHCP reservation"], ["آخر ظهور", "Last seen"], ["انستغرام", "Instagram"], ["منع كامل", "Block fully"], ["اتغير من", "changed from"], ["جهاز الـ", "device whose"], ["متربط بـ", "bound to"], ["حظر موقع", "Block a site"], ["متابَع ·", "tracked ·"], ["موبايل (", "phone ("], ["جهاز على", "device on"], ["تسجيل بس", "log only"], ["المستخدم", "User"], ["التقارير", "Reports"], ["جهاز IoT", "IoT device"], ["الأجهزة", "Devices"], ["الفيديو", "Video"], ["محاولات", "Attempts"], ["أوفلاين", "Offline"], ["اسمح له", "Allow"], ["المصنّع", "Vendor"], ["بيتفرّج", "Watching"], ["تيك توك", "TikTok"], ["نتفليكس", "Netflix"], ["أندرويد", "Android"], ["أي جهاز", "Any device"], ["الإجراء", "Action"], ["٣ ساعات", "3 hours"], ["بيحمّل…", "Loading…"], ["ملحوظة:", "Note:"], ["الإدارة", "Management"], ["المكاتب", "Offices"], ["أو خدمة", "or service"], ["موقوف ·", "blocked ·"], ["عشوائي)", "random)"], ["اتصال ·", "connections ·"], ["حدّها 2", "Limit to 2"], ["تشغيلهم", "Unblock them"], ["الخدمات", "Services"], ["كمبيوتر", "Computer"], ["أونلاين", "online"], ["من أصل", "of"], ["الجهاز", "Device"], ["النشاط", "Signed in as"], ["الحالة", "Status"], ["حظر بـ", "Blocked by"], ["بينزّل", "Downloading"], ["الأعلى", "Heaviest"], ["محدودة", "Limited"], ["موقوفة", "Blocked"], ["عشوائي", "Random"], ["متابَع", "Tracked"], ["بلا حد", "No limit"], ["بيعدّي", "LEAKING"], ["تفاصيل", "Details"], ["أوقفها", "Block"], ["احظرها", "Block service"], ["يوتيوب", "YouTube"], ["فيسبوك", "Facebook"], ["واتساب", "WhatsApp"], ["ويندوز", "Windows"], ["كل يوم", "Every day"], ["العطلة", "Weekend"], ["مستخدم", "users"], ["مش على", "not only"], ["الضيوف", "Guests"], ["بيحمّل", "Loading"], ["نزول و", "down and"], ["الجلسة", "Session"], ["محاولة", "attempt"], ["جهاز ×", "devices ×"], ["جهاز ·", "devices ·"], ["دلوقتي", "now"], ["هيعدي.", "it will get through."], ["النسبة", "Share"], ["الدخول", "Logins"], ["كاميرا", "Camera"], ["موبايل", "Phone"], ["السجل", "Log"], ["موقوف", "Blocked"], ["الرفع", "Upload"], ["النوع", "Type"], ["إجراء", "Actions"], ["مؤقتة", "Temporary"], ["تحديث", "Refresh"], ["اتصال", "conns"], ["أجهزة", "devices"], ["إيقاف", "Block"], ["تشغيل", "Unblock"], ["تطبيق", "Apply"], ["إلغاء", "Cancel"], ["إغلاق", "Close"], ["عرضهم", "Show them"], ["أوقفه", "Block"], ["حدّها", "Limit"], ["تويتش", "Twitch"], ["مسموح", "Allowed"], ["محدود", "Limited"], ["ممنوع", "Blocked"], ["آيفون", "iPhone"], ["لينكس", "Linux"], ["المدة", "Duration"], ["لغاية", "to"], ["تحديد", "Limit"], ["تسجيل", "Log"], ["اتقطع", "Disconnected"], ["ساعات", "hours"], ["دقيقة", "min"], ["غيرهم", "Others"], ["محمية", "protected"], ["إضافة", "Add"], ["احظره", "Block it"], ["اعرضه", "Show it"], ["مثال:", "e.g."], ["الوصف", "Description"], ["عنوان", "Address"], ["تنظيف", "Cleanup"], ["محجوز", "reserved"], ["مسجّل", "registered"], ["الحد:", "Limit:"], ["تفعيل", "Enable"], ["تنفيذ", "Run"], ["جلسات", "sessions"], ["من 31", "of 31"], ["هيعدي", "will get through"], ["اتغير", "changed"], ["شغّله", "Unblock"], ["شغّال", "On"], ["اليوم", "Day"], ["طابعة", "Printer"], ["سويتش", "Switch"], ["راوتر", "Router"], ["سيرفر", "Server"], ["تخزين", "Storage"], ["تنزيل", "Download"], ["تجميع", "Group"], ["نزول", "down"], ["الكل", "All"], ["بحث…", "Search…"], ["نظام", "System"], ["ثابت", "Reserved"], ["معفى", "Exempt"], ["محمي", "Protected"], ["ساكن", "Idle"], ["جهاز", "device"], ["يدوي", "Manual"], ["اعرض", "View"], ["دائم", "Permanent"], ["ساعة", "1 hour"], ["دخول", "logins"], ["ميجا", "Mb"], ["احظر", "Block"], ["خدمة", "service"], ["منها", "of which"], ["لمدة", "for"], ["أيام", "days"], ["رجوع", "Back"], ["رفع.", "up."], ["حدّه", "Limit it"], ["عنصر", "item"], ["فاضي", "empty"], ["شغال", "active"], ["محدد", "selected"], ["فشل:", "Failed:"], ["الحد", "Limit"], ["مرات", "times"], ["12 ص", "12am"], ["12 ظ", "12pm"], ["رفع", "upload"], ["ألف", "K"], ["حفظ", "Save"], ["بحث", "Search"], ["نشط", "Active"], ["حظر", "Block"], ["نعم", "Yes"], ["ماك", "Mac"], ["منع", "Block"], ["حدث", "events"], ["دخل", "Signed in"], ["يوم", "days"], ["حذف", "Delete"], ["مسح", "Clear"], ["حجز", "Reserve"], ["حتى", "until"], ["على", "on"], ["حسب", "by"], ["6 ص", "6am"], ["6 م", "6pm"], ["لا", "No"], ["من", "from"], ["أو", "or"], ["بـ", "by "]];
+  var PAIRS = [["فيديو يوتيوب وتيك توك بياكل معظم الخط. امنعه أو حدده — على الكل أو على أجهزة محددة.", "YouTube and TikTok video eat most of the line. Block or limit it — network-wide or for chosen devices."], ["ومطابق للشروط بيتصرف فيه مرة واحدة بس — بعدها يبقى معروف ومايتصرفش فيه تاني.", "and matching the rules is acted on once — after that it is known and left alone."], ["الرابط الكامل للفيديو مشفّر جوه الاتصال ومايظهرش لأي فايروول من غير", "The full video URL is encrypted inside the connection and is invisible to any firewall without"], ["مفيش محاولات مسجّلة — بيتسجّل هنا أول ما حد يحاول يفتح موقع محظور", "No attempts logged — one appears here as soon as someone tries a blocked site"], ["طبّق قاعدة على مجموعة كاملة. الضم بيتم من تبويب الأجهزة (حدد ثم", "Apply a rule to a whole group. Membership is set from the Devices tab (select, then"], ["قواعد بتشتغل وتقف لوحدها على السيرفر — مش محتاج تفتح الصفحة.", "Rules that start and stop by themselves on the firewall — no need to keep this page open."], ["البوابة · السويتش · الأكسس بوينت · المضيف) مستثناة دائمًا.", "gateway · switch · access point · host) are always exempt."], ["انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5) وحاول تاني", "Session expired — refresh the page (F5) and try again"], ["السياسة بتفحص الشبكة كل دقيقة. أي جهاز مش متشاف قبل كده", "The policy scans the network every minute. Any device not seen before"], ["هيترفع الحظر، والحدود اللي اتحطت بسبب الخدمة دي هتتشال.", "The block is lifted, and limits applied because of this service are removed."], ["تحكّم لحظي في استهلاك الإنترنت وإدارة الأجهزة المتصلة", "Live control over internet usage and connected devices"], ["الأسماء دي هي السيرفرات اللي الجهاز متصل بيها فعلاً.", "These are the servers the device is actually connected to."], ["جهاز موقوف ولسه بيسحب داتا — الحظر مش بيتنفّذ عليه", "blocked device(s) still pulling data — the block is not being enforced"], ["بيتحدد من اسم الجهاز والمصنّع — تخمين مش تأكيد.", "Guessed from the device name and vendor — a guess, not a certainty."], ["بتاعه اتغير — القواعد اتنقلت تلقائيًا معاه بالـ", "changed — the rules moved with it automatically by"], ["الجهاز ده من البنية الأساسية ومايتوقفش من هنا", "This device is infrastructure and cannot be blocked here"], ["الجهاز ده من البنية الأساسية ومايتحددش من هنا", "This device is infrastructure and cannot be limited here"], ["الجهاز بيغير الـ MAC كل مرة — مش مشاركة حساب", "The device changes its MAC each time - not account sharing"], ["انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5)", "Session expired - refresh the page (F5)"], ["شغالة — بتتطبق على أي جهاز جديد يدخل الشبكة", "On — applies to any new device joining the network"], ["الاتصال بالسيرفر انقطع — حاول تاني بعد لحظة", "Lost contact with the firewall - try again in a moment"], ["الحد الخاص هيتشال وكل جهاز يرجع للحد العام.", "Own limits are removed; every device falls back to the global limit."], ["نسخة احتياطية بتتاخد أوتوماتيك قبل التنفيذ", "A backup is taken automatically before applying"], ["الكابتيف بورتال موقوف — الخيار ده مش هيفرق", "Captive portal is off — this option makes no difference"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص —", "Applies to every device without its own limit —"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص", "Applies to every device without its own limit"], ["اليوم لسه ماخلصش — الأرقام لغاية دلوقتي", "The day is not over yet — figures are up to now"], ["كل إجراء اتعمل على الشبكة، الأحدث فوق", "Every action taken on the network, newest first"], ["معاينة — دول اللي هيتأثروا لو فعّلتها", "Preview — these would be affected if you enable it"], ["أجهزة هتتأثر دلوقتي لو السياسة اشتغلت", "Devices that would be affected right now if the policy ran"], ["MAC عشوائي ومافيش اسم ثابت نتابعه بيه", "Random MAC with no stable name to follow it by"], ["الحد الأقصى لكل جهاز مامعاهوش حد خاص", "Maximum for each device without its own limit"], ["جهاز شبكة — محمي من الإيقاف والتحديد", "Network device - protected from blocking and limiting"], ["ابحث باسم الجهاز أو عنوان IP او MAC", "Search by device name, IP or MAC"], ["كل ما تتصل، فهتظهر كجهاز جديد تاني.", "on every connection, so they appear as a new device each time."], ["عشوائي ومافيش اسم ثابت نتابعه بيه —", "random MAC with no stable name to follow it by —"], ["كل أجهزة المجموعة هيتقطع عنها النت.", "Every device in the group will lose internet."], ["الأجهزة اللي ليها حد خاص مش هتتأثر.", "Devices with their own limit are unaffected."], ["كل نطاقات الخدمة هتتحظر مش واحد بس.", "Every domain the service uses is blocked, not just one."], ["لسه مافيش بيانات — بتتجمع كل دقيقة", "No data yet — it is collected every minute"], ["الأجهزة دي هترجع تتصل بالنت فورًا.", "These devices will reconnect immediately."], ["بس — مافيش طريقة تحدّ خدمة لوحدها.", "— there is no way to throttle one service on its own."], ["الجهاز ده مابقاش ظاهر — اعمل تحديث", "That device is no longer visible — refresh"], ["مافيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["عشوائي ومافيش اسم ثابت نتابعه بيه", "random MAC with no stable name to follow it by"], ["، وأي حد يبدأ بعد كده هيتحد كمان.", ", and anyone who starts afterwards is limited too."], ["حدد أجهزة من تبويب الأجهزة الأول", "Select devices from the Devices tab first"], ["مفيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["مين حاول يفتح موقع محظور وإمتى.", "Who tried to open a blocked site, and when."], ["كل الأجهزة دي هيتقطع عنها النت.", "All these devices will lose internet."], ["الرفع بيزاحم النزول، فخليه أقل", "Upload competes with download, so keep it lower"], ["مفيش أجهزة جديدة مطابقة دلوقتي", "No new matching devices right now"], ["جهاز متصل دلوقتي هيتأثر فورًا.", "connected device(s) will be affected immediately."], ["موقوفة — مفيش أي إجراء تلقائي", "Off — no automatic action"], ["عشوائي، بس الجهاز متابَع باسم", "random MAC, but the device is tracked by the name"], ["وممكن يفلت لو الجهاز غيّر الـ", "and it may escape if the device changes its"], ["جديد، الحظر بيتابعه تلقائيًا.", "the block follows it automatically."], ["حد النزول هيبقى 2 ميجا لكلها.", "The download limit becomes 2 Mb for all of them."], ["الجهاز هياخد الخط بلا حد (كان", "The device gets the line with no limit (was"], ["جهاز متصل دلوقتي هيتأثر فورًا", "connected device(s) affected immediately"], ["اختار نوع جهاز واحد على الأقل", "Choose at least one device type"], ["مفيش أجهزة على الحد ده دلوقتي", "No devices at that limit right now"], ["كل جهاز في المجموعة هياخد لحد", "Every device in the group gets up to"], ["الموبايلات الحديثة بتغير الـ", "Modern phones change their"], ["اعتراض الشهادات على كل جهاز.", "installing an intercepting certificate on every device."], ["القواعد اتنقلت تلقائيًا بالـ", "the rules moved automatically by"], ["تسمح للجهاز ده وتشيل القيود؟", "Allow this device and remove the restrictions?"], ["الحد الجديد هيتطبق على كلها.", "The new limit applies to all of them."], ["كل نطاقات الخدمة مش واحد بس.", "every domain the service uses, not just one."], ["السياسة هتتحفظ بس مش هتشتغل.", "The policy is saved but will not run."], ["استثنِ اللي سجّل دخول بيوزر", "Exempt anyone signed in with an account"], ["هيتحظر على كل أجهزة الشبكة.", "It will be blocked for every device on the network."], ["تفعيل سياسة الأجهزة الجديدة", "Enable the new-device policy"], ["سرعة النزول (تصفّح وتنزيل)", "Download speed (browsing & downloads)"], ["الجهاز هيرجع بحده الحالي (", "The device returns to its current limit ("], ["أي جهاز جديد مطابق هيتعمله", "Any matching new device will be"], ["نزول / رفع — مرجع المقارنة", "down / up — the comparison baseline"], ["الحد العام نزول/رفع (ميجا)", "Global limit down/up (Mb)"], ["MAC عشوائي — نوعه مش معروف", "Random MAC - type unknown"], ["شغّالة في مواعيد محددة بس", "Only active during set hours"], ["الحظر بيتنقل معاه تلقائي.", "the block follows it automatically."], ["يحظر الخدمة على كل الشبكة", "Blocks the service network-wide"], ["السيرفر رجّع رد غير متوقع", "The firewall returned an unexpected reply"], ["مافيش فيديو مفتوح دلوقتي", "No video open right now"], ["موقوف ومع ذلك بيمرر داتا", "blocked yet still passing data"], ["اللي اتصرف فيه قبل كده ·", "Previously acted on ·"], ["ماقدرش يقرا البث المفتوح", "Could not read the open streams"], ["لا — عنوان متغير من DHCP", "No - dynamic address from DHCP"], ["<span class=\"tg ipb\">حد ", "<span class=\"tg ipb\">limit "], ["الحد أعلى من الخط بكتير", "far above what the line can carry"], ["عشوائي: الحظر بيتم بالـ", "random MAC: the block is applied by"], ["مفيش فيديو مفتوح دلوقتي", "No video open right now"], ["مقروء من الفايروول نفسه", "Read from the firewall itself"], ["تجميع الأجهزة حسب النوع", "Group devices by type"], ["مراقبة الشبكة والأجهزة", "Network & Device Monitor"], ["بحث باسم أو IP أو MAC…", "Search by name, IP or MAC…"], ["الفيديو المفتوح دلوقتي", "Video Open Now"], ["اللي اتصرف فيه قبل كده", "Previously acted on"], ["جهاز محظور ممكن يفلت —", "blocked device(s) may escape —"], ["هيترفع الحظر عنهم كلهم", "The block will be lifted from all of them"], ["تحديد النزول بـ 2 ميجا", "Limit download to 2 Mb"], ["مسح حجوزات غير مستخدمة", "Delete unused reservations"], ["جاري تحميل حالة الشبكة", "Loading network state"], ["اسحب لتغيير عرض العمود", "Drag to resize the column"], ["جهاز مسجّل دخول دلوقتي", "device(s) signed in right now"], ["الكابتيف بورتال شغال ·", "Captive portal is on ·"], ["الجهاز مش معروف للنظام", "The device is unknown to the system"], ["الاتصال بالسيرفر انقطع", "Lost contact with the firewall"], ["سياسة الأجهزة الجديدة", "New-Device Policy"], ["إيقاف الأجهزة المحددة", "Block selected devices"], ["شيل الجهاز من الأنبوب", "Remove the device from its pipe"], ["عنوان محجوز للجهاز ده", "Address reserved for this device"], ["حركة الشبكة الداخلية", "Internal Traffic"], ["النزول (تصفح وتنزيل)", "Download (browsing & downloads)"], ["إيقاف النت عن الجهاز", "Cut internet from device"], ["حفظ السياسة (موقوفة)", "Save policy (disabled)"], ["الحجوزات هتتمسح والـ", "The reservations are deleted and the"], ["ماقدرش يقرا البيانات", "Could not read the data"], ["جهاز على الحد دلوقتي", "devices at the limit now"], ["الحد العام لكل جهاز", "Global Per-Device Limit"], ["مفيش نتايج للبحث ده", "No results for that search"], ["عشوائي — الحظر بالـ", "random MAC — blocked by"], ["قاعدة مؤقتة شغالة —", "temporary rule(s) active —"], ["روح لتبويب الموقوفة", "Go to the Blocked tab"], ["ماقدرش يقرا التقرير", "Could not read the report"], ["جهاز أونلاين دلوقتي", "devices online right now"], ["جهاز في المجموعة دي", "devices in this group"], ["الاستهلاك الإجمالي", "Total Usage"], ["مفيش قواعد بمواعيد", "No scheduled rules"], ["بحث باسم الجهاز أو", "Search by device name or"], ["إعفاء من حد السرعة", "Exempt from the speed limit"], ["ماقدرش يحفظ الاسم:", "Could not save the name:"], ["اتخطى أجهزة محمية:", "Skipped protected devices:"], ["سعة النزول / الرفع", "Download / upload capacity"], ["الوارد من الإنترنت", "Inbound from internet"], ["الدخول والاستهلاك", "Logins & Usage"], ["الجهاز · IP · MAC", "Device · IP · MAC"], ["ماقدرش يقرا السجل", "Could not read the history"], ["مفيش أجهزة مطابقة", "No matching devices"], ["مفيش أجهزة موقوفة", "No blocked devices"], ["إرجاع النت للجهاز", "Restore internet to device"], ["كل جهاز هياخد لحد", "Each device gets up to"], ["كل استخدام الجهاز", "everything the device does"], ["لو جهاز رجع، ياخد", "If a device returns it gets a"], ["مفيش مواقع محظورة", "No blocked sites"], ["مفيش خدمات مطابقة", "No matching services"], ["عنوان محطور فعلًا", "address actually blocked"], ["الجهاز دلوقتي على", "device is now on"], ["منها رايح للأجهزة", "of it goes to devices"], ["استهلاك الإنترنت", "Internet Usage"], ["الاستهلاك اليومي", "Daily Usage"], ["مفيش إجراءات لسه", "No actions yet"], ["أو سمّيه يدوياً.", "or give it a name manually."], ["أضعف وممكن يفلت.", "which is weaker and may be escaped."], ["تحذف القاعدة دي؟", "Delete this rule?"], ["تغيير الحد العام", "Change the global limit"], ["الأجهزة الموقوفة", "Blocked devices"], ["داخل من الإنترنت", "inbound from the internet"], ["على فيديو دلوقتي", "video right now"], ["مفيش فيديو مفتوح", "No video open"], ["قاعدة تحديد سرعة", "speed-limit rule"], ["الإجمالي 24 ساعة", "24-hour total"], ["لسه مافيش بيانات", "No data yet"], ["التحكم في الشبكة", "Network control"], ["الأجهزة المتصلة", "Connected Devices"], ["اكتب اسم الجهاز", "Enter a device name"], ["سماح (تسجيل بس)", "Allow (log only)"], ["مفيش حد بيتفرّج", "Nobody is watching"], ["تغيير حد النزول", "Change download limit"], ["الحد بيتطبق على", "The limit applies to"], ["اختار المجموعة:", "Choose the group:"], ["البنية الأساسية", "Infrastructure"], ["مفيش حاجة غائبة", "Nothing stale"], ["بحث في الموقوفة", "Search blocked"], ["موقوفة / محدودة", "blocked / limited"], ["عشوائي · متابَع", "random · tracked"], ["الشبكة الداخلية", "Internal network"], ["خطأ في الاتصال:", "Connection error:"], ["قاعدة Temporary", "Temporary rule"], ["بره ساعات العمل", "Outside work hours"], ["الـ IP اتغير من", "The IP changed from"], ["الصادر للإنترنت", "Outbound to internet"], ["المفتوح دلوقتي", "Live Now"], ["تحديث البيانات", "Refresh"], ["إعدادات الشبكة", "Network Settings"], ["استهلاك كبير —", "Heavy usage —"], ["تشيل الحظر ده؟", "Remove this block?"], ["المجموعة فاضية", "The group is empty"], ["اكتب نطاق صحيح", "Enter a valid domain"], ["إجراءات النظام", "System Actions"], ["التنفيذ الفعلي", "Actually Enforced"], ["في ساعات العمل", "Within work hours"], ["صباحًا / مساءً", "AM / PM"], ["سيرفرات وتخزين", "Servers & storage"], ["مباشر · اتحدّث", "Live · updated"], ["جلسات الاتصال", "Connection States"], ["حفظ التغييرات", "Save Changes"], ["السرعة دلوقتي", "Current Speed"], ["الصفحة مفتوحة", "Page open"], ["على كل الشبكة", "network-wide"], ["كل الموبايلات", "All phones"], ["بمواعيد محددة", "On a schedule"], ["سجل الإجراءات", "Action Log"], ["هيعدي. احجزله", "it will get through. Reserve it an"], ["كلهم متابَعين", "all tracked"], ["بيتفرّج فعلاً", "actually watching"], ["إلغاء التحديد", "Clear selection"], ["بحث بالاسم أو", "Search by name or"], ["إلغاء التصفية", "Clear filter"], ["تفاصيل الجهاز", "Device details"], ["خارج للإنترنت", "outbound to the internet"], ["لو الجهاز أخد", "If the device takes"], ["مُضيف افتراضي", "Hypervisor"], ["أقربها بتنتهي", "the soonest ends at"], ["مرجع المقارنة", "comparison baseline"], ["مش متعرف عليه", "Unidentified"], ["بـ MAC عشوائي", "with a random MAC"], ["موقوف / محدود", "Blocked / limited"], ["سياسة الجديد", "New-Device Policy"], ["غالبًا فيديو", "Probably video"], ["فيديو فيسبوك", "Facebook Video"], ["فلترة السجل…", "Filter the log…"], ["أجهزة النظام", "System devices"], ["ازاي بتشتغل:", "How it works:"], ["نظام التشغيل", "Operating system"], ["بنتابعه باسم", "tracked by the name"], ["الأجهزة اللي", "The devices"], ["إيقاف مجموعة", "Block group"], ["تحديد مجموعة", "Limit group"], ["مع تثبيت حجز", "with a reservation pinned"], ["فشل التحميل:", "Load failed:"], ["عليه حد سرعة", "speed-limited"], ["محاولة فاشلة", "failed attempt"], ["جهاز افتراضي", "Virtual machine"], ["قاعدة مخزّنة", "stored rule"], ["أجهزة الشبكة", "Network equipment"], ["عناوين ثابتة", "Fixed addresses"], ["تجميع: النوع", "Group: Category"], ["من غير تجميع", "No grouping"], ["سرعة المصدر", "Line Speed"], ["الخط يستحمل", "the line can carry this"], ["شغال دلوقتي", "Active now"], ["سمّي الجهاز", "Rename device"], ["حدّه 1 ميجا", "Limit to 1 Mb"], ["الحد الحالي", "Current limit"], ["لو غيّر الـ", "if it changes its"], ["بتتفرّج على", "watching"], ["ضمّ لمجموعة", "Add to group"], ["أجهزة محددة", "selected devices"], ["يوم أو أكتر", "days or more"], ["فلترة السجل", "Filter the log"], ["آيفون/آيباد", "iPhone/iPad"], ["جهاز دلوقتي", "devices now"], ["فيديو مفتوح", "video open"], ["قاعدة مؤقتة", "Temporary rule"], ["متصل دلوقتي", "online now"], ["جلسة اتقطعت", "session dropped"], ["جهاز استهلك", "devices used data"], ["ملف الأسبوع", "Weekly file"], ["إدارة سيرفر", "Server mgmt"], ["الطلب اترفض", "The request was refused"], ["قواعد مؤقتة", "temporary rules"], ["حد للمجموعة", "Set group limit"], ["فشل التحميل", "Load failed"], ["سرعة الرفع", "Upload speed"], ["تنافس عادي", "normal contention"], ["مسجّل دخول", "Signed in"], ["MAC عشوائي", "Random MAC"], ["اسم الهوست", "Hostname"], ["تحديد سرعة", "Limit speed"], ["لآخر اليوم", "Until end of day"], ["أيام العمل", "Workdays"], ["المستخدمين", "Users"], ["سجل الدخول", "Login History"], ["مفيش نتايج", "No results"], ["هيتحظر على", "Will be blocked on"], ["هياخدوا حد", "will get a limit of"], ["جديد عادي.", "new one normally."], ["شيل القيود", "Remove restrictions"], ["تحديد الكل", "Select all"], ["مسح المحدد", "Delete selected"], ["جهاز محدد.", "selected device(s)."], ["حذف حجوزات", "Delete reservations"], ["حسب الجهاز", "By device"], ["حسب الخدمة", "By service"], ["بالسياسة ·", "by policy ·"], ["الموبايلات", "Phones"], ["أونلاين من", "online of"], ["جهاز متأثر", "device affected"], ["الحد هيبقى", "The limit becomes"], ["الحظر بالـ", "blocked by"], ["مدة الجلسة", "Session"], ["تنزيل HTML", "Download HTML"], ["موقع محطور", "site blocked"], ["أكسس بوينت", "Access point"], ["جهاز Apple", "Apple device"], ["جلسات (PF)", "Sessions (PF)"], ["المجموعات", "Groups"], ["حظر مواقع", "Site Blocking"], ["تنظيف MAC", "MAC Cleanup"], ["عنوان MAC", "MAC Address"], ["الاستهلاك", "Data"], ["حد النزول", "Download Limit"], ["الاتصالات", "Conns"], ["ممكن يفلت", "Can escape"], ["شغّل الكل", "Unblock all"], ["يتطبق على", "Applies to"], ["استثناءات", "Exceptions"], ["هترجع للـ", "return to the"], ["جهاز محدد", "selected device"], ["الكاميرات", "Cameras"], ["غير معروف", "Unknown"], ["للأجهزة ·", "to devices ·"], ["حد 2 ميجا", "2 Mb limit"], ["ميجا (كان", "Mb (was"], ["كل الشبكة", "the whole network"], ["الحفظ فشل", "Save failed"], ["على فيديو", "video"], ["دخول ناجح", "successful login"], ["MAC متغير", "MAC rotating"], ["سرعة الخط", "Line speed"], ["حسب النوع", "By category"], ["حد السرعة", "Speed limit"], ["الموقوفة", "Blocked"], ["المواعيد", "Schedules"], ["عنوان IP", "IP Address"], ["الإجمالي", "Total"], ["المجموعة", "Group"], ["مش مسجّل", "Not signed in"], ["IP اتغير", "IP changed"], ["بالسياسة", "By policy"], ["التفاصيل", "Details"], ["مسجّل بـ", "Signed in as"], ["حجز DHCP", "DHCP reservation"], ["آخر ظهور", "Last seen"], ["انستغرام", "Instagram"], ["منع كامل", "Block fully"], ["اتغير من", "changed from"], ["جهاز الـ", "device whose"], ["متربط بـ", "bound to"], ["حظر موقع", "Block a site"], ["متابَع ·", "tracked ·"], ["موبايل (", "phone ("], ["جهاز على", "device on"], ["تسجيل بس", "log only"], ["المستخدم", "User"], ["التقارير", "Reports"], ["جهاز IoT", "IoT device"], ["رقم تاني", "Other"], ["الأجهزة", "Devices"], ["الفيديو", "Video"], ["محاولات", "Attempts"], ["أوفلاين", "Offline"], ["اسمح له", "Allow"], ["المصنّع", "Vendor"], ["بيتفرّج", "Watching"], ["تيك توك", "TikTok"], ["نتفليكس", "Netflix"], ["أندرويد", "Android"], ["أي جهاز", "Any device"], ["الإجراء", "Action"], ["٣ ساعات", "3 hours"], ["بيحمّل…", "Loading…"], ["ملحوظة:", "Note:"], ["الإدارة", "Management"], ["المكاتب", "Offices"], ["أو خدمة", "or service"], ["موقوف ·", "blocked ·"], ["عشوائي)", "random)"], ["اتصال ·", "connections ·"], ["حدّها 2", "Limit to 2"], ["تشغيلهم", "Unblock them"], ["الخدمات", "Services"], ["كمبيوتر", "Computer"], ["أونلاين", "online"], ["كمان في", "more in"], ["عرض أقل", "Show less"], ["القائمة", "the list"], ["من أصل", "of"], ["الجهاز", "Device"], ["النشاط", "Signed in as"], ["الحالة", "Status"], ["حظر بـ", "Blocked by"], ["بينزّل", "Downloading"], ["الأعلى", "Heaviest"], ["محدودة", "Limited"], ["موقوفة", "Blocked"], ["عشوائي", "Random"], ["متابَع", "Tracked"], ["بلا حد", "No limit"], ["بيعدّي", "LEAKING"], ["تفاصيل", "Details"], ["أوقفها", "Block"], ["احظرها", "Block service"], ["يوتيوب", "YouTube"], ["فيسبوك", "Facebook"], ["واتساب", "WhatsApp"], ["ويندوز", "Windows"], ["كل يوم", "Every day"], ["العطلة", "Weekend"], ["مستخدم", "users"], ["مش على", "not only"], ["الضيوف", "Guests"], ["بيحمّل", "Loading"], ["نزول و", "down and"], ["الجلسة", "Session"], ["محاولة", "attempt"], ["جهاز ×", "devices ×"], ["جهاز ·", "devices ·"], ["دلوقتي", "now"], ["هيعدي.", "it will get through."], ["النسبة", "Share"], ["الدخول", "Logins"], ["كاميرا", "Camera"], ["موبايل", "Phone"], ["المزيد", "More"], ["السجل", "Log"], ["موقوف", "Blocked"], ["الرفع", "Upload"], ["النوع", "Type"], ["إجراء", "Actions"], ["مؤقتة", "Temporary"], ["تحديث", "Refresh"], ["اتصال", "conns"], ["أجهزة", "devices"], ["إيقاف", "Block"], ["تشغيل", "Unblock"], ["تطبيق", "Apply"], ["إلغاء", "Cancel"], ["إغلاق", "Close"], ["عرضهم", "Show them"], ["أوقفه", "Block"], ["حدّها", "Limit"], ["تويتش", "Twitch"], ["مسموح", "Allowed"], ["محدود", "Limited"], ["ممنوع", "Blocked"], ["آيفون", "iPhone"], ["لينكس", "Linux"], ["المدة", "Duration"], ["لغاية", "to"], ["تحديد", "Limit"], ["تسجيل", "Log"], ["اتقطع", "Disconnected"], ["ساعات", "hours"], ["دقيقة", "min"], ["غيرهم", "Others"], ["محمية", "protected"], ["إضافة", "Add"], ["احظره", "Block it"], ["اعرضه", "Show it"], ["مثال:", "e.g."], ["الوصف", "Description"], ["عنوان", "Address"], ["تنظيف", "Cleanup"], ["محجوز", "reserved"], ["مسجّل", "registered"], ["الحد:", "Limit:"], ["تفعيل", "Enable"], ["تنفيذ", "Run"], ["جلسات", "sessions"], ["من 31", "of 31"], ["هيعدي", "will get through"], ["اتغير", "changed"], ["شغّله", "Unblock"], ["شغّال", "On"], ["اليوم", "Day"], ["طابعة", "Printer"], ["سويتش", "Switch"], ["راوتر", "Router"], ["سيرفر", "Server"], ["تخزين", "Storage"], ["تنزيل", "Download"], ["تجميع", "Group"], ["تعديل", "Edit"], ["فلاتر", "Filters"], ["إظهار", "Show"], ["(عام)", "(global)"], ["نزول", "down"], ["الكل", "All"], ["بحث…", "Search…"], ["نظام", "System"], ["ثابت", "Reserved"], ["معفى", "Exempt"], ["محمي", "Protected"], ["ساكن", "Idle"], ["جهاز", "device"], ["يدوي", "Manual"], ["اعرض", "View"], ["دائم", "Permanent"], ["ساعة", "1 hour"], ["دخول", "logins"], ["ميجا", "Mb"], ["احظر", "Block"], ["خدمة", "service"], ["منها", "of which"], ["لمدة", "for"], ["أيام", "days"], ["رجوع", "Back"], ["رفع.", "up."], ["حدّه", "Limit it"], ["عنصر", "item"], ["فاضي", "empty"], ["شغال", "active"], ["محدد", "selected"], ["فشل:", "Failed:"], ["الحد", "Limit"], ["مرات", "times"], ["12 ص", "12am"], ["12 ظ", "12pm"], ["تمام", "OK"], ["متاح", "free"], ["رفع", "upload"], ["ألف", "K"], ["حفظ", "Save"], ["بحث", "Search"], ["نشط", "Active"], ["حظر", "Block"], ["نعم", "Yes"], ["ماك", "Mac"], ["منع", "Block"], ["حدث", "events"], ["دخل", "Signed in"], ["يوم", "days"], ["حذف", "Delete"], ["مسح", "Clear"], ["حجز", "Reserve"], ["حتى", "until"], ["على", "on"], ["حسب", "by"], ["6 ص", "6am"], ["6 م", "6pm"], ["لا", "No"], ["من", "from"], ["أو", "or"], ["بـ", "by "]];
   var lang = 'ar';
   try { lang = localStorage.getItem('nc_lang') || 'ar'; } catch(e){}
 

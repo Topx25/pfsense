@@ -195,7 +195,7 @@ Linksys and the gateways; all were refused.
 ## 8. Health check
 
 ```bash
-php -f /usr/local/pkg/netcontrol_selftest.php | tail -3
+php -f /usr/local/sbin/netcontrol_selftest.php | tail -3
 php -f /usr/local/pkg/netcontrol_audit.php | tail -3
 ```
 
