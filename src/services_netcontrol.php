@@ -1022,6 +1022,22 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
 #nc .gchip,#nc .sp2 span,#nc .gl3,#nc .lpo button,#nc .dcard td.num,#nc .dcard td.c b,
 #nc .sp .k .s,#nc .sp .k .v{direction:ltr;unicode-bidi:isolate}
 #nc:not([data-lang="en"]) .sp .k .v,#nc:not([data-lang="en"]) .sp .k .s{text-align:right}
+/* details panel: a plain grid across the full row, not a centred column */
+#nc .dcard table.ncgrid tbody tr.exrow>td{padding:0;text-align:start;white-space:normal;
+  overflow:visible;background:#f8fafc;border-bottom:1px solid #e6eaf0}
+#nc .dcard table.ncgrid tr.exrow>td>.dwrap{display:block;gap:0;justify-content:normal;white-space:normal;
+  width:100%;box-sizing:border-box;padding:14px 16px}
+#nc .dcard .dgrid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 22px;background:none}
+#nc .dcard .df{background:none;padding:0;text-align:start;border:0}
+#nc .dcard .dl{font-size:11.5px;color:#64748b;font-weight:600;margin-bottom:3px;font-family:inherit}
+#nc .dcard .df .dv{font-size:13.5px;color:var(--ink);min-width:0;font-weight:500}
+#nc .dcard .df .dv .m{font-size:12.5px;color:var(--ink)}
+#nc .dcard .dnote{margin:12px 0 0}
+/* headers and number cells use the page font, and "Current speed" fits */
+#nc .dcard table.ncgrid thead th,#nc .dcard table.ncgrid td.num,#nc .dcard table.ncgrid th.num{
+  font-family:inherit;overflow:visible;text-overflow:clip;white-space:nowrap}
+#nc .dcard table.ncgrid td.num b,#nc .dcard table.ncgrid td.num{font-weight:500}
+#nc .dcard table.ncgrid td.num.hot{font-weight:700;color:var(--crit)}
 </style>
 
 <div id="nc">
@@ -1121,7 +1137,7 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
       <div class="table-responsive">
         <table class="ncgrid"><colgroup>
           <col style="width:44px"><col style="width:auto"><col style="width:126px">
-          <col style="width:126px"><col style="width:124px"><col style="width:92px">
+          <col style="width:126px"><col style="width:140px"><col style="width:96px">
           <col style="width:128px"><col style="width:132px"><col style="width:118px">
         </colgroup><thead><tr>
           <th class="c"><input type="checkbox" id="all"></th>
