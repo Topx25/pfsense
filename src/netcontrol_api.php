@@ -316,6 +316,43 @@ function nc_api_upload_limit($down) {
 	return (float)$up;
 }
 
+function nc_limit_wan_peers($states, $ip) {
+	$peers = array();
+	$client = preg_quote($ip, '/');
+	$wan = preg_quote(NC_WAN_IF, '/');
+	foreach ($states as $line) {
+		if (preg_match('/^' . $wan . '\s+(?:tcp|udp)\s+\S+\s+\(' . $client .
+			':\d+\)\s*->\s*(\d+(?:\.\d+){3}):\d+\b/', $line, $m) &&
+			filter_var($m[1], FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+			$peers[$m[1]] = true;
+		}
+	}
+	return array_keys($peers);
+}
+
+function nc_limit_reset_wan($device) {
+	$ip = $device['ip'];
+	if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) || empty($device['online'])) {
+		return false;
+	}
+	$states = array();
+	exec('/sbin/pfctl -ss 2>/dev/null', $states, $rc);
+	if ($rc !== 0) {
+		return false;
+	}
+	nc_arp_table($holders);
+	if (($holders[$ip] ?? null) !== $device['mac'] || nc_is_protected($device['mac'], $ip)) {
+		return false;
+	}
+	$ok = true;
+	foreach (nc_limit_wan_peers($states, $ip) as $peer) {
+		if (mwexec('/sbin/pfctl -k ' . escapeshellarg($ip) . ' -k ' . escapeshellarg($peer) . ' 2>/dev/null') !== 0) {
+			$ok = false;
+		}
+	}
+	return $ok;
+}
+
 if ($action !== 'speedtest') {
 	nc_api_lock_store();
 	$store = nc_store_load();
@@ -422,7 +459,12 @@ case 'limit': {
 	nc_api_check_apply(nc_apply() !== false);
 	nc_log(sprintf("LIMIT %s (%s) = %s%s", $mac, $d['ip'],
 		$mb ? $mb . 'Mb down / ' . nc_upload_limit($store['devices'][$mac]) . 'Mb up' : 'بلا حد', $durTxt));
-	nc_out(array('ok' => true));
+	$result = array('ok' => true);
+	if ($mb && ($_POST['restart_traffic'] ?? '') === '1' && !nc_limit_reset_wan($d)) {
+		$result['warning'] = 'الحد اتطبق، لكن تعذّر إغلاق اتصالات الإنترنت المفتوحة.';
+		nc_log("LIMIT-RESTART-ERROR {$mac}");
+	}
+	nc_out($result);
 }
 
 case 'bulk': {

@@ -1075,6 +1075,44 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
 #nc .nc-limit-fields{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
 #nc .nc-limit-fields label{display:grid;gap:4px;margin:0}
 #nc .nc-limit-fields input{width:110px}
+#nc{--ui-surface:#fff;--ui-soft:#f4f7fb;--ui-border:#d8e2ee;--ui-heading:#172c46}
+#nc .nc-bar{gap:16px;padding:18px 20px;background:var(--ui-surface);border:1px solid var(--ui-border);border-radius:12px}
+#nc .nc-bar h1{margin:0 0 5px;font-size:clamp(22px,3vw,32px);line-height:1.2;color:var(--ui-heading)}
+#nc .nc-bar .sp-r{gap:8px}
+#nc .tabs{gap:6px;flex-wrap:wrap;padding:6px;background:var(--ui-surface);border:1px solid var(--ui-border);border-radius:12px;margin:14px 0}
+#nc .tabs button[data-t],#nc #tmore{min-height:41px;padding:8px 12px;border-radius:8px;border-bottom:0}
+#nc .tabs button[data-t].on,#nc #tmore.on{background:#e8f0ff;color:#174499;box-shadow:inset 0 -2px 0 currentColor}
+#nc .nc-view-head{display:flex;align-items:center;gap:10px;margin:0 0 10px;color:var(--ui-heading)}
+#nc .nc-view-head h2,#nc .nc-subhead{margin:0;font-size:clamp(17px,2vw,22px);font-weight:700;color:var(--ui-heading)}
+#nc .nc-subhead{font-size:16px;margin:16px 0 9px}
+#nc .nc-tool-row{padding:10px;margin-bottom:10px;background:var(--ui-surface);border:1px solid var(--ui-border);border-radius:10px;gap:8px}
+#nc .nc-tool-row :is(button,input,select){min-height:38px}
+#nc #t-dev .nc-tool-row .srch{min-width:min(240px,100%);flex:1}
+#nc .table-responsive{max-width:100%;overflow:auto}
+#nc .nc-device-table{max-height:min(62vh,650px)}
+#nc .dcard{border:1px solid var(--ui-border);border-radius:12px}
+#nc .ncgrid thead th,#nc .dcard .ncgrid thead th{background:var(--ui-soft);color:var(--ui-heading);font-size:12px;letter-spacing:0;text-transform:none}
+#nc .dcard table.ncgrid thead th{position:sticky;top:0;z-index:2;border-bottom:1px solid var(--ui-border)}
+#nc .ncgrid th[data-sort]::after,#nc .ncgrid th.sorted[aria-sort]::after{content:none}
+#nc .ncgrid th[data-sort] .nc-table-sort{display:flex;align-items:center;justify-content:inherit;gap:5px;width:100%;min-height:32px;
+  padding:0 5px;background:none;border:0;border-radius:5px;color:inherit;font:inherit;text-align:inherit;white-space:normal}
+#nc .ncgrid th.num .nc-table-sort{justify-content:flex-end}
+#nc .ncgrid th.c .nc-table-sort{justify-content:center}
+#nc .nc-sort-arrow{color:#48627f}
+#nc .sorted .nc-sort-arrow{color:var(--acc)}
+#nc :is(button,input,select,a,[tabindex]):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#nc :is(.ncgrid,.dvm,.live-detail-head) :is(.num,bdi,.v,.sm){font-variant-numeric:tabular-nums}
+#nc table.nc-temporary-table{min-width:0;width:100%;table-layout:auto}
+#nc .nc-temporary-card{background:#fff;border:1px solid var(--ui-border);border-radius:10px}
+#nc table.ncgrid.nc-temporary-table :is(th,td){padding:12px 16px;text-align:start}
+#nc table.ncgrid.nc-temporary-table td.empty{text-align:center}
+#nc table.ncgrid.nc-temporary-table bdi{display:inline;white-space:nowrap}
+@media(max-width:640px){
+  #nc .nc-bar,#nc .nc-tool-row{padding:10px}
+  #nc .nc-tool-row :is(button,input,select),#nc .tabs button[data-t],#nc #tmore{min-height:44px}
+  #nc .nc-device-table{max-height:72vh}
+  #nc table.nc-temporary-table{min-width:470px}
+}
 #nc .live-grid{--live-actions:162px;--live-metrics:repeat(4,minmax(74px,1fr))}
 #nc .live-grid.live-services{--live-metrics:repeat(3,minmax(74px,1fr))}
 #nc .live-grid .dvh,#nc .live-head{grid-template-columns:minmax(0,1fr) minmax(320px,36%) var(--live-actions);gap:12px}
@@ -1184,8 +1222,8 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
 
   <div class="glim" id="glim"></div>
 
-  <div class="tabs">
-    <button class="on" data-t="live">المفتوح دلوقتي <span class="c" id="c-live">—</span></button>
+  <nav class="tabs" aria-label="أقسام التحكم في الشبكة">
+    <button class="on" data-t="live" aria-current="page">المفتوح دلوقتي <span class="c" id="c-live">—</span></button>
     <button data-t="dev">الأجهزة <span class="c" id="c-dev">—</span></button>
     <button data-t="blocked">الموقوفة <span class="c" id="c-blk">—</span></button>
     <button data-t="groups">المجموعات <span class="c" id="c-grp">—</span></button>
@@ -1193,7 +1231,7 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
     <button data-t="sites">حظر مواقع <span class="c" id="c-sites">—</span></button>
     <button data-t="policy">سياسة الجديد <span class="c" id="c-pol">—</span></button>
     <div class="tmore">
-      <button type="button" id="tmore">المزيد <i class="fa fa-angle-down"></i></button>
+      <button type="button" id="tmore" aria-controls="tmenu" aria-expanded="false">المزيد <i class="fa fa-angle-down" aria-hidden="true"></i></button>
       <div class="tmenu" id="tmenu" hidden>
         <button data-t="video">الفيديو</button>
         <button data-t="att">محاولات <span class="c" id="c-att">—</span></button>
@@ -1203,10 +1241,11 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
         <button data-t="log">السجل</button>
       </div>
     </div>
-  </div>
+  </nav>
 
-  <section id="t-live">
-    <div class="bar">
+  <section id="t-live" aria-labelledby="live-heading">
+    <header class="nc-view-head"><h2 id="live-heading">المفتوح دلوقتي</h2></header>
+    <div class="bar nc-tool-row">
       <div class="seg">
         <button class="on" data-lvv="devices">حسب الجهاز</button>
         <button data-lvv="services">حسب الخدمة</button>
@@ -1217,8 +1256,9 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
     <div id="lvbox"><div class="empty">بيحمّل…</div></div>
   </section>
 
-  <section id="t-dev" hidden>
-    <div class="tb2">
+  <section id="t-dev" aria-labelledby="devices-heading" hidden>
+    <header class="nc-view-head"><h2 id="devices-heading">الأجهزة</h2></header>
+    <div class="tb2 nc-tool-row">
       <button type="button" class="btn2" id="clean-offline" disabled>إزالة كل الأوفلاين</button>
       <label class="srch"><i class="fa fa-search"></i>
         <input type="search" id="q" placeholder="بحث بالاسم أو IP أو MAC…"></label>
@@ -1259,13 +1299,13 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
     </div>
     <div class="dcard">
       <div class="chips" id="chips"></div>
-      <div class="table-responsive">
+      <div class="table-responsive nc-device-table" tabindex="0" role="region" aria-labelledby="devices-heading">
         <table class="ncgrid"><colgroup>
           <col style="width:44px"><col style="width:auto"><col style="width:126px">
           <col style="width:126px"><col style="width:140px"><col style="width:96px">
           <col style="width:128px"><col style="width:132px"><col style="width:118px">
         </colgroup><thead><tr>
-          <th class="c"><input type="checkbox" id="all"></th>
+          <th scope="col" class="c"><input type="checkbox" id="all" aria-label="تحديد الكل"></th>
           <th class="s" data-sort="name">الجهاز</th>
           <th class="s" data-sort="ip">عنوان IP</th>
           <th class="s" data-sort="user">مسجّل بـ</th>
@@ -1311,23 +1351,39 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
     <div id="polbox"><div class="empty">بيحمّل…</div></div>
   </section>
 
-  <section id="t-groups" hidden>
+  <section id="t-groups" aria-labelledby="groups-heading" hidden>
+    <header class="nc-view-head"><h2 id="groups-heading">المجموعات</h2></header>
     <p style="color:#6b7785;font-size:12.5px;margin:11px 0">
       طبّق قاعدة على مجموعة كاملة. الضم بيتم من تبويب الأجهزة (حدد ثم «ضمّ لمجموعة»).</p>
     <div class="grid" id="grps"></div>
   </section>
 
-  <section id="t-sched" hidden>
+  <section id="t-sched" aria-labelledby="schedules-heading" hidden>
+    <header class="nc-view-head"><h2 id="schedules-heading">المواعيد</h2></header>
+    <h3 class="nc-subhead" id="temporary-limits-heading">حدود السرعة المؤقتة</h3>
+    <div class="table-responsive nc-temporary-card" tabindex="0" role="region" aria-labelledby="temporary-limits-heading">
+      <table class="ncgrid nc-temporary-table">
+        <thead><tr>
+          <th scope="col">الجهاز</th><th scope="col">عنوان IP</th>
+          <th scope="col">حد النزول</th><th scope="col">حد الرفع</th><th scope="col">ينتهي في</th>
+        </tr></thead>
+        <tbody id="temporary-limits"><tr><td colspan="5">بيحمّل…</td></tr></tbody>
+      </table>
+    </div>
+    <h3 class="nc-subhead">القواعد المجدولة</h3>
     <p style="color:#6b7785;font-size:12.5px;margin:11px 0">
       قواعد بتشتغل وتقف لوحدها على السيرفر — مش محتاج تفتح الصفحة.</p>
-    <div class="tl" id="tl"></div>
-    <div class="tlx"><span>12 ص</span><span>6 ص</span><span>12 ظ</span><span>6 م</span><span>12 ص</span></div>
+    <div id="schedule-timeline" hidden>
+      <div class="tl" id="tl"></div>
+      <div class="tlx"><span>12 ص</span><span>6 ص</span><span>12 ظ</span><span>6 م</span><span>12 ص</span></div>
+    </div>
     <div class="sched" id="sched"></div>
   </section>
 
-  <section id="t-sites" hidden>
-    <div class="bar">
-      <input type="text" id="dom" placeholder="مثال: facebook.com">
+  <section id="t-sites" aria-labelledby="sites-heading" hidden>
+    <header class="nc-view-head"><h2 id="sites-heading">حظر مواقع</h2></header>
+    <div class="bar nc-tool-row">
+      <input type="text" id="dom" aria-label="عنوان الموقع" placeholder="مثال: facebook.com">
       <div class="seg">
         <button class="on" data-sc="all">الكل</button>
         <button data-sc="sel">أجهزة محددة</button>
@@ -2106,7 +2162,7 @@ $('#alerts').addEventListener('click',e=>{
       tr.classList.add('flash'); setTimeout(()=>tr.classList.remove('flash'),1700);}
     return;
   }
-  if(b.dataset.a==='lim1') askLimit(d,1); else askBlock(d);
+  if(b.dataset.a==='lim1') askLimit(d,1,true); else askBlock(d);
 });
 
 function rows(){
@@ -2204,11 +2260,23 @@ function markSort(){
     const on = th.dataset.sort===sortBy;
     th.classList.toggle('sorted', on);
     th.setAttribute('aria-sort', on?(sortDir>0?'ascending':'descending'):'none');
+    const arrow=th.querySelector('.nc-sort-arrow');
+    if(arrow) arrow.textContent=on?(sortDir>0?'↑':'↓'):'↕';
   });
 }
 
 function bindSort(){
   $$('#t-dev th[data-sort]').forEach(th=>{
+    const button=document.createElement('button');
+    button.type='button';
+    button.className='nc-table-sort';
+    button.append(...th.childNodes);
+    const arrow=document.createElement('span');
+    arrow.className='nc-sort-arrow';
+    arrow.setAttribute('aria-hidden','true');
+    button.append(arrow);
+    th.append(button);
+    th.setAttribute('scope','col');
     th.addEventListener('click', e=>{
       if(e.target.classList.contains('rsz')) return;   /* that is a drag */
       const k=th.dataset.sort;
@@ -2811,7 +2879,7 @@ $$('#gmenu [data-g]').forEach(b=>b.onclick=()=>{
 document.addEventListener('click',e=>{
   if(!e.target.closest('#fdd'))  $('#fmenu').hidden=true;
   if(!e.target.closest('#gdd'))  $('#gmenu').hidden=true;
-  if(!e.target.closest('.tmore')) $('#tmenu').hidden=true;
+  if(!e.target.closest('.tmore')) toggleMore(false);
 });
 $('#bulk').addEventListener('click',e=>{
   const b=e.target.closest('[data-b]'); if(!b) return;
@@ -2858,6 +2926,15 @@ $('#grps').addEventListener('click',e=>{
 });
 
 function sched(){
+  const nowSeconds = Number(S.now) || Date.now()/1000;
+  const temporary = S.devices.filter(d=>!d.blocked && d.limit>0 && d.expires>nowSeconds)
+    .sort((a,b)=>a.expires-b.expires);
+  $('#temporary-limits').innerHTML = temporary.length ? temporary.map(d=>
+    '<tr><td><span class="nm">'+esc(devLabel(d))+'</span></td><td><bdi class="m">'+esc(d.ip||d.last_ip||'—')+
+    '</bdi></td><td><bdi>'+esc(d.limit)+' Mb/s</bdi></td><td><bdi>'+
+    esc(d.limit_up ?? Math.max(1,Math.round(d.limit/2)))+' Mb/s</bdi></td><td><bdi>'+
+    esc(dmhm(d.expires))+'</bdi></td></tr>').join('')
+    : '<tr><td colspan="5" class="empty">مفيش حدود سرعة مؤقتة</td></tr>';
   const box=$('#sched'); box.innerHTML='';
   (S.schedule||[]).forEach((s,i)=>{
     const el=document.createElement('div'); el.className='srow';
@@ -2870,6 +2947,7 @@ function sched(){
     box.appendChild(el);
   });
   if(!(S.schedule||[]).length) box.innerHTML='<div class="empty">مفيش قواعد بمواعيد</div>';
+  $('#schedule-timeline').hidden=!(S.schedule||[]).some(s=>s.enabled);
   const tl=$('#tl'); tl.innerHTML='';
   const now=new Date().getHours();
   for(let h=0;h<24;h++){
@@ -2878,7 +2956,7 @@ function sched(){
     if(h===now) d.innerHTML='<span class="now"></span>';
     tl.appendChild(d);
   }
-  $('#c-sch').textContent=(S.schedule||[]).filter(s=>s.enabled).length;
+  $('#c-sch').textContent=temporary.length+(S.schedule||[]).filter(s=>s.enabled).length;
 }
 $('#sched').addEventListener('change',async e=>{
   if(e.target.dataset.sch===undefined) return;
@@ -3200,10 +3278,11 @@ function limitFields(down, up = Math.max(1, Math.round(down / 2))){
     '</div>';
 }
 
-function askLimit(d,v){
-  pend={kind:'limit',mac:d.mac,mb:v};
+function askLimit(d,v,restartTraffic=false){
+  pend={kind:'limit',mac:d.mac,mb:v,restartTraffic};
   sheet('تغيير حد النزول',(d.name||d.hostname||d.ip)+' · '+d.ip+' · '+d.mac,
-    v?limitFields(v, d.limit_up ?? Math.max(1, Math.round(v / 2)))
+    v?limitFields(v, d.limit_up ?? Math.max(1, Math.round(v / 2)))+
+      (restartTraffic?'<p>اتصالات الإنترنت المفتوحة للجهاز هتتقفل بعد تطبيق الحد.</p>':'')
      :('الجهاز هياخد الخط بلا حد (كان '+fmtL(d.limit)+').'),'',
     v?''
      :'# شيل الجهاز من الأنبوب','تطبيق',true);
@@ -3252,7 +3331,7 @@ async function apply(){
     if(p.kind==='block'||p.kind==='unblock')
       r=await api(p.kind,{mac:p.mac,duration:dur});
     else if(p.kind==='limit')
-      r=await api('limit',{mac:p.mac,...speeds,duration:dur});
+      r=await api('limit',{mac:p.mac,...speeds,duration:dur,...(p.restartTraffic?{restart_traffic:1}:{})});
     else if(p.kind==='bulk'){
       /* the API takes 60 at a time; a big category goes in slices */
       const skipped=[];
@@ -3282,6 +3361,10 @@ async function apply(){
     }
 
     if(r && r.ok===false){ alert('فشل: '+(r.error||'غير معروف')); }
+    if(r && r.warning){
+      if($('#nc').dataset.lang==='en') alert('Limit applied. Existing internet connections could not be closed.');
+      else alert(r.warning);
+    }
     if(r && r.skipped && r.skipped.length)
       alert('اتخطى أجهزة محمية: '+r.skipped.join('، '));
     closeSheet();
@@ -4020,7 +4103,11 @@ function renderMonitor(){
 
 function showTab(t){
   tab=t;
-  $$('.tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  $$('.tabs button[data-t]').forEach(b=>{
+    const current=b.dataset.t===t;
+    b.classList.toggle('on',current);
+    if(current) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+  });
   /* a tab living in the More menu lights the menu button instead */
   $('#tmore').classList.toggle('on', !!$('#tmenu [data-t="'+t+'"]'));
   /* drive this off the sections that exist, so a new tab needs no edit here */
@@ -4036,8 +4123,23 @@ function showTab(t){
   if(t==='blocked') blocked();
   if(t==='report') loadReport();
 }
-$$('.tabs button[data-t]').forEach(b=>b.onclick=()=>{ showTab(b.dataset.t); $('#tmenu').hidden=true; });
-$('#tmore').onclick=e=>{ e.stopPropagation(); $('#tmenu').hidden=!$('#tmenu').hidden; };
+function toggleMore(open){
+  $('#tmenu').hidden=!open;
+  $('#tmore').setAttribute('aria-expanded',String(open));
+}
+$$('.tabs button[data-t]').forEach(b=>b.onclick=()=>{
+  const fromMore=b.closest('#tmenu');
+  showTab(b.dataset.t);
+  toggleMore(false);
+  if(fromMore) $('#tmore').focus();
+});
+$('#tmore').onclick=()=>toggleMore($('#tmenu').hidden);
+$('.tmore').addEventListener('keydown',e=>{
+  if(e.key==='Escape' && !$('#tmenu').hidden){
+    toggleMore(false);
+    $('#tmore').focus();
+  }
+});
 
 /* a banner can send you to the tab that holds the detail */
 document.addEventListener('click',e=>{
@@ -4099,7 +4201,11 @@ document.addEventListener('visibilitychange', pollState);
     ['حد النزول (Mb/s)', 'Download limit (Mb/s)'], ['حد الرفع (Mb/s)', 'Upload limit (Mb/s)'],
     ['حد الرفع', 'Upload limit'], ['حد الرفع لازم يكون بين 0.1 و50 Mb/s', 'Upload limit must be between 0.1 and 50 Mb/s'],
     ['استخدام لحظي مرتفع', 'Heavy usage now'], ['حجم البيانات', 'Data transferred'],
-    ['عمر الاتصال', 'Connection age'], ['الإجراءات', 'Actions'], ['الخدمة', 'Service']);
+    ['عمر الاتصال', 'Connection age'], ['الإجراءات', 'Actions'], ['الخدمة', 'Service'],
+    ['حدود السرعة المؤقتة', 'Temporary speed limits'], ['القواعد المجدولة', 'Scheduled rules'],
+    ['مفيش حدود سرعة مؤقتة', 'No temporary speed limits'], ['ينتهي في', 'Expires at'],
+    ['اتصالات الإنترنت المفتوحة للجهاز هتتقفل بعد تطبيق الحد.', 'The device’s open internet connections will be closed after the limit is applied.'],
+    ['أقسام التحكم في الشبكة', 'Network control sections'], ['عنوان الموقع', 'Website address']);
   var lang = 'ar';
   try { lang = localStorage.getItem('nc_lang') || 'ar'; } catch(e){}
 
