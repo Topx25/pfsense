@@ -339,7 +339,8 @@ function nc_store_unlock($fh) {
 
 function nc_store_save($d) {
 	$tmp = NC_STORE . '.tmp';
-	if (file_put_contents($tmp, json_encode($d, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) === false) {
+	$json = json_encode($d, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	if ($json === false || file_put_contents($tmp, $json) !== strlen($json)) {
 		return false;
 	}
 	@chmod($tmp, 0600);
@@ -375,8 +376,9 @@ function nc_norm_mac($mac) {
 /* ------------------------------------------------------------- discovery */
 
 /* Current ARP table: mac => ip, plus expiry/permanent info. */
-function nc_arp_table() {
+function nc_arp_table(&$holders = null) {
 	$out = array();
+	$holders = array();
 	$raw = shell_exec('/usr/sbin/arp -an 2>/dev/null');
 	foreach (explode("\n", (string)$raw) as $line) {
 		if (!preg_match('/\((\d+\.\d+\.\d+\.\d+)\) at ([0-9a-f:]{17})/i', $line, $m)) {
@@ -384,6 +386,7 @@ function nc_arp_table() {
 		}
 		$ip  = $m[1];
 		$mac = nc_norm_mac($m[2]);
+		$holders[$ip] = $mac;
 		$out[$mac] = array(
 			'ip'        => $ip,
 			'permanent' => (strpos($line, 'permanent') !== false),
@@ -756,7 +759,7 @@ function nc_pipe_usage() {
  */
 function nc_devices() {
 	$store = nc_store_load();
-	$arp   = nc_arp_table();
+	$arp   = nc_arp_table($holder);
 	$res   = nc_dhcp_reservations();
 	/*
 	 * Pipe counters where they exist (precise, for shaped devices), and
@@ -783,13 +786,6 @@ function nc_devices() {
 	 * stored address goes stale quickly, and an offline record that still
 	 * claims it shadows the device actually sitting there.
 	 */
-	$holder = array();
-	foreach ($arp as $m => $a) {
-		if (!empty($a['ip'])) {
-			$holder[$a['ip']] = $m;
-		}
-	}
-
 	/*
 	 * Infrastructure stays listed even when it has gone silent. Without
 	 * this a switch that stops answering drops out of the panel the moment
@@ -840,6 +836,7 @@ function nc_devices() {
 		 * its own address is unaffected.
 		 */
 		$last_ip = $ip;
+		$ip_mac_conflict = !$live && $ip !== '' && isset($holder[$ip]) && $holder[$ip] !== $mac;
 		if ($ip !== '' && !isset($arp[$mac]) && !isset($res[$mac]) &&
 		    isset($holder[$ip]) && $holder[$ip] !== $mac &&
 		    !isset($prot_macs[$mac])) {
@@ -866,15 +863,17 @@ function nc_devices() {
 		list($tkey, $tlabel) = nc_device_type($mac, $host, $ldesc . ' ' . ($res[$mac]['descr'] ?? ''));
 
 		/* a portal login is tracked by MAC where we have it, else by IP */
-		$sess = $cp['by_mac'][$mac] ?? ($ip ? ($cp['by_ip'][$ip] ?? null) : null);
+		$ip_session = $ip ? ($cp['by_ip'][$ip] ?? null) : null;
+		$sess = $cp['by_mac'][$mac] ?? (empty($ip_session['mac']) ? $ip_session : null);
+		$usage_ip = $ip_mac_conflict ? '' : $ip;
 
 		$list[] = array(
 			'mac'       => $mac,
 			'ip'        => $ip,
 			'name'      => $name,
-			'rate'      => $ip ? ($rates[$ip] ?? 0.0) : 0.0,
-			'rate_dn'   => $ip ? ($dir_rates[$ip]['dn'] ?? 0.0) : 0.0,
-			'rate_up'   => $ip ? ($dir_rates[$ip]['up'] ?? 0.0) : 0.0,
+			'rate'      => $rates[$usage_ip] ?? 0.0,
+			'rate_dn'   => $dir_rates[$usage_ip]['dn'] ?? 0.0,
+			'rate_up'   => $dir_rates[$usage_ip]['up'] ?? 0.0,
 			/*
 			 * A randomized MAC is only a real risk when we have no
 			 * fingerprint to follow it by; with one, nc_reattach_rules()
@@ -889,7 +888,9 @@ function nc_devices() {
 			'type_name' => $tlabel,
 			'group'     => $rule['group'] ?? '',
 			'limit'     => isset($rule['limit']) ? (int)$rule['limit'] : null,
+			'limit_up'  => nc_upload_limit($rule),
 			'blocked'   => !empty($rule['blocked']),
+			'by_policy' => !empty($rule['by_policy']),
 			'expires'   => $rule['expires'] ?? null,
 			'random'    => nc_mac_is_random($mac),
 			'reserved'  => isset($res[$mac]),
@@ -900,9 +901,10 @@ function nc_devices() {
 			 */
 			'res_ip'    => $res[$mac]['ip'] ?? '',
 			'online'    => $live,
+			'ip_mac_conflict' => $ip_mac_conflict,
 			/* by address or by MAC: protection follows the device */
 			'protected' => in_array($ip, $prot) || isset($prot_macs[$mac]),
-			'bytes'     => $usage[$ip]['bytes'] ?? 0,
+			'bytes'     => $usage[$usage_ip]['bytes'] ?? 0,
 			'moved'     => $moved,
 			'prev_ip'   => $moved ? $known_ip : null,
 			/*
@@ -1509,8 +1511,7 @@ function nc_policy_get() {
 function nc_policy_set($p) {
 	$store = nc_store_load();
 	$store['policy'] = array_merge(nc_policy_get(), $p);
-	nc_store_save($store);
-	return $store['policy'];
+	return nc_store_save($store) ? $store['policy'] : false;
 }
 
 /*
@@ -1721,6 +1722,7 @@ function nc_policy_run($dry_run = false) {
 			}
 		} elseif ($pol['action'] === 'limit') {
 			$cur['limit']   = max(1, (int)$pol['limit_mb']);
+			unset($cur['limit_up']);
 			$cur['expires'] = $exp;
 		}
 		$store['devices'][$d['mac']] = $cur;
@@ -1733,8 +1735,12 @@ function nc_policy_run($dry_run = false) {
 
 	if (!$dry_run && count($acted)) {
 		$store['policy_seen'] = $known;
-		nc_store_save($store);
-		nc_apply();
+		if (!nc_store_save($store)) {
+			throw new RuntimeException('NetControl policy could not be saved');
+		}
+		if (nc_apply() === false) {
+			throw new RuntimeException('NetControl policy was saved but could not be applied');
+		}
 	}
 	return $acted;
 }
@@ -1757,13 +1763,6 @@ function nc_policy_history($limit = 30) {
 		);
 	}
 	return $out;
-}
-
-/* Forget a device, so the policy treats it as new again. */
-function nc_policy_forget($mac) {
-	$store = nc_store_load();
-	unset($store['policy_seen'][nc_norm_mac($mac)]);
-	nc_store_save($store);
 }
 
 /* ------------------------------------------------- live traffic by domain */
@@ -2276,12 +2275,25 @@ function nc_tick() {
 		nc_log('TICK-SKIP another run still holds the store');
 		return false;
 	}
+	try {
+		return nc_tick_locked();
+	} finally {
+		nc_store_unlock($lock);
+	}
+}
 
+function nc_tick_locked() {
 	$store = nc_store_load();
 	$arp   = nc_arp_table();
 	$names = nc_lease_names();
 	$now   = time();
 	$dirty = false;
+	foreach (array_keys($arp) as $mac) {
+		if (isset($store['offline_dismissed'][$mac])) {
+			unset($store['offline_dismissed'][$mac]);
+			$dirty = true;
+		}
+	}
 
 	foreach ($store['devices'] as $mac => &$rule) {
 		if (isset($arp[$mac])) {
@@ -2307,6 +2319,7 @@ function nc_tick() {
 			nc_log(sprintf("EXPIRED %s: القاعدة المؤقتة انتهت، رجع للوضع الطبيعي", $mac));
 			$rule['blocked'] = false;
 			$rule['limit']   = null;
+			unset($rule['limit_up']);
 			$rule['expires'] = null;
 			$dirty = true;
 		}
@@ -2344,13 +2357,15 @@ function nc_tick() {
 	/* and the reverse: let an authenticated user out of a policy block */
 	$dirty = nc_release_authenticated($store) || $dirty;
 
-	if ($dirty) {
-		nc_store_save($store);
+	if ($dirty && !nc_store_save($store)) {
+		throw new RuntimeException('NetControl scheduled changes could not be saved');
 	}
-	nc_store_unlock($lock);
-
-	/* applied outside the lock: it only reads, and it is the slow part */
-	nc_apply();
+	if (nc_apply() === false) {
+		nc_log('TICK-APPLY-ERROR firewall rules could not be applied');
+	}
+	if (nc_dns_apply() < 0) {
+		nc_log('TICK-APPLY-ERROR DNS rules could not be applied');
+	}
 	return $dirty;
 }
 
@@ -2401,6 +2416,7 @@ function nc_video_limits(&$store) {
 		}
 		$cur['ip']        = $vv['ip'];
 		$cur['limit']     = $r['mb'];
+		unset($cur['limit_up']);
 		$cur['expires']   = $r['exp'];
 		$cur['by_video']  = $vv['kind'];
 		$cur['last_seen'] = time();
@@ -2437,6 +2453,7 @@ function nc_mobile_limits(&$store) {
 		foreach ($store['devices'] as $mac => &$r) {
 			if (!empty($r['by_mobile'])) {
 				$r['limit'] = null;
+				unset($r['limit_up']);
 				unset($r['by_mobile']);
 				$dirty = true;
 			}
@@ -2476,6 +2493,7 @@ function nc_mobile_limits(&$store) {
 
 		$cur['ip']        = $d['ip'];
 		$cur['limit']     = $mb;
+		unset($cur['limit_up']);
 		$cur['by_mobile'] = true;
 		$cur['last_seen'] = time();
 		$store['devices'][$mac] = $cur;
@@ -2833,7 +2851,12 @@ function nc_dns_apply() {
 	/* a reload keeps the cache and existing clients; a restart would not */
 	$rc = mwexec('/usr/local/sbin/unbound-control -c /var/unbound/unbound.conf reload 2>/dev/null');
 	if ($rc !== 0) {
-		mwexec('/usr/local/sbin/pfSsh.php playback svc restart unbound 2>/dev/null');
+		$rc = mwexec('/usr/local/sbin/pfSsh.php playback svc restart unbound 2>/dev/null');
+	}
+	if ($rc !== 0) {
+		nc_log('DNS-ERROR resolver reload and restart failed');
+		@file_put_contents($file, $old ?? "# NetControl DNS update pending\n");
+		return -1;
 	}
 	nc_log(sprintf('DNS-APPLY %d نطاق محظور', $count));
 	return $count;
@@ -2860,7 +2883,7 @@ function nc_dns_active() {
  *
  * pfSense writes one line per event, for example:
  *   Nov 16 10:14:56 pfSense logportalauth[801]: Zone: mainlan - ACCEPT: \
- *     YoussefDr, 2c:44:fd:29:f2:de, 192.168.1.134
+ *     example-user, 02:00:00:00:00:01, 192.0.2.10
  *
  * The file is a circular log, so it is read from the end rather than
  * streamed: on a busy network the start of it is already overwritten.
@@ -3464,8 +3487,9 @@ function nc_install_anchor() {
 	}
 
 	/* keep any pipe number this pass handed out */
-	if (!empty($pipe_dirty)) {
-		nc_store_save($store);
+	if (!empty($pipe_dirty) && !nc_store_save($store)) {
+		nc_log('ANCHOR-ERROR could not save the assigned pipes');
+		return false;
 	}
 
 	$rules = $shape .
@@ -3512,6 +3536,16 @@ function nc_anchor_active() {
  * The pf rule that references the table lives in the firewall ruleset and is
  * installed once by nc_install_anchor().
  */
+function nc_upload_limit($rule) {
+	$down = (int)($rule['limit'] ?? 0);
+	if ($down <= 0) {
+		return null;
+	}
+	$up = $rule['limit_up'] ?? null;
+	return is_numeric($up) && $up >= 0.1 && $up <= 50
+		? (float)$up : max(1, (int)round($down / 2));
+}
+
 function nc_apply() {
 	$store = nc_store_load();
 	$block_ips = array();
@@ -3526,7 +3560,7 @@ function nc_apply() {
 	 * device, so it has to change whenever a limit is added or removed,
 	 * not only when the anchor has gone missing entirely.
 	 */
-	nc_install_anchor();
+	$applied = nc_install_anchor();
 
 	/*
 	 * Re-assert DNS enforcement too. A filter reload flushes our anchors
@@ -3605,11 +3639,12 @@ function nc_apply() {
 			$rc = mwexec("/sbin/dnctl pipe {$pipe} config bw {$bw}Mbit/s " .
 			             "mask dst-ip 0xffffffff codel 2>/dev/null");
 			/* upload: same device, now the source - a separate pipe number */
-			$upb = max(1, (int)round($bw / 2));
+			$up_kbit = (int)round(nc_upload_limit($rule) * 1000);
 			$rc2 = mwexec("/sbin/dnctl pipe " . ($pipe + 1000) .
-			              " config bw {$upb}Mbit/s " .
+			              " config bw {$up_kbit}Kbit/s " .
 			              "mask src-ip 0xffffffff codel 2>/dev/null");
 			if ($rc !== 0 || $rc2 !== 0) {
+				$applied = false;
 				nc_log("PIPE-ERROR {$mac}: dnctl رفض الأنبوب {$pipe} (rc={$rc}/{$rc2})");
 			}
 		}
@@ -3621,15 +3656,22 @@ function nc_apply() {
 	 * gets a different pipe next time and the guarantee that it keeps its
 	 * own pipe is empty.
 	 */
-	if (!empty($pipe_dirty)) {
-		nc_store_save($store);
+	if (!empty($pipe_dirty) && !nc_store_save($store)) {
+		$applied = false;
 	}
 
 	/* Replace the table contents in one shot so there is no open window. */
 	$tmp = '/tmp/nc_blocked.txt';
-	file_put_contents($tmp, implode("\n", array_unique($block_ips)) . "\n");
-	mwexec('/sbin/pfctl -t ' . NC_TABLE . ' -T replace -f ' . escapeshellarg($tmp) . ' 2>/dev/null');
+	$table = implode("\n", array_unique($block_ips)) . "\n";
+	if (file_put_contents($tmp, $table) !== strlen($table)) {
+		@unlink($tmp);
+		return false;
+	}
+	$rc = mwexec('/sbin/pfctl -t ' . NC_TABLE . ' -T replace -f ' . escapeshellarg($tmp) . ' 2>/dev/null');
 	@unlink($tmp);
+	if ($rc !== 0) {
+		return false;
+	}
 
 	/*
 	 * Drop existing states for anything blocked. A "block" rule only stops
@@ -3638,9 +3680,11 @@ function nc_apply() {
 	 * having no effect.
 	 */
 	foreach ($block_ips as $ip) {
-		mwexec('/sbin/pfctl -k ' . escapeshellarg($ip) . ' 2>/dev/null');
+		if (mwexec('/sbin/pfctl -k ' . escapeshellarg($ip) . ' 2>/dev/null') !== 0) {
+			$applied = false;
+		}
 	}
-	return count($block_ips);
+	return $applied ? count($block_ips) : false;
 }
 
 require_once('/usr/local/pkg/netcontrol_diag.inc');

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetControl | مقترحات التصميم</title>
+<style>
+:root{font-family:"Segoe UI",Tahoma,sans-serif;color:#f1f4fb;background:#0b101a;color-scheme:dark;--surface:#131b29;--line:#2a364b;--muted:#aebbd1;--accent:#88e7cb}
+*{box-sizing:border-box}
+body{margin:0}
+button,input{font:inherit;border:1px solid var(--line);border-radius:8px;padding:.65rem .9rem;min-height:44px;background:var(--surface);color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+button[aria-pressed=true]{color:var(--accent);border-color:var(--accent)}
+header,main{max-width:1440px;margin:auto;padding:24px clamp(16px,4vw,64px)}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{font-weight:800;letter-spacing:.02em;display:flex;align-items:center;gap:10px}
+.brand::before{content:"";width:25px;height:25px;border:7px double var(--accent);border-radius:9px}
+.modes,.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+small,.muted,th{color:var(--muted)}
+h1{font-size:clamp(2rem,5vw,3.35rem);margin:8px 0}
+h2{margin:0;font-size:1.15rem}
+p{line-height:1.65}
+.status{color:var(--accent)}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.card{border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:clamp(12px,2vw,24px);min-width:0}
+.number{display:block;font-size:clamp(1.35rem,3vw,2.3rem);margin:.4rem 0;font-weight:800}
+.workspace{display:grid;grid-template-columns:minmax(0,2fr) minmax(240px,1fr);gap:16px}
+.tools{justify-content:space-between;margin-bottom:16px}
+input{max-width:100%;width:16rem}
+.table-scroll{overflow:auto}
+table{width:100%;border-collapse:collapse;text-align:start}
+th,td{padding:.65rem .4rem;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
+td button{border:0;background:transparent;text-align:start;padding-inline:0;color:var(--accent)}
+code{font-size:.95rem}
+.track{height:10px;border-radius:10px;background:var(--line);overflow:hidden}
+.track span{display:block;height:100%;background:var(--accent)}
+dl{margin:16px 0 0}dt{color:var(--muted)}dd{margin:4px 0 14px}
+.devices{color-scheme:light;background:#f3f1eb;color:#1d2b26;--surface:#fffdf8;--line:#d7ded5;--muted:#4a5e53;--accent:#126043;min-height:100vh}
+.devices .workspace{grid-template-columns:minmax(220px,1fr) minmax(0,3fr)}
+.devices aside{grid-column:1;grid-row:1}
+.devices .inventory{grid-column:2;grid-row:1}
+.devices .metrics,.devices .telemetry,.devices #overview{display:none}
+.devices .workspace{display:block}
+.devices .workspace>aside{display:none}
+body.review{background:#e9edf4;--surface:#fff;--line:#c8d2e2;--muted:#465772;--accent:#243d88}
+.review #directory-summary,.review .table-scroll{display:none}
+.review #review-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+#review-tools[hidden],#review-list[hidden]{display:none}
+.review-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:12px}
+.review-card{padding:16px;border:1px solid var(--line);border-radius:13px;background:#f5f7fc}
+.review-card[data-blocked="true"]{border-inline-start:4px solid #aa382e;background:#fff5f3}
+.review-card h3{margin:8px 0;font-size:1.2rem;text-align:start}
+.review-card p{margin:6px 0;color:var(--muted)}
+.review-card button{margin-top:10px;color:var(--accent)}
+dialog{width:min(680px,calc(100% - 28px));max-height:calc(100% - 28px);padding:16px;color:#192b26;background:#f3f1eb;color-scheme:light;border:0;border-radius:16px}
+dialog::backdrop{background:#101828a0}
+dialog h2{font-size:1.4rem}
+.dialog-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.dialog-top button{background:white;color:#192b26}
+.device-hero{background:#131b29;color:#eef3fb;border-radius:12px;padding:16px}
+.device-hero button{background:#24354e;color:white;border-color:#627493;min-height:36px}
+.addresses{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}
+.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.detail-grid>div{background:#fffdf8;padding:10px;border:1px solid #d7ded5;border-radius:8px}
+.detail-grid dt{color:#4a5e53}
+.detail-grid dd{margin-bottom:0}
+body:not(.devices) #directory-summary{display:none}
+.telemetry{display:grid;grid-template-columns:minmax(0,3fr) minmax(160px,1fr);gap:24px;margin-bottom:16px}
+.chart{min-width:0}
+.chart-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.chart-grid{display:grid;grid-template-columns:34px minmax(0,1fr);gap:12px}
+.axis{display:flex;flex-direction:column;justify-content:space-between;color:var(--muted);font:12px monospace;padding-block:2px}
+.plot{height:158px;display:flex;align-items:end;gap:clamp(2px,.7vw,11px);border-bottom:1px solid var(--line);background:repeating-linear-gradient(to top,transparent 0 calc(33.33% - 1px),var(--line) calc(33.33% - 1px) 33.33%)}
+.plot span{height:var(--h);flex:1;background:linear-gradient(0deg,#216c67,var(--accent));border-radius:4px 4px 0 0}
+.time-axis{display:flex;justify-content:space-between;margin:7px 46px 0 0;color:var(--muted);font:12px monospace}
+.telemetry aside{border-inline-start:1px solid var(--line);padding-inline-start:22px;align-self:center}
+.telemetry aside p{margin:1rem 0}
+.telemetry aside strong{display:block;font-size:1.35rem}
+.metrics .card:first-child{border-block-start:2px solid var(--accent)}
+tr:has(button[aria-pressed=true]){background:color-mix(in srgb,var(--accent) 9%,transparent)}
+@media(max-width:620px){.telemetry{grid-template-columns:minmax(0,1fr)}.telemetry aside{display:flex;justify-content:space-between;gap:8px;border-inline-start:0;border-top:1px solid var(--line);padding-inline-start:0}.plot{height:130px}}
+@media(max-width:760px){.workspace,.devices .workspace{grid-template-columns:minmax(0,1fr)}.devices aside,.devices .inventory{grid-column:auto;grid-row:auto}}
+@media(max-width:440px){.metrics,.devices .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<header>
+  <span class="brand" dir="ltr">NetControl / pfSense</span>
+  <div class="modes" role="group" aria-label="اتجاه التصميم">
+    <button id="monitor" aria-pressed="true">مركز المراقبة</button>
+    <button id="devices" aria-pressed="false">إدارة الأجهزة</button>
+    <button id="review" aria-pressed="false">مراجعة الحظر</button>
+  </div>
+</header>
+<main>
+  <small>معاينة تصميم · بيانات تجريبية</small>
+  <h1 id="title">مراقبة الشبكة</h1>
+  <p id="summary" class="muted">لقطة تجريبية عند 14:32 · الواجهة LAN</p>
+  <section class="telemetry card" aria-labelledby="chart-title">
+    <div class="chart">
+      <div class="chart-head"><h2 id="chart-title">حركة التنزيل على WAN</h2><small dir="ltr">Mb/s</small></div>
+      <div class="chart-grid" dir="ltr">
+        <div class="axis" aria-hidden="true"><span>30</span><span>20</span><span>10</span><span>0</span></div>
+        <div class="plot" role="img" aria-label="عينات تجريبية للتنزيل خلال ساعة، بدأت عند 9 وبلغت 24.8 ميجابت في الثانية في آخر عينة">
+          <span style="--h:30%"></span><span style="--h:35%"></span><span style="--h:33%"></span><span style="--h:47%"></span><span style="--h:39%"></span><span style="--h:42%"></span><span style="--h:68%"></span><span style="--h:53%"></span><span style="--h:46%"></span><span style="--h:60%"></span><span style="--h:71%"></span><span style="--h:56%"></span><span style="--h:65%"></span><span style="--h:76%"></span><span style="--h:71%"></span><span style="--h:82.7%"></span>
+        </div>
+      </div>
+      <div class="time-axis" dir="ltr"><span>13:32</span><span>14:02</span><span>14:32</span></div>
+    </div>
+    <aside aria-label="مؤشرات الوصلة">
+      <p><small>آخر عينة</small><strong><bdi>24.8 Mb/s</bdi></strong></p>
+      <p><small>سعة التنزيل</small><strong><bdi>50 Mb/s</bdi></strong></p>
+    </aside>
+  </section>
+  <p id="directory-summary" class="muted">4 أجهزة · حجزان ثابتان · جهاز واحد موقوف</p>
+  <section class="metrics" aria-label="ملخص الشبكة">
+    <div class="card"><small>متصلة الآن</small><strong class="number">3 أجهزة</strong></div>
+    <div class="card"><small>تنزيل WAN</small><strong class="number" dir="ltr">24.8 Mb/s</strong></div>
+    <div class="card"><small>أجهزة موقوفة</small><strong class="number">جهاز واحد</strong></div>
+  </section>
+  <div class="workspace">
+    <section class="card inventory" aria-labelledby="inventory-title">
+      <div class="tools">
+        <h2 id="inventory-title">النشاط حسب الجهاز</h2>
+        <input id="search" type="search" aria-label="بحث عن جهاز بالاسم أو IP" placeholder="بحث بالاسم أو IP">
+      </div>
+      <div id="review-tools" role="group" aria-label="تصفية حسب الحظر" hidden>
+        <button id="review-blocked" aria-pressed="true">الموقوفة</button>
+        <button id="review-all" aria-pressed="false">كل الأجهزة</button>
+      </div>
+      <div id="review-list" class="review-list" hidden></div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="جدول الأجهزة">
+        <table>
+          <thead><tr><th scope="col">الجهاز</th><th scope="col">IP</th><th scope="col">الحالة</th><th scope="col">تنزيل</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p id="results" class="muted" role="status"></p>
+    </section>
+    <aside class="card" aria-label="التفاصيل">
+      <div id="overview">
+        <h2>استخدام الوصلة</h2>
+        <p>تنزيل <bdi>24.8 / 50 Mb/s</bdi></p>
+        <div class="track" role="meter" aria-label="استخدام التنزيل" aria-valuenow="24.8" aria-valuemin="0" aria-valuemax="50"><span style="width:49.6%"></span></div>
+        <p>رفع <bdi>2.1 / 10 Mb/s</bdi></p>
+        <div class="track" role="meter" aria-label="استخدام الرفع" aria-valuenow="2.1" aria-valuemin="0" aria-valuemax="10"><span style="width:21%"></span></div>
+      </div>
+    </aside>
+  </div>
+</main>
+<dialog id="detail" aria-labelledby="detail-title">
+  <div class="dialog-top">
+    <h2 id="detail-title">تفاصيل الجهاز</h2>
+    <form method="dialog"><button autofocus>إغلاق</button></form>
+  </div>
+  <div class="device-hero">
+    <strong id="device-name" dir="ltr"></strong> · <span id="device-status"></span>
+    <div class="addresses">
+      <bdi id="device-ip"></bdi><button id="copy-ip">نسخ IP</button>
+      <bdi id="device-mac"></bdi><button id="copy-mac">نسخ MAC</button>
+    </div>
+    <span id="copy-status" role="status"></span>
+  </div>
+  <dl class="detail-grid">
+    <div><dt>تخصيص DHCP</dt><dd id="device-dhcp"></dd></div>
+    <div><dt>التنزيل الحالي</dt><dd><bdi id="device-rate"></bdi></dd></div>
+    <div><dt>حالة الحظر</dt><dd id="device-rule"></dd></div>
+    <div><dt>المصدر وانتهاء الحظر</dt><dd id="device-expiry"></dd></div>
+  </dl>
+</dialog>
+<script>
+const fixtures = [
+  {name:'studio-pc', ip:'192.0.2.21', status:'متصل', rate:'13.4', dhcp:'حجز ثابت'},
+  {name:'meeting-room', ip:'192.0.2.32', status:'متصل', rate:'7.2', dhcp:'تخصيص ديناميكي'},
+  {name:'office-ap', ip:'192.0.2.40', status:'متصل · محمي', rate:'4.2', dhcp:'حجز ثابت'},
+  {name:'guest-tablet', ip:'192.0.2.93', status:'موقوف', rate:'0.0', dhcp:'تخصيص ديناميكي'}
+];
+const byId = id => document.getElementById(id);
+let selectedButton;
+
+function showDevice(device, button){
+  selectedButton?.removeAttribute('aria-pressed');
+  selectedButton = button;
+  selectedButton.setAttribute('aria-pressed', 'true');
+  byId('device-name').textContent = device.name;
+  byId('device-ip').textContent = device.ip;
+  byId('device-status').textContent = device.status;
+  byId('device-dhcp').textContent = device.dhcp;
+  byId('device-mac').textContent = macOf(device);
+  byId('device-rate').textContent = device.rate + ' Mb/s';
+  byId('device-rule').textContent = device.status === 'موقوف' ? 'العنوان موجود في جدول الحظر' : 'مفيش حظر مسجّل';
+  byId('device-expiry').textContent = device.status === 'موقوف' ? 'إجراء يدوي · اليوم 18:00' : '—';
+  byId('copy-status').textContent = '';
+  byId('detail').showModal();
+}
+
+const macOf = device => '02:00:00:00:00:' + device.ip.split('.').at(-1);
+
+let mode = 'monitor';
+let blockedOnly = true;
+
+function renderRows(){
+  const query = byId('search').value.trim().toLowerCase();
+  const matches = fixtures.filter(device => device.name.includes(query) || device.ip.includes(query));
+  if (mode === 'review'){
+    const list = byId('review-list');
+    const shown = matches.filter(device => !blockedOnly || device.status === 'موقوف');
+    list.replaceChildren();
+    for (const device of shown){
+      const card = document.createElement('article');
+      const blocked = device.status === 'موقوف';
+      card.className = 'review-card';
+      card.dataset.blocked = String(blocked);
+      const status = document.createElement('strong');
+      status.textContent = blocked ? 'الحظر مطبّق' : 'مفيش حظر مسجّل';
+      const name = document.createElement('h3');
+      name.dir = 'ltr';
+      name.textContent = device.name;
+      const address = document.createElement('bdi');
+      address.textContent = device.ip;
+      const expiry = document.createElement('p');
+      expiry.textContent = blocked ? 'إجراء يدوي · ينتهي اليوم 18:00' : device.status;
+      const button = document.createElement('button');
+      button.textContent = 'تفاصيل الجهاز';
+      button.onclick = () => showDevice(device, button);
+      card.append(status, name, address, expiry, button);
+      list.append(card);
+    }
+    byId('results').textContent = shown.length ? 'عدد النتائج · ' + shown.length : 'مفيش أجهزة مطابقة للبحث';
+    return;
+  }
+  const rows = byId('rows');
+  rows.replaceChildren();
+  for (const device of matches){
+    const row = rows.insertRow();
+    const button = document.createElement('button');
+    button.dir = 'ltr';
+    button.textContent = device.name;
+    button.addEventListener('click', () => showDevice(device, button));
+    row.insertCell().append(button);
+    const ip = row.insertCell();
+    for (const value of [device.ip, macOf(device)]){
+      const address = document.createElement('button');
+      address.dir = 'ltr';
+      address.textContent = value;
+      address.addEventListener('click', () => showDevice(device, address));
+      ip.append(address, document.createElement('br'));
+    }
+    row.insertCell().textContent = device.status;
+    const rate = row.insertCell();
+    rate.dir = 'ltr';
+    rate.textContent = device.rate + ' Mb/s';
+  }
+  byId('results').textContent = matches.length ? 'عدد النتائج · ' + matches.length : 'مفيش أجهزة مطابقة للبحث';
+}
+
+function setMode(nextMode){
+  mode = nextMode;
+  const review = mode === 'review';
+  document.body.classList.toggle('devices', mode !== 'monitor');
+  document.body.classList.toggle('review', review);
+  const titles = {monitor:['مراقبة الشبكة','النشاط حسب الجهاز'], devices:['إدارة الأجهزة','دليل الأجهزة'], review:['مراجعة الحظر','حالة قواعد الأجهزة']};
+  for (const id of Object.keys(titles)) byId(id).setAttribute('aria-pressed', id === mode);
+  byId('title').textContent = titles[mode][0];
+  byId('inventory-title').textContent = titles[mode][1];
+  byId('summary').hidden = mode !== 'monitor';
+  byId('review-tools').hidden = !review;
+  byId('review-list').hidden = !review;
+  renderRows();
+}
+
+for (const id of ['monitor', 'devices', 'review']) byId(id).onclick = () => setMode(id);
+for (const id of ['review-blocked', 'review-all']){
+  byId(id).onclick = () => {
+    blockedOnly = id === 'review-blocked';
+    byId('review-blocked').setAttribute('aria-pressed', blockedOnly);
+    byId('review-all').setAttribute('aria-pressed', !blockedOnly);
+    renderRows();
+  };
+}
+byId('search').oninput = renderRows;
+byId('detail').addEventListener('close', () => {
+  selectedButton?.removeAttribute('aria-pressed');
+  (selectedButton?.isConnected ? selectedButton : byId('search')).focus();
+});
+for (const field of ['ip', 'mac']){
+  byId('copy-'+field).onclick = async () => {
+    const address = byId('device-'+field);
+    try{
+      await navigator.clipboard.writeText(address.textContent);
+      byId('copy-status').textContent = 'تم النسخ';
+    }catch(e){
+      const range = document.createRange();
+      range.selectNodeContents(address);
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      byId('copy-status').textContent = 'العنوان متحدد للنسخ اليدوي';
+    }
+  };
+}
+renderRows();
+</script>

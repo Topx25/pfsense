@@ -125,8 +125,10 @@ function nc_h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 #nc th{font-size:10px;text-transform:uppercase;color:var(--faint);letter-spacing:.04em;
   padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);background:#fafbfc}
 #nc td{padding:6px 8px;border-bottom:1px solid var(--soft);vertical-align:middle}
-#nc tr.heavy{background:var(--critb)}
-#nc tr.heavy td:first-child{box-shadow:inset 3px 0 0 var(--crit)}
+#nc tr.heavy{background:#fff7df}
+#nc tr.heavy td:first-child{box-shadow:inset 3px 0 0 #b45309}
+#nc tr.heavy td.num.hot{color:#92400e}
+#nc .pl.mac-conflict{background:#fff0c9;color:#84410a}
 #nc tr.blk{background:var(--critb);opacity:.78}
 #nc tr.blk .n{text-decoration:line-through}
 #nc tr.sel{background:var(--accb)}
@@ -356,7 +358,7 @@ function nc_h($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 #nc table.ncgrid{min-width:1070px}
 #nc table.ncgrid tbody tr.blk{background:rgba(220,38,38,.035)}
 #nc table.ncgrid tbody tr.blk:hover{background:rgba(220,38,38,.06)}
-#nc table.ncgrid tbody tr.heavy{box-shadow:inset 3px 0 0 var(--crit)}
+#nc table.ncgrid tbody tr.heavy{box-shadow:inset 3px 0 0 #b45309}
 #nc table.ncgrid tbody tr.sel{background:var(--accb)}
 #nc .empty{text-align:center;color:var(--faint);padding:34px 12px;font-size:13px}
 #nc tr.flash{animation:ncfl 1.6s ease-out}
@@ -1040,6 +1042,106 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
 #nc .dcard table.ncgrid td.num.hot{font-weight:700;color:var(--crit)}
 </style>
 
+<style>
+#nc[data-layout="studio"]{background:#f3f1eb;border:1px solid #d7ded5;border-radius:16px;padding:clamp(12px,2vw,26px)}
+#nc[data-layout="studio"] .nc-bar{background:#131b29;color:#f1f4fb;border-radius:12px;padding:20px}
+#nc[data-layout="studio"] .nc-bar h1{color:#f1f4fb;font-size:clamp(24px,3vw,38px)}
+#nc[data-layout="studio"] .nc-bar .sub{color:#c1cde0}
+#nc[data-layout="studio"] #layout-toggle{background:#88e7cb;color:#0b3026;border-color:#88e7cb}
+#nc[data-layout="studio"] .tabs{background:#fffdf8;border:1px solid #d7ded5;border-radius:12px;padding:8px;margin-bottom:12px}
+#nc[data-layout="studio"] .tabs button.on{background:#d9eee4;color:#126043;border-radius:8px}
+#nc[data-layout="studio"] #t-dev .tb2{background:#fffdf8;border-radius:12px;padding:12px}
+#nc[data-layout="studio"] #t-dev table.ncgrid thead{background:#e6eee6}
+#nc .nc-inspect{display:none}
+#nc .nc-duration [lang="en"],#nc[data-lang="en"] .nc-duration [lang="ar"]{display:none}
+#nc[data-lang="en"] .nc-duration [lang="en"]{display:inline}
+#nc[data-layout="studio"]:has(#t-dev:not([hidden])) #sp{display:none}
+#nc .nc-inspector{width:min(780px,calc(100% - 32px));max-height:calc(100% - 32px);padding:0;
+  background:#f4f6f8;color:var(--ink);border:1px solid #d7ded5;border-radius:18px;
+  box-shadow:0 18px 65px #131b2940;overflow:auto;overflow-wrap:anywhere}
+#nc .nc-inspector::backdrop{background:#131b2999}
+#nc .nc-inspector-head{position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:14px clamp(14px,3vw,24px);background:#fff;border-bottom:1px solid #dce3eb}
+#nc .nc-inspector h2{margin:0;font-size:20px}
+#nc #nc-inspector-content{padding:clamp(14px,3vw,24px)}
+#nc .nc-device-summary{padding:clamp(14px,3vw,24px);background:#131b29;color:#eef3fb;border-radius:13px;margin-bottom:14px}
+#nc .nc-device-summary h3{margin:0;color:inherit;font-size:clamp(20px,4vw,30px)}
+#nc .nc-device-identity{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#nc .nc-device-addresses{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+#nc .nc-device-addresses bdi{padding:5px 9px;border:1px solid #465773;border-radius:7px;color:#e0ebf9;font:13px monospace}
+#nc .nc-copy{padding:4px 8px;border:1px solid #617693;border-radius:6px;background:#24354e;color:#f1f4fb}
+#nc .nc-rule-state{margin:0 0 14px;padding:12px;border:1px solid #dce3eb;border-radius:9px;background:#fff}
+#nc .nc-rule-state p{margin:4px 0}
+#nc .nc-limit-fields{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}
+#nc .nc-limit-fields label{display:grid;gap:4px;margin:0}
+#nc .nc-limit-fields input{width:110px}
+#nc .live-grid{--live-actions:162px;--live-metrics:repeat(4,minmax(74px,1fr))}
+#nc .live-grid.live-services{--live-metrics:repeat(3,minmax(74px,1fr))}
+#nc .live-grid .dvh,#nc .live-head{grid-template-columns:minmax(0,1fr) minmax(320px,36%) var(--live-actions);gap:12px}
+#nc .live-head{display:grid;align-items:center;padding:8px 11px;margin-bottom:8px;background:#eaf0f8;border:1px solid var(--line);border-radius:9px;color:#24334b}
+#nc .live-grid .dvm{grid-template-columns:var(--live-metrics);width:100%;gap:4px}
+#nc .live-head .live-actions{text-align:center;font-weight:600}
+#nc .live-sort{background:transparent;border:0;border-radius:6px;padding:8px 5px;color:inherit;font:inherit;font-weight:600}
+#nc .live-sort[aria-pressed="true"]{background:#dce8fc;color:#1744a0}
+#nc .live-sort:focus-visible,#nc .live-expand:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+#nc .live-expand{background:transparent;border:0;padding:0 3px;color:inherit;font-weight:700;text-align:start}
+#nc .live-grid .dvc.open .chev{transform:none}
+#nc .live-grid .dva{justify-content:center;flex-wrap:wrap}
+#nc .live-grid .svr{grid-template-columns:minmax(130px,1fr) repeat(3,minmax(65px,100px)) minmax(64px,auto)}
+#nc .live-grid .svr .sm{text-align:center}
+#nc .live-grid .live-detail-head{background:#eaf0f8;color:#24334b}
+#nc .live-grid .live-detail-label{display:none}
+@media(min-width:921px){#nc .live-grid .dvh .dvm .t{display:none}}
+@media(max-width:920px){
+  #nc .live-grid .dvh,#nc .live-head{grid-template-columns:minmax(0,1fr);gap:6px}
+  #nc .live-head .live-actions{display:none}
+  #nc .live-grid .dva{justify-content:flex-start}
+}
+@media(max-width:580px){
+  #nc .live-grid .dvm{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #nc .live-grid .svr{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #nc .live-grid .svr> :first-child{grid-column:1/-1}
+  #nc .live-grid .svr .sm{text-align:start}
+  #nc .live-grid .live-detail-label{display:block;color:var(--dim);font-family:inherit}
+}
+#nc #nc-change-status:not(:empty){margin-bottom:10px;padding:10px;border-radius:8px;background:#e6f4eb;color:#145233}
+#nc #nc-change-status.bad{background:#ffefcf;color:#763f05}
+#nc .nc-inspector .dgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#nc .nc-inspector .dwrap{padding:0;border:0;background:none}
+#nc .nc-inspector .df{padding:10px 12px;border:1px solid #dce3eb;border-radius:9px;background:#fff;min-width:0}
+@media(max-width:575px){#nc .nc-inspector .dgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+#nc[data-layout="studio"] .nc-inspect{display:inline-block;padding:3px 6px;color:#126043;background:none;border:1px solid transparent;border-radius:6px;text-align:start;font:inherit}
+#nc[data-layout="studio"] .nc-inspect:hover{background:#d9eee4;text-decoration:underline}
+#nc[data-layout="studio"] .nc-inspect:focus-visible{outline:2px solid #126043}
+#nc[data-layout="studio"] .nc-classic-name,#nc[data-layout="studio"] #t-dev .exrow{display:none}
+#nc[data-layout="studio"] #t-dev table.ncgrid{min-width:575px}
+#nc[data-layout="studio"] #t-dev .ncgrid :is(col,th,td):is(:nth-child(4),:nth-child(6),:nth-child(8)){display:none}
+#nc[data-layout="studio"] #t-dev .ncgrid col:nth-child(3){width:110px!important}
+#nc[data-layout="studio"] #t-dev .ncgrid col:nth-child(5){width:85px!important}
+#nc[data-layout="studio"] #t-dev .ncgrid col:nth-child(7){width:85px!important}
+#nc[data-layout="studio"]:has(#t-live:not([hidden])) #sp{display:none}
+#nc[data-layout="studio"]:has(#t-live:not([hidden])) .nc-monitor{display:grid}
+#nc .nc-monitor{display:none;grid-template-columns:minmax(0,3fr) minmax(150px,1fr);gap:24px;
+  margin:14px 0;padding:clamp(16px,3vw,30px);border-radius:14px;background:#131b29;color:#f1f4fb}
+#nc .nc-monitor h2{color:inherit;font-size:20px;margin:0 0 12px}
+#nc .nc-monitor dl{border-inline-start:1px solid #384962;margin:0;padding-inline-start:18px;align-self:center}
+#nc .nc-monitor dt,#nc .nc-monitor-caption{color:#b4c1d6}
+#nc .nc-monitor dd{margin:2px 0 10px;font-size:19px;font-weight:700}
+#nc .nc-plot{display:flex;align-items:end;gap:clamp(3px,1vw,14px);height:135px;
+  border-bottom:1px solid #51617a;background:repeating-linear-gradient(to top,transparent 0 calc(25% - 1px),#2a364b calc(25% - 1px) 25%)}
+#nc .nc-plot i{flex:1;min-width:0;border-radius:4px 4px 0 0;background:linear-gradient(#88e7cb,#267a70)}
+#nc .nc-plot .sample{flex:1;min-width:0;height:100%;display:flex;align-items:end;gap:3px}
+#nc .nc-plot i.upload{background:linear-gradient(#9dc7ff,#4776c6)}
+#nc .nc-monitor-key{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:8px;color:#e0ebf9}
+#nc .nc-monitor-key .down{color:#88e7cb}
+#nc .nc-monitor-key .up{color:#9dc7ff}
+#nc .nc-monitor-caption{display:flex;justify-content:space-between;gap:8px;padding-top:8px;font-variant-numeric:tabular-nums}
+@media(max-width:620px){
+  #nc .nc-monitor{grid-template-columns:minmax(0,1fr);gap:12px}
+  #nc .nc-monitor dl{display:grid;grid-template-columns:1fr auto;gap:4px 12px;border-inline-start:0;padding-inline-start:0}
+  #nc .nc-monitor dd{margin:0}
+}
+</style>
 <div id="nc">
   <!--
     A bar for page-level controls. The language switch mounts into .sp-r;
@@ -1052,12 +1154,32 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
       <div class="sub" id="live">جاري تحميل حالة الشبكة…</div>
     </div>
     <div class="sp-r">
-      <span class="livepill" id="livepill"><i></i><span>بيحمّل…</span></span>
+      <span class="livepill" id="livepill" role="status"><i aria-hidden="true"></i><span>بيحمّل…</span></span>
+      <button type="button" class="btn2" id="layout-toggle" aria-pressed="false">التصميم الإضافي</button>
       <button type="button" class="btn2" id="refresh"><i class="fa fa-refresh"></i> تحديث</button>
     </div>
   </div>
 
   <div id="alerts"></div>
+  <div id="nc-change-status" role="status"></div>
+  <section id="nc-monitor" class="nc-monitor" aria-labelledby="nc-monitor-title">
+    <div>
+      <h2 id="nc-monitor-title">حركة الإنترنت على WAN</h2>
+      <p id="nc-monitor-empty">لسه مافيش بيانات</p>
+      <div id="nc-monitor-series" hidden>
+        <div class="nc-monitor-key"><span class="down">↓ التنزيل</span><span class="up">↑ الرفع</span><bdi>Mb/s</bdi></div>
+        <div id="nc-monitor-plot" class="nc-plot" dir="ltr" role="img"></div>
+        <div class="nc-monitor-caption" dir="ltr">
+          <time id="nc-monitor-first"></time><time id="nc-monitor-last"></time>
+        </div>
+      </div>
+    </div>
+    <dl>
+      <dt>الوارد من الإنترنت</dt><dd><bdi id="nc-monitor-down">—</bdi></dd>
+      <dt>الصادر للإنترنت</dt><dd><bdi id="nc-monitor-up">—</bdi></dd>
+      <dt>الأجهزة المتصلة</dt><dd id="nc-monitor-devices">—</dd>
+    </dl>
+  </section>
   <div class="sp" id="sp"></div>
 
   <div class="glim" id="glim"></div>
@@ -1097,11 +1219,13 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
 
   <section id="t-dev" hidden>
     <div class="tb2">
+      <button type="button" class="btn2" id="clean-offline" disabled>إزالة كل الأوفلاين</button>
       <label class="srch"><i class="fa fa-search"></i>
         <input type="search" id="q" placeholder="بحث بالاسم أو IP أو MAC…"></label>
       <div class="seg2">
         <button class="on" data-f="all">الكل</button>
         <button data-f="now">شغال دلوقتي</button>
+        <button data-f="offline">أوفلاين</button>
         <button data-f="dl">بينزّل</button>
         <button data-f="busy">الأعلى</button>
       </div>
@@ -1125,6 +1249,7 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
       </div>
     </div>
     <div class="bulk" id="bulk" style="display:none">
+      <button type="button" class="btn2" id="clean-offline-selected" disabled>إزالة الأوفلاين المحدد</button>
       <span><b id="bn">0</b> جهاز محدد</span>
       <button class="btn btn-xs btn-danger" data-b="block">إيقاف</button>
       <button class="btn btn-xs btn-default" data-b="lim2">حد 2 ميجا</button>
@@ -1153,6 +1278,16 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
       </div>
       <div class="more2" id="more2"></div>
     </div>
+    <dialog id="nc-inspector" class="nc-inspector" aria-labelledby="nc-inspector-title">
+      <div class="nc-inspector-body">
+        <div class="nc-inspector-head">
+          <h2 id="nc-inspector-title">تفاصيل الجهاز</h2>
+          <form method="dialog"><button type="submit" class="btn2" autofocus>إغلاق</button></form>
+        </div>
+        <div id="nc-inspector-content"></div>
+        <div id="nc-copy-status" role="status"></div>
+      </div>
+    </dialog>
   </section>
 
   <section id="t-blocked" hidden>
@@ -1304,6 +1439,22 @@ body.rszing #nc .rsz{background:var(--acc);opacity:.5}
 
 <script>
 (function(){
+  const root = document.getElementById('nc');
+  const button = document.getElementById('layout-toggle');
+  function setLayout(alternate){
+    root.dataset.layout = alternate ? 'studio' : 'standard';
+    button.setAttribute('aria-pressed', String(alternate));
+  }
+  try{ setLayout(localStorage.getItem('nc_layout') === 'studio'); }catch(e){}
+  button.addEventListener('click', ()=>{
+    setLayout(root.dataset.layout !== 'studio');
+    try{ localStorage.setItem('nc_layout', root.dataset.layout); }catch(e){}
+  });
+})();
+</script>
+
+<script>
+(function(){
 const CSRF = <?= json_encode(csrf_get_tokens()) ?>;
 const API  = 'netcontrol_api.php';
 const $  = s => document.querySelector(s);
@@ -1369,12 +1520,13 @@ const esc = s => String(s??'').replace(/[&<>"']/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 let S = {devices:[],rates:{},system:{},sites:[],video:[],schedule:[],groups:{},attempts:[]};
-let filt='all', tab='dev', age=30, dur='perm', pend=null, newScope='all', activeGrp=null;
+let filt='all', tab='live', age=30, dur='perm', pend=null, newScope='all', activeGrp=null;
 const picked = new Set();
 const DUR = {perm:'دائم','60':'ساعة','180':'٣ ساعات',eod:'لآخر اليوم'};
 const GRPN = {infra:'البنية الأساسية',office:'المكاتب',guest:'الضيوف',
               cam:'الكاميرات',admin:'الإدارة'};
 let histD=[], histU=[];
+const monitorSamples = [];
 
 const mb = b => b>=1073741824 ? (b/1073741824).toFixed(1)+' GB'
                : b>=1048576   ? (b/1048576).toFixed(1)+' MB'
@@ -1478,8 +1630,9 @@ async function withProgress(btn, job){
 }
 
 async function api(action, body){
-  const o = {method: body?'POST':'GET'};
+  const o = {};
   if (body){
+    o.method = 'POST';
     const f = new FormData();
     f.append('__csrf_magic', CSRF);
     f.append('action', action);
@@ -1489,11 +1642,14 @@ async function api(action, body){
     }
     o.body = f;
   }
-  const url = body ? API : API+'?action='+action;
+  return requestJSON(body ? API : API+'?action='+action, o);
+}
 
-  let r;
+async function requestJSON(url, options, read = false){
+  let r, txt;
   try{
-    r = await fetch(url, o);
+    r = await fetch(url, options);
+    txt = await r.text();
   }catch(e){
     /* the network, not the server: the firewall may be reloading rules */
     apiFail('الاتصال بالسيرفر انقطع — حاول تاني بعد لحظة');
@@ -1506,19 +1662,25 @@ async function api(action, body){
    * nothing useful - which is how a refused action became a button that
    * silently does nothing.
    */
-  const txt = await r.text();
   let d = null;
   try{ d = JSON.parse(txt); }catch(e){}
 
-  if (!d){
+  if (!d || (read && !r.ok)){
     apiFail(r.status === 403
       ? 'انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5)'
-      : 'السيرفر رجّع رد غير متوقع (' + r.status + ')');
+      : (d && d.error) || 'السيرفر رجّع رد غير متوقع (' + r.status + ')');
     throw new Error('bad response ' + r.status);
   }
-  if (d.ok === false){
+  if (!read && d.ok === false){
     apiFail(d.error || 'الطلب اترفض');
     /* returned, not thrown: callers that do check ok still see the object */
+  }
+  if (!read && options?.method === 'POST'){
+    const status = $('#nc-change-status');
+    status.classList.toggle('bad', d.ok === false);
+    status.textContent = d.ok === false ? d.error || 'الطلب اترفض'
+      : d.change_status === 'applied' ? 'تم تطبيق التغيير.'
+      : d.change_status === 'saved' ? 'تم حفظ التغيير.' : '';
   }
   return d;
 }
@@ -1536,29 +1698,19 @@ function apiFail(msg){
   setTimeout(()=>{ try{ el.remove(); }catch(e){} }, 9000);
 }
 async function get(action, qs){
-  let r;
-  try{
-    r = await fetch(API+'?action='+action+(qs?'&'+qs:''));
-  }catch(e){
-    apiFail('الاتصال بالسيرفر انقطع');
-    throw e;
-  }
-  const txt = await r.text();
-  let d = null;
-  try{ d = JSON.parse(txt); }catch(e){}
-  if(!r.ok || !d){
-    apiFail(r.status === 403
-      ? 'انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5)'
-      : 'ماقدرش يقرا البيانات (' + r.status + ')');
-    throw new Error('bad response ' + r.status);
-  }
-  return d;
+  return requestJSON(API+'?action='+action+(qs?'&'+qs:''), undefined, true);
 }
 
 /* ---------------- load ---------------- */
+let stateRequest = 0;
+let statePending = 0;
+let lastStateAt = null;
 async function load(sample){
+  const request = ++stateRequest;
+  statePending++;
   try{
     const d = await get('state','sample='+(sample||1));
+    if (request !== stateRequest) return;
     if(!d.ok) throw new Error(d.error||'fail');
     S = d;
     histD.push(d.rates.wan_in); histU.push(d.rates.wan_out);
@@ -1569,14 +1721,22 @@ async function load(sample){
       $('#live').innerHTML = (location.hostname?esc(location.hostname)+' · ':'')+'<b>'+on+'</b> جهاز أونلاين دلوقتي'+
         (rnd?' · '+rnd+' بـ MAC عشوائي':'');
       const lp=$('#livepill');
+      lastStateAt = Number(d.now) || Date.now()/1000;
+      monitorSamples.push({at:lastStateAt, down:Math.max(0, Number(d.rates.wan_in)||0),
+        up:Math.max(0, Number(d.rates.wan_out)||0)});
+      if (monitorSamples.length > 12) monitorSamples.shift();
       if(lp){ lp.className='livepill';
-        lp.querySelector('span').textContent='مباشر · اتحدّث '+hhmm(Date.now()/1000); }
+        lp.querySelector('span').textContent='مباشر · اتحدّث '+hhmm(lastStateAt); }
     }
     paint();
   }catch(e){
+    if (request !== stateRequest) return;
     $('#live').innerHTML = '<strong style="color:#b3261e">فشل التحميل:</strong> '+esc(e.message);
     const lp=$('#livepill');
-    if(lp){ lp.className='livepill bad'; lp.querySelector('span').textContent='فشل التحميل'; }
+    if(lp){ lp.className='livepill bad'; lp.querySelector('span').textContent=lastStateAt
+      ? 'بيانات قديمة · آخر تحديث '+hhmm(lastStateAt) : 'فشل التحميل'; }
+  }finally{
+    statePending--;
   }
 }
 async function loadStale(){
@@ -1724,7 +1884,7 @@ async function loadLog(){
 
 
 /* ---------------- paint ---------------- */
-function paint(){ glim(); speed(); alerts(); devices(); groups(); sched(); sites(); video(); att(); }
+function paint(){ glim(); speed(); alerts(); devices(); groups(); sched(); sites(); video(); att(); renderMonitor(); }
 
 /* ---- network-wide per-device ceiling ---- */
 let gD=null, gU=null, gEdit=false;
@@ -1838,14 +1998,25 @@ function speed(){
        st.rtt!=null?' · '+(+st.rtt).toFixed(1)+' ms':''}</div></div>`;
 }
 
+function liveLoad(d){
+  const downCapacity = Number(S.rates?.src_down);
+  const upCapacity = Number(S.rates?.src_up);
+  return Math.max(downCapacity > 0 ? dnOf(d) / downCapacity : 0,
+    upCapacity > 0 ? (+d.rate_up || 0) / upCapacity : 0);
+}
+
+function isHeavyNow(d){
+  return d.online && !d.blocked && !d.protected && liveLoad(d) >= 0.5;
+}
+
 function alerts(){
   const box=$('#alerts'); box.innerHTML='';
-  const heavy=S.devices.filter(d=>d.bytes>50*1048576 && !d.blocked && !d.protected);
+  const heavy=S.devices.filter(isHeavyNow).sort((a,b)=>liveLoad(b)-liveLoad(a));
   heavy.slice(0,2).forEach(d=>{
     const el=document.createElement('div'); el.className='al';
     el.innerHTML=`<span style="font-size:15px">⬇</span>
       <div class="grow">
-        <div class="al-t">استهلاك كبير — <b>${mb(d.bytes)}</b></div>
+        <div class="al-t">استخدام لحظي مرتفع — <bdi>↓ ${r1(dnOf(d))} · ↑ ${r1(+d.rate_up||0)} Mb/s</bdi></div>
         <div class="al-id"><span class="al-n">${esc(d.name||d.ip)}</span>
           <span>·</span><span>${esc(d.ip)}</span>
           <span>·</span><span class="${d.random?'r':''}">${esc(d.mac)}</span>
@@ -1941,11 +2112,13 @@ $('#alerts').addEventListener('click',e=>{
 function rows(){
   const q=$('#q').value.trim().toLowerCase();
   return S.devices.filter(d=>{
+    if(d.hidden_offline) return false;
     if(activeGrp && d.group!==activeGrp) return false;
     if(q && !((d.name||'').toLowerCase().includes(q)||(d.hostname||'').toLowerCase().includes(q)||(d.vendor||'').toLowerCase().includes(q)||(d.type_name||'').includes(q)||d.ip.includes(q)||d.mac.includes(q))) return false;
     if(filt==='now')  return +d.rate > 0.1;
-    if(filt==='dl')   return d.bytes>50*1048576 && !d.blocked && !d.protected;
-    if(filt==='busy') return d.bytes>10*1048576;
+    if(filt==='offline') return !d.online;
+    if(filt==='dl')   return d.online && !d.blocked && dnOf(d)>=1;
+    if(filt==='busy') return isHeavyNow(d);
     if(filt==='lim')  return d.limit && !d.blocked;
     if(filt==='blk')  return d.blocked;
     if(filt==='tmp')  return !!d.expires;
@@ -2183,6 +2356,7 @@ function stPill(d){
   if(d.blocked)
     return '<span class="pl blk">موقوف</span>'+((+d.rate>0.05)
       ?' <span class="tg hot" title="موقوف ومع ذلك بيمرر داتا">⚠ بيعدّي</span>':'');
+  if(d.ip_mac_conflict)  return '<span class="pl mac-conflict">IP على MAC مختلف</span>';
   if(!d.online)          return '<span class="pl off">أوفلاين</span>';
   if(d.limit)            return '<span class="pl lim">محدود</span>';
   if(dnOf(d)>=1)         return '<span class="pl dl">بينزّل</span>';
@@ -2197,7 +2371,7 @@ function speedCell(d){
 function limCell(d){
   if(d.protected) return '<span class="faint">معفى</span>';
   if(d.blocked)   return '<span class="faint">—</span>';
-  if(d.limit)     return '<b>'+d.limit+' Mb</b>';
+  if(d.limit)     return '<bdi>↓ '+d.limit+' · ↑ '+(d.limit_up ?? Math.max(1, Math.round(d.limit/2)))+' Mb/s</bdi>';
   const g=(S.global||{}).down;
   return g ? '<span class="gl3">'+g+' Mb <span class="faint">(عام)</span></span>'
            : '<span class="faint">بلا حد</span>';
@@ -2227,7 +2401,81 @@ function grpStats(arr, inGroup){
     '</div>';
 }
 
+let inspectedMac = null;
+let inspectedField = null;
+const inspector = $('#nc-inspector');
+
+function inspectButton(mac, field, value){
+  if (!value) return '—';
+  return '<span class="nc-classic-name">'+esc(value)+'</span>'+
+    '<button type="button" class="nc-inspect" data-inspect="'+esc(mac)+'" data-inspect-field="'+field+
+    '" aria-haspopup="dialog" aria-controls="nc-inspector">'+esc(value)+'</button>';
+}
+
+function renderInspector(){
+  const device = S.devices.find(d=>d.mac===inspectedMac);
+  if (!device){
+    if (inspector.open) inspector.close();
+    return false;
+  }
+  const address = value => value ? '<bdi class="m">'+esc(value)+'</bdi>'+
+    '<button type="button" class="nc-copy" data-copy="'+esc(value)+'">نسخ</button>' : '';
+  const rule = device.blocked || device.limit !== null && device.limit !== undefined;
+  const blockStatus = device.block_applied === true ? 'الحظر موجود في جدول الفايروول.'
+    : device.block_applied === false ? 'الحظر محفوظ لكن عنوان الجهاز مش في جدول الفايروول.'
+    : 'حالة تطبيق الحظر غير مؤكدة.';
+  const expiry = device.expires ? '<bdi>'+esc(dmhm(device.expires))+'</bdi>' : 'دائم';
+  $('#nc-inspector-content').innerHTML =
+    '<div class="nc-device-summary"><div class="nc-device-identity"><h3 class="nm">'+esc(devLabel(device))+
+    '</h3>'+stPill(device)+'</div><div class="nc-device-addresses">'+
+    address(device.ip)+address(device.mac.toUpperCase())+'</div></div>'+
+    (rule ? '<section class="nc-rule-state"><strong>حالة القاعدة</strong>'+
+        (device.blocked ? '<p>'+blockStatus+'</p><p>'+
+          (device.by_policy ? 'المصدر: سياسة الأجهزة الجديدة' : 'المصدر: إجراء يدوي')+'</p>' : '')+
+        '<p>انتهاء القاعدة <span>'+expiry+'</span></p></section>' : '')+detailHTML(device);
+  return true;
+}
+
+$('#tb').addEventListener('click', e=>{
+  const button = e.target.closest('[data-inspect]');
+  if (!button) return;
+  inspectedMac = button.dataset.inspect;
+  inspectedField = button.dataset.inspectField;
+  $('#nc-copy-status').textContent = '';
+  if (renderInspector()) inspector.showModal();
+});
+inspector.addEventListener('click', async e=>{
+  if (e.target===inspector) inspector.close();
+  const button = e.target.closest('[data-copy]');
+  if (!button) return;
+  let copied = false;
+  try {
+    await navigator.clipboard.writeText(button.dataset.copy);
+    copied = true;
+  } catch(e) {
+    const range = document.createRange();
+    range.selectNodeContents(button.previousElementSibling);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    copied = document.execCommand('copy');
+    if (copied) selection.removeAllRanges();
+  }
+  $('#nc-copy-status').textContent = copied ? 'تم النسخ.' : 'العنوان متحدد للنسخ اليدوي.';
+});
+inspector.addEventListener('close', ()=>{
+  const trigger = $$('#tb [data-inspect]').find(button=>
+    button.dataset.inspect===inspectedMac && button.dataset.inspectField===inspectedField);
+  inspectedMac = null;
+  inspectedField = null;
+  (trigger || $('#q')).focus();
+});
+
+const canCleanOffline = d=>!d.online && !d.protected && !d.ip_mac_conflict && !d.hidden_offline;
+
 function devices(){
+  $('#clean-offline').disabled = !S.devices.some(canCleanOffline);
+  $('#clean-offline-selected').disabled = !S.devices.some(d=>canCleanOffline(d) && picked.has(d.mac));
   const tb=$('#tb'); tb.innerHTML='';
   filtUI();
   const list=sortRows(rows());
@@ -2259,7 +2507,7 @@ function devices(){
   const all = pageAll.has(gkey);
   const view = all ? shown : shown.slice(0, PAGE);
   view.forEach(d=>{
-    const heavy=d.bytes>50*1048576 && !d.blocked && !d.protected;
+    const heavy=isHeavyNow(d);
     const m=esc(d.mac);
     const tr=document.createElement('tr');
     tr.dataset.mac=d.mac;
@@ -2268,14 +2516,14 @@ function devices(){
       <td class="c">${d.protected?'':`<input type="checkbox" data-s="${m}" ${
         picked.has(d.mac)?'checked':''}>`}</td>
       <td class="s"><div class="dv"${devSub(d)?` title="${esc(devSub(d))}"`:''}>
-        <span class="nm"><span class="t">${esc(devLabel(d))}</span>${d.protected?'':
+        <span class="nm"><span class="t">${inspectButton(d.mac,'name',devLabel(d))}</span>${d.protected?'':
           `<button class="ren" data-ren="${m}" title="سمّي الجهاز" aria-label="سمّي الجهاز">✎</button>`}</span>
-        <div class="mac2"><span class="${d.random?'r':''}">${esc((d.mac||'').toUpperCase())}</span>${badges(d)}</div>
+        <div class="mac2"><span class="${d.random?'r':''}">${inspectButton(d.mac,'mac',(d.mac||'').toUpperCase())}</span>${badges(d)}</div>
       </div></td>
-      <td class="s"><span class="m">${esc(d.ip||'—')}</span></td>
+      <td class="s"><span class="m">${inspectButton(d.mac,'ip',d.ip)}</span></td>
       <td class="s">${d.cp_user?esc(d.cp_user):'<span class="faint">مش مسجّل</span>'}</td>
-      <td class="num">${speedCell(d)}</td>
-      <td class="num${heavy?' hot':''}">${mb(d.bytes)}</td>
+      <td class="num${heavy?' hot':''}">${speedCell(d)}</td>
+      <td class="num">${mb(d.bytes)}</td>
       <td class="c">${stPill(d)}</td>
       <td class="c">${limCell(d)}</td>
       <td class="c act">${d.protected
@@ -2299,12 +2547,37 @@ function devices(){
     ? '<button type="button" data-more="1">إظهار '+rest+' كمان في '+esc(glabel||'القائمة')+'</button>'
     : (all && shown.length>PAGE ? '<button type="button" data-more="0">عرض أقل</button>' : '');
 
-  $('#c-dev').textContent=S.devices.length;
+  $('#c-dev').textContent=S.devices.filter(d=>!d.hidden_offline).length;
   $('#c-blk').textContent=S.devices.filter(d=>d.blocked).length;
   if(tab==='blocked') blocked();
   $('#bulk').style.display=picked.size?'flex':'none';
   $('#bn').textContent=picked.size;
+  if (inspector.open) renderInspector();
 }
+
+async function cleanOffline(button, selected){
+  const macs = S.devices.filter(d=>canCleanOffline(d) && (!selected || picked.has(d.mac))).map(d=>d.mac);
+  if (!macs.length) return;
+  const en = $('#nc').dataset.lang === 'en';
+  const message = en
+    ? 'Remove '+macs.length+' offline device(s) from Devices? DHCP reservations and rules will be kept.'
+    : 'تشيل '+macs.length+' جهاز أوفلاين من قائمة الأجهزة؟ حجوزات DHCP والقواعد هتفضل محفوظة.';
+  if (!confirm(message)) return;
+  await withProgress(button, async ()=>{
+    try{
+      const result = await api('cleanoffline', {macs});
+      if (result.ok) {
+        await load(1);
+        S.devices.filter(d=>d.hidden_offline).forEach(d=>picked.delete(d.mac));
+        $('#nc-change-status').textContent = en ? 'Offline devices removed: '+result.removed
+          : 'تمت إزالة الأجهزة الأوفلاين: '+result.removed;
+      }
+    }catch(e){}
+  });
+  devices();
+}
+$('#clean-offline').onclick = e=>cleanOffline(e.currentTarget, false);
+$('#clean-offline-selected').onclick = e=>cleanOffline(e.currentTarget, true);
 
 /* a small menu of speeds, used by a row and by the group button */
 function closePop(){ const p=$('#lpop'); if(p) p.remove(); }
@@ -2353,7 +2626,7 @@ $('#chips').addEventListener('click',e=>{
   limPop(g, null, v=>{
     pend={kind:'bulk', op:v?'lim':'unl', mb:v, macs:items.map(d=>d.mac)};
     sheet('حد للمجموعة: '+label, items.length+' جهاز',
-      v ? 'كل جهاز في المجموعة هياخد لحد <b>'+v+' ميجا</b> نزول.'
+      v ? limitFields(v)
         : 'الحد الخاص هيتشال وكل جهاز يرجع للحد العام.',
       devList(items), '', 'تطبيق', true);
   });
@@ -2495,7 +2768,7 @@ $('#tb').addEventListener('input',e=>{
 $('#tb').addEventListener('change',e=>{
   if(e.target.type==='range'){
     const d=S.devices.find(x=>x.mac===e.target.dataset.r);
-    if(d && +e.target.value!==(d.limit||0)) askLimit(d,+e.target.value);
+    if(d) askLimit(d,+e.target.value);
     return;
   }
   if(e.target.dataset.s!==undefined){
@@ -2508,7 +2781,7 @@ $('#tb').addEventListener('click',e=>{
   const d=S.devices.find(x=>x.mac===b.dataset.m); if(!d) return;
   if(b.dataset.act==='blk') askBlock(d);
   else if(b.dataset.act==='lim')
-    limPop(b, d.limit||0, v=>{ if(v!==(d.limit||0)) askLimit(d,v); });
+    limPop(b, d.limit||0, v=>askLimit(d,v));
   else profile(d);
 });
 $('#all').onchange=e=>{
@@ -2793,6 +3066,7 @@ function detailHTML(d){
     F('مسجّل بـ', d.cp_user?'<b style="color:var(--ok)">'+esc(d.cp_user)+'</b>':dash) +
     F('المجموعة', esc(GRPN[d.group]||d.group||'—')) +
     F('الحد الحالي', fmtL(d.limit)) +
+    F('حد الرفع', d.limit ? esc(String(d.limit_up ?? Math.max(1, Math.round(d.limit/2))))+' Mb/s' : dash) +
     F('حظر بـ', d.random?'<span class="tg ipb">IP</span>':'<span class="tg mac">MAC</span>') +
     F('حجز DHCP', d.reserved
         ? (d.res_ip
@@ -2919,12 +3193,19 @@ function askBlock(d){
       :'pfctl -t nc_blocked -T delete '+d.ip,
     on?'إيقاف':'تشغيل', on);
 }
+function limitFields(down, up = Math.max(1, Math.round(down / 2))){
+  return '<div class="nc-limit-fields">'+
+    '<label>حد النزول (Mb/s)<input id="limit-down-value" class="form-control" type="number" min="1" max="50" step="1" required value="'+esc(down)+'"></label>'+
+    '<label>حد الرفع (Mb/s)<input id="limit-up-value" class="form-control" type="number" min="0.1" max="50" step="0.001" required value="'+esc(up)+'"></label>'+
+    '</div>';
+}
+
 function askLimit(d,v){
   pend={kind:'limit',mac:d.mac,mb:v};
   sheet('تغيير حد النزول',(d.name||d.hostname||d.ip)+' · '+d.ip+' · '+d.mac,
-    v?('الحد هيبقى '+v+' ميجا (كان '+fmtL(d.limit)+').')
+    v?limitFields(v, d.limit_up ?? Math.max(1, Math.round(v / 2)))
      :('الجهاز هياخد الخط بلا حد (كان '+fmtL(d.limit)+').'),'',
-    v?'dnctl pipe … config bw '+v+'Mbit/s mask dst-ip 0xffffffff codel\n# متربط بـ '+d.mac
+    v?''
      :'# شيل الجهاز من الأنبوب','تطبيق',true);
 }
 function askBulk(k){
@@ -2932,10 +3213,11 @@ function askBulk(k){
   if(!items.length) return;
   const t={block:'إيقاف الأجهزة المحددة',lim2:'تحديد النزول بـ 2 ميجا',unl:'إعفاء من حد السرعة'}[k];
   pend={kind:'bulk',op:k,macs:items.map(d=>d.mac)};
+  if(k==='lim2'){ pend.op='lim'; pend.mb=2; }
   sheet(t,items.length+' جهاز',
-    k==='block'?'كل الأجهزة دي هيتقطع عنها النت.':'الحد الجديد هيتطبق على كلها.',
+    k==='lim2'?limitFields(2):k==='block'?'كل الأجهزة دي هيتقطع عنها النت.':'الحد العام هيتطبق على كلها.',
     devList(items),
-    cmdList(items,k),'تنفيذ',true);
+    k==='lim2'?'':cmdList(items,k),'تنفيذ',true);
 }
 function askGroup(){
   const items=sel(); if(!items.length) return;
@@ -2955,6 +3237,9 @@ function askGroup(){
 
 async function apply(){
   const p=pend; if(!p) return;
+  const downField=$('#limit-down-value'), upField=$('#limit-up-value');
+  if (downField && (!downField.reportValidity() || !upField.reportValidity())) return;
+  const speeds = downField ? {mb:downField.value,up_mb:upField.value} : {mb:p.mb||0};
   /*
    * The spinner goes in the confirm button, not over the whole dialog:
    * the label stays readable, and the control that was pressed is where
@@ -2967,12 +3252,12 @@ async function apply(){
     if(p.kind==='block'||p.kind==='unblock')
       r=await api(p.kind,{mac:p.mac,duration:dur});
     else if(p.kind==='limit')
-      r=await api('limit',{mac:p.mac,mb:p.mb,duration:dur});
+      r=await api('limit',{mac:p.mac,...speeds,duration:dur});
     else if(p.kind==='bulk'){
       /* the API takes 60 at a time; a big category goes in slices */
       const skipped=[];
       for(let i=0;i<p.macs.length;i+=60){
-        r=await api('bulk',{op:p.op,mb:p.mb||0,macs:p.macs.slice(i,i+60),duration:dur});
+        r=await api('bulk',{op:p.op,...speeds,macs:p.macs.slice(i,i+60),duration:dur});
         if(!r || r.ok===false) break;
         (r.skipped||[]).forEach(x=>skipped.push(x));
       }
@@ -3015,9 +3300,12 @@ async function apply(){
 /* ---------------- live traffic ---------------- */
 let LIVE=null, lvView='devices';
 const secs = n => {
-  if(!n) return '—';
-  const h=Math.floor(n/3600), m=Math.floor((n%3600)/60);
-  return h ? h+'س '+m+'د' : (m ? m+'د' : Math.floor(n)+'ث');
+  const total = Math.floor(Number(n));
+  if (!Number.isFinite(total) || total <= 0) return '—';
+  const h = Math.floor(total / 3600), m = Math.floor(total % 3600 / 60);
+  const ar = h ? h+'س '+m+'د' : m ? m+'د' : total+'ث';
+  const en = h ? h+'h '+m+'m' : m ? m+'m' : total+'s';
+  return '<bdi class="nc-duration"><span lang="ar">'+ar+'</span><span lang="en">'+en+'</span></bdi>';
 };
 /*
  * The video streams open right now. Each row names the watcher, so the admin
@@ -3106,13 +3394,17 @@ const VNAME={youtube:'يوتيوب',tiktok:'تيك توك',
   instagram:'انستغرام',twitch:'تويتش',
   whatsapp:'واتساب'};
 
+let trafficRequest = 0;
 async function loadLive(){
+  const request = ++trafficRequest;
   $('#lvbox').innerHTML='<div class="empty">بيحمّل…</div>';
   try{
     const d=await get('traffic','view='+lvView);
+    if (request !== trafficRequest) return;
     if(!d.ok) throw new Error(d.error||'fail');
     LIVE=d; drawLive();
   }catch(e){
+    if (request !== trafficRequest) return;
     $('#lvbox').innerHTML='<div class="empty">فشل التحميل: '+esc(e.message)+'</div>';
   }
 }
@@ -3120,10 +3412,50 @@ function nameOf(ip){
   const d=S.devices.find(x=>x.ip===ip);
   return d ? (d.name||d.hostname||ip) : ip;
 }
+
+const liveColumns = {
+  devices: [['name','الجهاز',devLabel], ['session','مدة الجلسة',d=>d.session], ['bytes','حجم البيانات',d=>d.bytes],
+    ['conns','الاتصالات',d=>d.conns], ['services','الخدمات',d=>d.services.length]],
+  services: [['name','الخدمة',d=>d.service], ['bytes','حجم البيانات',d=>d.bytes],
+    ['conns','الاتصالات',d=>d.conns], ['devices','الأجهزة',d=>d.device_count]],
+  detail: [['name','الخدمة',d=>d.service], ['bytes','حجم البيانات',d=>d.bytes],
+    ['conns','الاتصالات',d=>d.conns], ['age','عمر الاتصال',d=>d.age]]
+};
+const liveOrder = {devices:['bytes',-1],services:['bytes',-1],detail:['bytes',-1]};
+const liveExpanded = new Set();
+
+function orderedLive(rows, scope){
+  const [field, direction] = liveOrder[scope];
+  const value = liveColumns[scope].find(column=>column[0]===field)[2];
+  return [...rows].sort((a,b)=>{
+    const x=value(a), y=value(b);
+    if(field==='name') return direction*String(x||'').localeCompare(String(y||''),undefined,{numeric:true});
+    if(x==null) return y==null ? 0 : 1;
+    if(y==null) return -1;
+    return direction*(x-y);
+  });
+}
+
+function liveSortButton(scope, column){
+  const [field,label] = column;
+  const [key,direction] = liveOrder[scope];
+  return '<button type="button" class="live-sort" data-live-sort="'+field+'" data-live-scope="'+scope+
+    '" aria-pressed="'+(key===field)+'">'+label+' <span aria-hidden="true">'+
+    (key===field ? (direction>0?'↑':'↓') : '↕')+'</span></button>';
+}
+
+function liveHeader(scope){
+  const [first,...metrics] = liveColumns[scope];
+  return '<div class="live-head">'+liveSortButton(scope,first)+'<div class="dvm">'+
+    metrics.map(column=>liveSortButton(scope,column)).join('')+'</div><span class="live-actions">الإجراءات</span></div>';
+}
+
 function drawLive(){
   if(!LIVE) return;
   const q=($('#lvq').value||'').trim().toLowerCase();
   const box=document.createElement('div');
+  box.className='live-grid live-'+lvView;
+  box.innerHTML=liveHeader(lvView);
 
   if(lvView==='devices'){
     let rows=LIVE.devices||[];
@@ -3135,16 +3467,17 @@ function drawLive(){
     if(!rows.length){
       $('#lvbox').innerHTML='<div class="empty">مفيش أجهزة مطابقة</div>'; return;
     }
-    rows.forEach((d,i)=>{
+    orderedLive(rows,'devices').forEach((d,i)=>{
       const card=document.createElement('div');
-      card.className='dvc'+(d.blocked?' blk':'');
-      const svcMax=Math.max(...d.services.map(x=>x.bytes),1);
+      const key='device:'+d.ip+'|'+(d.mac||'');
+      const open=liveExpanded.has(key);
+      card.dataset.liveKey=key;
+      card.className='dvc'+(d.blocked?' blk':'')+(open?' open':'');
       card.innerHTML=`
         <div class="dvh" data-open="${i}">
           <div class="dvi">
             <div class="l1">
-              <span class="chev">▸</span>
-              <span class="nm">${esc(devLabel(d))}</span>
+              <button type="button" class="live-expand" data-live-expand aria-expanded="${open}" aria-controls="live-body-${i}"><span class="chev" aria-hidden="true">${open?'▾':'▸'}</span> <span class="nm">${esc(devLabel(d))}</span></button>
               ${devSub(d)?'<span class="host">'+esc(devSub(d))+'</span>':''}
               ${d.type_name?'<span class="tg">'+esc(d.type_name)+'</span>':''}
               ${d.vendor?'<span class="tg">'+esc(d.vendor)+'</span>':''}
@@ -3159,7 +3492,7 @@ function drawLive(){
           </div>
           <div class="dvm">
             <div class="k"><div class="v">${secs(d.session)}</div><div class="t">مدة الجلسة</div></div>
-            <div class="k"><div class="v">${mb(d.bytes)}</div><div class="t">الاستهلاك</div></div>
+            <div class="k"><div class="v">${mb(d.bytes)}</div><div class="t">حجم البيانات</div></div>
             <div class="k"><div class="v">${d.conns}</div><div class="t">الاتصالات</div></div>
             <div class="k"><div class="v">${d.services.length}</div><div class="t">الخدمات</div></div>
           </div>
@@ -3170,14 +3503,16 @@ function drawLive(){
                 data-dv="blk" data-m="${esc(d.mac)}">${d.blocked?'شغّله':'أوقفه'}</button>`}
           </div>
         </div>
-        <div class="dvs" data-body="${i}" hidden>
-          ${d.services.map(x=>{
+        <div class="dvs" id="live-body-${i}" data-body="${i}" ${open?'':'hidden'}>
+          <div class="svr live-detail-head">${liveColumns.detail.map(column=>liveSortButton('detail',column)).join('')}<span>الإجراءات</span></div>
+          ${orderedLive(d.services,'detail').map(x=>{
             const isIP=/^\d+\.\d+\.\d+\.\d+$/.test(x.service);
             return `<div class="svr">
               <div class="sn"><b>${esc(x.service)}</b>${isIP?' <span class="tg">غير معروف</span>':''}
                 ${x.host?'<span class="hh">'+esc(x.host)+'</span>':''}</div>
-              <div class="sb"><i style="width:${(x.bytes/svcMax*100).toFixed(0)}%"></i></div>
-              <div class="sm">${mb(x.bytes)} · ${x.conns} اتصال · ${secs(x.age)}</div>
+              <div class="sm"><span class="live-detail-label">حجم البيانات</span>${mb(x.bytes)}</div>
+              <div class="sm"><span class="live-detail-label">الاتصالات</span>${x.conns}</div>
+              <div class="sm"><span class="live-detail-label">عمر الاتصال</span>${secs(x.age)}</div>
               <button class="btn btn-xs btn-danger" data-sv="${esc(x.service)}">احظر</button>
             </div>`;}).join('')}
         </div>`;
@@ -3190,27 +3525,30 @@ function drawLive(){
     if(!svcs.length){
       $('#lvbox').innerHTML='<div class="empty">مفيش خدمات مطابقة</div>'; return;
     }
-    svcs.forEach((x,i)=>{
+    orderedLive(svcs,'services').forEach((x,i)=>{
       const isIP=/^\d+\.\d+\.\d+\.\d+$/.test(x.service);
-      const card=document.createElement('div'); card.className='dvc';
+      const card=document.createElement('div');
+      const key='service:'+x.service;
+      const open=liveExpanded.has(key);
+      card.dataset.liveKey=key;
+      card.className='dvc'+(open?' open':'');
       card.innerHTML=`
         <div class="dvh" data-open="${i}">
           <div class="dvi">
-            <div class="l1"><span class="chev">▸</span>
-              <span class="nm">${esc(x.service)}</span>
+            <div class="l1"><button type="button" class="live-expand" data-live-expand aria-expanded="${open}" aria-controls="live-body-${i}"><span class="chev" aria-hidden="true">${open?'▾':'▸'}</span> <span class="nm">${esc(x.service)}</span></button>
               ${isIP?'<span class="tg">غير معروف</span>':''}</div>
             ${x.host?'<div class="l2">'+esc(x.host)+'</div>':''}
           </div>
           <div class="dvm">
-            <div class="k"><div class="v">${mb(x.bytes)}</div><div class="t">نقل</div></div>
-            <div class="k"><div class="v">${x.conns}</div><div class="t">اتصال</div></div>
-            <div class="k"><div class="v">${x.device_count}</div><div class="t">جهاز</div></div>
+            <div class="k"><div class="v">${mb(x.bytes)}</div><div class="t">حجم البيانات</div></div>
+            <div class="k"><div class="v">${x.conns}</div><div class="t">الاتصالات</div></div>
+            <div class="k"><div class="v">${x.device_count}</div><div class="t">الأجهزة</div></div>
           </div>
           <div class="dva">
             <button class="btn btn-xs btn-danger" data-sv="${esc(x.service)}">احظره</button>
           </div>
         </div>
-        <div class="dvs" data-body="${i}" hidden>
+        <div class="dvs" id="live-body-${i}" data-body="${i}" ${open?'':'hidden'}>
           ${(x.devices||[]).map(ip=>`<div class="svr">
             <div class="sn"><b>${esc(nameOf(ip))}</b><span class="hh">${esc(ip)}</span></div>
             <div></div><div></div><div></div></div>`).join('')}
@@ -3221,6 +3559,17 @@ function drawLive(){
   $('#lvbox').innerHTML=''; $('#lvbox').appendChild(box);
 }
 $('#lvbox').addEventListener('click',e=>{
+  const sort=e.target.closest('[data-live-sort]');
+  if(sort){
+    const scope=sort.dataset.liveScope, field=sort.dataset.liveSort;
+    const parentKey=sort.closest('.dvc')?.dataset.liveKey;
+    const [key,dir]=liveOrder[scope];
+    liveOrder[scope]=[field,key===field?-dir:field==='name'?1:-1];
+    drawLive();
+    $$('#lvbox [data-live-sort]').find(b=>b.dataset.liveScope===scope &&
+      b.dataset.liveSort===field && b.closest('.dvc')?.dataset.liveKey===parentKey)?.focus();
+    return;
+  }
   /* the "blocked" badge jumps to the tab that can undo it */
   if(e.target.closest('[data-goblk]')){
     e.stopPropagation();
@@ -3228,10 +3577,18 @@ $('#lvbox').addEventListener('click',e=>{
     return;
   }
   const hdr=e.target.closest('[data-open]');
-  if(hdr && !e.target.closest('button')){
+  if(hdr && (!e.target.closest('button') || e.target.closest('[data-live-expand]'))){
     const card=hdr.closest('.dvc');
     const body=card.querySelector('[data-body]');
-    if(body){ body.hidden=!body.hidden; card.classList.toggle('open',!body.hidden); }
+    if(body){
+      body.hidden=!body.hidden;
+      const open=!body.hidden;
+      card.classList.toggle('open',open);
+      const button=hdr.querySelector('[data-live-expand]');
+      button.setAttribute('aria-expanded',String(open));
+      button.querySelector('.chev').textContent=open?'▾':'▸';
+      if(open) liveExpanded.add(card.dataset.liveKey); else liveExpanded.delete(card.dataset.liveKey);
+    }
     return;
   }
   const sv=e.target.closest('[data-sv]');
@@ -3632,6 +3989,35 @@ function repRender(){
         '</tr></thead><tbody>'+acts+'</tbody></table>') : '');
 }
 
+function renderMonitor(){
+  if (!monitorSamples.length) return;
+
+  const latest = monitorSamples[monitorSamples.length - 1];
+  const scale = Math.max(1, ...monitorSamples.flatMap(sample=>[sample.down,sample.up]));
+  const plot = $('#nc-monitor-plot');
+  const rate = value=>value.toFixed(1)+' Mb/s';
+  plot.setAttribute('aria-label', monitorSamples.map(sample=>hhmm(sample.at)+' ↓ '+rate(sample.down)+' ↑ '+rate(sample.up)).join(', '));
+  plot.replaceChildren(...monitorSamples.map(sample=>{
+    const pair = document.createElement('div');
+    pair.className = 'sample';
+    pair.title = hhmm(sample.at)+' · ↓ '+rate(sample.down)+' · ↑ '+rate(sample.up);
+    for (const [value, css] of [[sample.down,'download'],[sample.up,'upload']]){
+      const bar = document.createElement('i');
+      bar.className = css;
+      bar.style.height = value / scale * 100+'%';
+      pair.appendChild(bar);
+    }
+    return pair;
+  }));
+  $('#nc-monitor-first').textContent = hhmm(monitorSamples[0].at);
+  $('#nc-monitor-last').textContent = hhmm(latest.at);
+  $('#nc-monitor-down').textContent = rate(latest.down);
+  $('#nc-monitor-up').textContent = rate(Math.max(0, Number(S.rates.wan_out)||0));
+  $('#nc-monitor-devices').textContent = S.devices.filter(device=>device.online).length;
+  $('#nc-monitor-empty').hidden = true;
+  $('#nc-monitor-series').hidden = false;
+}
+
 function showTab(t){
   tab=t;
   $$('.tabs button[data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
@@ -3672,7 +4058,11 @@ if($('#rday'))  $('#rday').onchange=e=>{ repDay=e.target.value; loadReport(); };
 
 bindSort(); bindResize(); applyWidths();
 load(1); loadLog(); loadLive();
-setInterval(()=>{ if(!$('#sheet')) load(1); }, 10000);
+function pollState(){
+  if (!document.hidden && !statePending && !$('#sheet')) load(1);
+}
+setInterval(pollState, 10000);
+document.addEventListener('visibilitychange', pollState);
 })();
 </script>
 
@@ -3693,6 +4083,23 @@ setInterval(()=>{ if(!$('#sheet')) load(1); }, 10000);
  * ===================================================================== */
 (function(){
   var PAIRS = [["فيديو يوتيوب وتيك توك بياكل معظم الخط. امنعه أو حدده — على الكل أو على أجهزة محددة.", "YouTube and TikTok video eat most of the line. Block or limit it — network-wide or for chosen devices."], ["ومطابق للشروط بيتصرف فيه مرة واحدة بس — بعدها يبقى معروف ومايتصرفش فيه تاني.", "and matching the rules is acted on once — after that it is known and left alone."], ["الرابط الكامل للفيديو مشفّر جوه الاتصال ومايظهرش لأي فايروول من غير", "The full video URL is encrypted inside the connection and is invisible to any firewall without"], ["مفيش محاولات مسجّلة — بيتسجّل هنا أول ما حد يحاول يفتح موقع محظور", "No attempts logged — one appears here as soon as someone tries a blocked site"], ["طبّق قاعدة على مجموعة كاملة. الضم بيتم من تبويب الأجهزة (حدد ثم", "Apply a rule to a whole group. Membership is set from the Devices tab (select, then"], ["قواعد بتشتغل وتقف لوحدها على السيرفر — مش محتاج تفتح الصفحة.", "Rules that start and stop by themselves on the firewall — no need to keep this page open."], ["البوابة · السويتش · الأكسس بوينت · المضيف) مستثناة دائمًا.", "gateway · switch · access point · host) are always exempt."], ["انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5) وحاول تاني", "Session expired — refresh the page (F5) and try again"], ["السياسة بتفحص الشبكة كل دقيقة. أي جهاز مش متشاف قبل كده", "The policy scans the network every minute. Any device not seen before"], ["هيترفع الحظر، والحدود اللي اتحطت بسبب الخدمة دي هتتشال.", "The block is lifted, and limits applied because of this service are removed."], ["تحكّم لحظي في استهلاك الإنترنت وإدارة الأجهزة المتصلة", "Live control over internet usage and connected devices"], ["الأسماء دي هي السيرفرات اللي الجهاز متصل بيها فعلاً.", "These are the servers the device is actually connected to."], ["جهاز موقوف ولسه بيسحب داتا — الحظر مش بيتنفّذ عليه", "blocked device(s) still pulling data — the block is not being enforced"], ["بيتحدد من اسم الجهاز والمصنّع — تخمين مش تأكيد.", "Guessed from the device name and vendor — a guess, not a certainty."], ["بتاعه اتغير — القواعد اتنقلت تلقائيًا معاه بالـ", "changed — the rules moved with it automatically by"], ["الجهاز ده من البنية الأساسية ومايتوقفش من هنا", "This device is infrastructure and cannot be blocked here"], ["الجهاز ده من البنية الأساسية ومايتحددش من هنا", "This device is infrastructure and cannot be limited here"], ["الجهاز بيغير الـ MAC كل مرة — مش مشاركة حساب", "The device changes its MAC each time - not account sharing"], ["انتهت صلاحية الجلسة — اعمل تحديث للصفحة (F5)", "Session expired - refresh the page (F5)"], ["شغالة — بتتطبق على أي جهاز جديد يدخل الشبكة", "On — applies to any new device joining the network"], ["الاتصال بالسيرفر انقطع — حاول تاني بعد لحظة", "Lost contact with the firewall - try again in a moment"], ["الحد الخاص هيتشال وكل جهاز يرجع للحد العام.", "Own limits are removed; every device falls back to the global limit."], ["نسخة احتياطية بتتاخد أوتوماتيك قبل التنفيذ", "A backup is taken automatically before applying"], ["الكابتيف بورتال موقوف — الخيار ده مش هيفرق", "Captive portal is off — this option makes no difference"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص —", "Applies to every device without its own limit —"], ["بيتطبق على كل الأجهزة اللي مالهاش حد خاص", "Applies to every device without its own limit"], ["اليوم لسه ماخلصش — الأرقام لغاية دلوقتي", "The day is not over yet — figures are up to now"], ["كل إجراء اتعمل على الشبكة، الأحدث فوق", "Every action taken on the network, newest first"], ["معاينة — دول اللي هيتأثروا لو فعّلتها", "Preview — these would be affected if you enable it"], ["أجهزة هتتأثر دلوقتي لو السياسة اشتغلت", "Devices that would be affected right now if the policy ran"], ["MAC عشوائي ومافيش اسم ثابت نتابعه بيه", "Random MAC with no stable name to follow it by"], ["الحد الأقصى لكل جهاز مامعاهوش حد خاص", "Maximum for each device without its own limit"], ["جهاز شبكة — محمي من الإيقاف والتحديد", "Network device - protected from blocking and limiting"], ["ابحث باسم الجهاز أو عنوان IP او MAC", "Search by device name, IP or MAC"], ["كل ما تتصل، فهتظهر كجهاز جديد تاني.", "on every connection, so they appear as a new device each time."], ["عشوائي ومافيش اسم ثابت نتابعه بيه —", "random MAC with no stable name to follow it by —"], ["كل أجهزة المجموعة هيتقطع عنها النت.", "Every device in the group will lose internet."], ["الأجهزة اللي ليها حد خاص مش هتتأثر.", "Devices with their own limit are unaffected."], ["كل نطاقات الخدمة هتتحظر مش واحد بس.", "Every domain the service uses is blocked, not just one."], ["لسه مافيش بيانات — بتتجمع كل دقيقة", "No data yet — it is collected every minute"], ["الأجهزة دي هترجع تتصل بالنت فورًا.", "These devices will reconnect immediately."], ["بس — مافيش طريقة تحدّ خدمة لوحدها.", "— there is no way to throttle one service on its own."], ["الجهاز ده مابقاش ظاهر — اعمل تحديث", "That device is no longer visible — refresh"], ["مافيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["عشوائي ومافيش اسم ثابت نتابعه بيه", "random MAC with no stable name to follow it by"], ["، وأي حد يبدأ بعد كده هيتحد كمان.", ", and anyone who starts afterwards is limited too."], ["حدد أجهزة من تبويب الأجهزة الأول", "Select devices from the Devices tab first"], ["مفيش حد بيتفرّج على فيديو دلوقتي", "Nobody is watching video right now"], ["مين حاول يفتح موقع محظور وإمتى.", "Who tried to open a blocked site, and when."], ["كل الأجهزة دي هيتقطع عنها النت.", "All these devices will lose internet."], ["الرفع بيزاحم النزول، فخليه أقل", "Upload competes with download, so keep it lower"], ["مفيش أجهزة جديدة مطابقة دلوقتي", "No new matching devices right now"], ["جهاز متصل دلوقتي هيتأثر فورًا.", "connected device(s) will be affected immediately."], ["موقوفة — مفيش أي إجراء تلقائي", "Off — no automatic action"], ["عشوائي، بس الجهاز متابَع باسم", "random MAC, but the device is tracked by the name"], ["وممكن يفلت لو الجهاز غيّر الـ", "and it may escape if the device changes its"], ["جديد، الحظر بيتابعه تلقائيًا.", "the block follows it automatically."], ["حد النزول هيبقى 2 ميجا لكلها.", "The download limit becomes 2 Mb for all of them."], ["الجهاز هياخد الخط بلا حد (كان", "The device gets the line with no limit (was"], ["جهاز متصل دلوقتي هيتأثر فورًا", "connected device(s) affected immediately"], ["اختار نوع جهاز واحد على الأقل", "Choose at least one device type"], ["مفيش أجهزة على الحد ده دلوقتي", "No devices at that limit right now"], ["كل جهاز في المجموعة هياخد لحد", "Every device in the group gets up to"], ["الموبايلات الحديثة بتغير الـ", "Modern phones change their"], ["اعتراض الشهادات على كل جهاز.", "installing an intercepting certificate on every device."], ["القواعد اتنقلت تلقائيًا بالـ", "the rules moved automatically by"], ["تسمح للجهاز ده وتشيل القيود؟", "Allow this device and remove the restrictions?"], ["الحد الجديد هيتطبق على كلها.", "The new limit applies to all of them."], ["كل نطاقات الخدمة مش واحد بس.", "every domain the service uses, not just one."], ["السياسة هتتحفظ بس مش هتشتغل.", "The policy is saved but will not run."], ["استثنِ اللي سجّل دخول بيوزر", "Exempt anyone signed in with an account"], ["هيتحظر على كل أجهزة الشبكة.", "It will be blocked for every device on the network."], ["تفعيل سياسة الأجهزة الجديدة", "Enable the new-device policy"], ["سرعة النزول (تصفّح وتنزيل)", "Download speed (browsing & downloads)"], ["الجهاز هيرجع بحده الحالي (", "The device returns to its current limit ("], ["أي جهاز جديد مطابق هيتعمله", "Any matching new device will be"], ["نزول / رفع — مرجع المقارنة", "down / up — the comparison baseline"], ["الحد العام نزول/رفع (ميجا)", "Global limit down/up (Mb)"], ["MAC عشوائي — نوعه مش معروف", "Random MAC - type unknown"], ["شغّالة في مواعيد محددة بس", "Only active during set hours"], ["الحظر بيتنقل معاه تلقائي.", "the block follows it automatically."], ["يحظر الخدمة على كل الشبكة", "Blocks the service network-wide"], ["السيرفر رجّع رد غير متوقع", "The firewall returned an unexpected reply"], ["مافيش فيديو مفتوح دلوقتي", "No video open right now"], ["موقوف ومع ذلك بيمرر داتا", "blocked yet still passing data"], ["اللي اتصرف فيه قبل كده ·", "Previously acted on ·"], ["ماقدرش يقرا البث المفتوح", "Could not read the open streams"], ["لا — عنوان متغير من DHCP", "No - dynamic address from DHCP"], ["<span class=\"tg ipb\">حد ", "<span class=\"tg ipb\">limit "], ["الحد أعلى من الخط بكتير", "far above what the line can carry"], ["عشوائي: الحظر بيتم بالـ", "random MAC: the block is applied by"], ["مفيش فيديو مفتوح دلوقتي", "No video open right now"], ["مقروء من الفايروول نفسه", "Read from the firewall itself"], ["تجميع الأجهزة حسب النوع", "Group devices by type"], ["مراقبة الشبكة والأجهزة", "Network & Device Monitor"], ["بحث باسم أو IP أو MAC…", "Search by name, IP or MAC…"], ["الفيديو المفتوح دلوقتي", "Video Open Now"], ["اللي اتصرف فيه قبل كده", "Previously acted on"], ["جهاز محظور ممكن يفلت —", "blocked device(s) may escape —"], ["هيترفع الحظر عنهم كلهم", "The block will be lifted from all of them"], ["تحديد النزول بـ 2 ميجا", "Limit download to 2 Mb"], ["مسح حجوزات غير مستخدمة", "Delete unused reservations"], ["جاري تحميل حالة الشبكة", "Loading network state"], ["اسحب لتغيير عرض العمود", "Drag to resize the column"], ["جهاز مسجّل دخول دلوقتي", "device(s) signed in right now"], ["الكابتيف بورتال شغال ·", "Captive portal is on ·"], ["الجهاز مش معروف للنظام", "The device is unknown to the system"], ["الاتصال بالسيرفر انقطع", "Lost contact with the firewall"], ["سياسة الأجهزة الجديدة", "New-Device Policy"], ["إيقاف الأجهزة المحددة", "Block selected devices"], ["شيل الجهاز من الأنبوب", "Remove the device from its pipe"], ["عنوان محجوز للجهاز ده", "Address reserved for this device"], ["حركة الشبكة الداخلية", "Internal Traffic"], ["النزول (تصفح وتنزيل)", "Download (browsing & downloads)"], ["إيقاف النت عن الجهاز", "Cut internet from device"], ["حفظ السياسة (موقوفة)", "Save policy (disabled)"], ["الحجوزات هتتمسح والـ", "The reservations are deleted and the"], ["ماقدرش يقرا البيانات", "Could not read the data"], ["جهاز على الحد دلوقتي", "devices at the limit now"], ["الحد العام لكل جهاز", "Global Per-Device Limit"], ["مفيش نتايج للبحث ده", "No results for that search"], ["عشوائي — الحظر بالـ", "random MAC — blocked by"], ["قاعدة مؤقتة شغالة —", "temporary rule(s) active —"], ["روح لتبويب الموقوفة", "Go to the Blocked tab"], ["ماقدرش يقرا التقرير", "Could not read the report"], ["جهاز أونلاين دلوقتي", "devices online right now"], ["جهاز في المجموعة دي", "devices in this group"], ["الاستهلاك الإجمالي", "Total Usage"], ["مفيش قواعد بمواعيد", "No scheduled rules"], ["بحث باسم الجهاز أو", "Search by device name or"], ["إعفاء من حد السرعة", "Exempt from the speed limit"], ["ماقدرش يحفظ الاسم:", "Could not save the name:"], ["اتخطى أجهزة محمية:", "Skipped protected devices:"], ["سعة النزول / الرفع", "Download / upload capacity"], ["الوارد من الإنترنت", "Inbound from internet"], ["الدخول والاستهلاك", "Logins & Usage"], ["الجهاز · IP · MAC", "Device · IP · MAC"], ["ماقدرش يقرا السجل", "Could not read the history"], ["مفيش أجهزة مطابقة", "No matching devices"], ["مفيش أجهزة موقوفة", "No blocked devices"], ["إرجاع النت للجهاز", "Restore internet to device"], ["كل جهاز هياخد لحد", "Each device gets up to"], ["كل استخدام الجهاز", "everything the device does"], ["لو جهاز رجع، ياخد", "If a device returns it gets a"], ["مفيش مواقع محظورة", "No blocked sites"], ["مفيش خدمات مطابقة", "No matching services"], ["عنوان محطور فعلًا", "address actually blocked"], ["الجهاز دلوقتي على", "device is now on"], ["منها رايح للأجهزة", "of it goes to devices"], ["استهلاك الإنترنت", "Internet Usage"], ["الاستهلاك اليومي", "Daily Usage"], ["مفيش إجراءات لسه", "No actions yet"], ["أو سمّيه يدوياً.", "or give it a name manually."], ["أضعف وممكن يفلت.", "which is weaker and may be escaped."], ["تحذف القاعدة دي؟", "Delete this rule?"], ["تغيير الحد العام", "Change the global limit"], ["الأجهزة الموقوفة", "Blocked devices"], ["داخل من الإنترنت", "inbound from the internet"], ["على فيديو دلوقتي", "video right now"], ["مفيش فيديو مفتوح", "No video open"], ["قاعدة تحديد سرعة", "speed-limit rule"], ["الإجمالي 24 ساعة", "24-hour total"], ["لسه مافيش بيانات", "No data yet"], ["التحكم في الشبكة", "Network control"], ["الأجهزة المتصلة", "Connected Devices"], ["اكتب اسم الجهاز", "Enter a device name"], ["سماح (تسجيل بس)", "Allow (log only)"], ["مفيش حد بيتفرّج", "Nobody is watching"], ["تغيير حد النزول", "Change download limit"], ["الحد بيتطبق على", "The limit applies to"], ["اختار المجموعة:", "Choose the group:"], ["البنية الأساسية", "Infrastructure"], ["مفيش حاجة غائبة", "Nothing stale"], ["بحث في الموقوفة", "Search blocked"], ["موقوفة / محدودة", "blocked / limited"], ["عشوائي · متابَع", "random · tracked"], ["الشبكة الداخلية", "Internal network"], ["خطأ في الاتصال:", "Connection error:"], ["قاعدة Temporary", "Temporary rule"], ["بره ساعات العمل", "Outside work hours"], ["الـ IP اتغير من", "The IP changed from"], ["الصادر للإنترنت", "Outbound to internet"], ["المفتوح دلوقتي", "Live Now"], ["تحديث البيانات", "Refresh"], ["إعدادات الشبكة", "Network Settings"], ["استهلاك كبير —", "Heavy usage —"], ["تشيل الحظر ده؟", "Remove this block?"], ["المجموعة فاضية", "The group is empty"], ["اكتب نطاق صحيح", "Enter a valid domain"], ["إجراءات النظام", "System Actions"], ["التنفيذ الفعلي", "Actually Enforced"], ["في ساعات العمل", "Within work hours"], ["صباحًا / مساءً", "AM / PM"], ["سيرفرات وتخزين", "Servers & storage"], ["مباشر · اتحدّث", "Live · updated"], ["جلسات الاتصال", "Connection States"], ["حفظ التغييرات", "Save Changes"], ["السرعة دلوقتي", "Current Speed"], ["الصفحة مفتوحة", "Page open"], ["على كل الشبكة", "network-wide"], ["كل الموبايلات", "All phones"], ["بمواعيد محددة", "On a schedule"], ["سجل الإجراءات", "Action Log"], ["هيعدي. احجزله", "it will get through. Reserve it an"], ["كلهم متابَعين", "all tracked"], ["بيتفرّج فعلاً", "actually watching"], ["إلغاء التحديد", "Clear selection"], ["بحث بالاسم أو", "Search by name or"], ["إلغاء التصفية", "Clear filter"], ["تفاصيل الجهاز", "Device details"], ["خارج للإنترنت", "outbound to the internet"], ["لو الجهاز أخد", "If the device takes"], ["مُضيف افتراضي", "Hypervisor"], ["أقربها بتنتهي", "the soonest ends at"], ["مرجع المقارنة", "comparison baseline"], ["مش متعرف عليه", "Unidentified"], ["بـ MAC عشوائي", "with a random MAC"], ["موقوف / محدود", "Blocked / limited"], ["سياسة الجديد", "New-Device Policy"], ["غالبًا فيديو", "Probably video"], ["فيديو فيسبوك", "Facebook Video"], ["فلترة السجل…", "Filter the log…"], ["أجهزة النظام", "System devices"], ["ازاي بتشتغل:", "How it works:"], ["نظام التشغيل", "Operating system"], ["بنتابعه باسم", "tracked by the name"], ["الأجهزة اللي", "The devices"], ["إيقاف مجموعة", "Block group"], ["تحديد مجموعة", "Limit group"], ["مع تثبيت حجز", "with a reservation pinned"], ["فشل التحميل:", "Load failed:"], ["عليه حد سرعة", "speed-limited"], ["محاولة فاشلة", "failed attempt"], ["جهاز افتراضي", "Virtual machine"], ["قاعدة مخزّنة", "stored rule"], ["أجهزة الشبكة", "Network equipment"], ["عناوين ثابتة", "Fixed addresses"], ["تجميع: النوع", "Group: Category"], ["من غير تجميع", "No grouping"], ["سرعة المصدر", "Line Speed"], ["الخط يستحمل", "the line can carry this"], ["شغال دلوقتي", "Active now"], ["سمّي الجهاز", "Rename device"], ["حدّه 1 ميجا", "Limit to 1 Mb"], ["الحد الحالي", "Current limit"], ["لو غيّر الـ", "if it changes its"], ["بتتفرّج على", "watching"], ["ضمّ لمجموعة", "Add to group"], ["أجهزة محددة", "selected devices"], ["يوم أو أكتر", "days or more"], ["فلترة السجل", "Filter the log"], ["آيفون/آيباد", "iPhone/iPad"], ["جهاز دلوقتي", "devices now"], ["فيديو مفتوح", "video open"], ["قاعدة مؤقتة", "Temporary rule"], ["متصل دلوقتي", "online now"], ["جلسة اتقطعت", "session dropped"], ["جهاز استهلك", "devices used data"], ["ملف الأسبوع", "Weekly file"], ["إدارة سيرفر", "Server mgmt"], ["الطلب اترفض", "The request was refused"], ["قواعد مؤقتة", "temporary rules"], ["حد للمجموعة", "Set group limit"], ["فشل التحميل", "Load failed"], ["سرعة الرفع", "Upload speed"], ["تنافس عادي", "normal contention"], ["مسجّل دخول", "Signed in"], ["MAC عشوائي", "Random MAC"], ["اسم الهوست", "Hostname"], ["تحديد سرعة", "Limit speed"], ["لآخر اليوم", "Until end of day"], ["أيام العمل", "Workdays"], ["المستخدمين", "Users"], ["سجل الدخول", "Login History"], ["مفيش نتايج", "No results"], ["هيتحظر على", "Will be blocked on"], ["هياخدوا حد", "will get a limit of"], ["جديد عادي.", "new one normally."], ["شيل القيود", "Remove restrictions"], ["تحديد الكل", "Select all"], ["مسح المحدد", "Delete selected"], ["جهاز محدد.", "selected device(s)."], ["حذف حجوزات", "Delete reservations"], ["حسب الجهاز", "By device"], ["حسب الخدمة", "By service"], ["بالسياسة ·", "by policy ·"], ["الموبايلات", "Phones"], ["أونلاين من", "online of"], ["جهاز متأثر", "device affected"], ["الحد هيبقى", "The limit becomes"], ["الحظر بالـ", "blocked by"], ["مدة الجلسة", "Session"], ["تنزيل HTML", "Download HTML"], ["موقع محطور", "site blocked"], ["أكسس بوينت", "Access point"], ["جهاز Apple", "Apple device"], ["جلسات (PF)", "Sessions (PF)"], ["المجموعات", "Groups"], ["حظر مواقع", "Site Blocking"], ["تنظيف MAC", "MAC Cleanup"], ["عنوان MAC", "MAC Address"], ["الاستهلاك", "Data"], ["حد النزول", "Download Limit"], ["الاتصالات", "Conns"], ["ممكن يفلت", "Can escape"], ["شغّل الكل", "Unblock all"], ["يتطبق على", "Applies to"], ["استثناءات", "Exceptions"], ["هترجع للـ", "return to the"], ["جهاز محدد", "selected device"], ["الكاميرات", "Cameras"], ["غير معروف", "Unknown"], ["للأجهزة ·", "to devices ·"], ["حد 2 ميجا", "2 Mb limit"], ["ميجا (كان", "Mb (was"], ["كل الشبكة", "the whole network"], ["الحفظ فشل", "Save failed"], ["على فيديو", "video"], ["دخول ناجح", "successful login"], ["MAC متغير", "MAC rotating"], ["سرعة الخط", "Line speed"], ["حسب النوع", "By category"], ["حد السرعة", "Speed limit"], ["الموقوفة", "Blocked"], ["المواعيد", "Schedules"], ["عنوان IP", "IP Address"], ["الإجمالي", "Total"], ["المجموعة", "Group"], ["مش مسجّل", "Not signed in"], ["IP اتغير", "IP changed"], ["بالسياسة", "By policy"], ["التفاصيل", "Details"], ["مسجّل بـ", "Signed in as"], ["حجز DHCP", "DHCP reservation"], ["آخر ظهور", "Last seen"], ["انستغرام", "Instagram"], ["منع كامل", "Block fully"], ["اتغير من", "changed from"], ["جهاز الـ", "device whose"], ["متربط بـ", "bound to"], ["حظر موقع", "Block a site"], ["متابَع ·", "tracked ·"], ["موبايل (", "phone ("], ["جهاز على", "device on"], ["تسجيل بس", "log only"], ["المستخدم", "User"], ["التقارير", "Reports"], ["جهاز IoT", "IoT device"], ["رقم تاني", "Other"], ["الأجهزة", "Devices"], ["الفيديو", "Video"], ["محاولات", "Attempts"], ["أوفلاين", "Offline"], ["اسمح له", "Allow"], ["المصنّع", "Vendor"], ["بيتفرّج", "Watching"], ["تيك توك", "TikTok"], ["نتفليكس", "Netflix"], ["أندرويد", "Android"], ["أي جهاز", "Any device"], ["الإجراء", "Action"], ["٣ ساعات", "3 hours"], ["بيحمّل…", "Loading…"], ["ملحوظة:", "Note:"], ["الإدارة", "Management"], ["المكاتب", "Offices"], ["أو خدمة", "or service"], ["موقوف ·", "blocked ·"], ["عشوائي)", "random)"], ["اتصال ·", "connections ·"], ["حدّها 2", "Limit to 2"], ["تشغيلهم", "Unblock them"], ["الخدمات", "Services"], ["كمبيوتر", "Computer"], ["أونلاين", "online"], ["كمان في", "more in"], ["عرض أقل", "Show less"], ["القائمة", "the list"], ["من أصل", "of"], ["الجهاز", "Device"], ["النشاط", "Signed in as"], ["الحالة", "Status"], ["حظر بـ", "Blocked by"], ["بينزّل", "Downloading"], ["الأعلى", "Heaviest"], ["محدودة", "Limited"], ["موقوفة", "Blocked"], ["عشوائي", "Random"], ["متابَع", "Tracked"], ["بلا حد", "No limit"], ["بيعدّي", "LEAKING"], ["تفاصيل", "Details"], ["أوقفها", "Block"], ["احظرها", "Block service"], ["يوتيوب", "YouTube"], ["فيسبوك", "Facebook"], ["واتساب", "WhatsApp"], ["ويندوز", "Windows"], ["كل يوم", "Every day"], ["العطلة", "Weekend"], ["مستخدم", "users"], ["مش على", "not only"], ["الضيوف", "Guests"], ["بيحمّل", "Loading"], ["نزول و", "down and"], ["الجلسة", "Session"], ["محاولة", "attempt"], ["جهاز ×", "devices ×"], ["جهاز ·", "devices ·"], ["دلوقتي", "now"], ["هيعدي.", "it will get through."], ["النسبة", "Share"], ["الدخول", "Logins"], ["كاميرا", "Camera"], ["موبايل", "Phone"], ["المزيد", "More"], ["السجل", "Log"], ["موقوف", "Blocked"], ["الرفع", "Upload"], ["النوع", "Type"], ["إجراء", "Actions"], ["مؤقتة", "Temporary"], ["تحديث", "Refresh"], ["اتصال", "conns"], ["أجهزة", "devices"], ["إيقاف", "Block"], ["تشغيل", "Unblock"], ["تطبيق", "Apply"], ["إلغاء", "Cancel"], ["إغلاق", "Close"], ["عرضهم", "Show them"], ["أوقفه", "Block"], ["حدّها", "Limit"], ["تويتش", "Twitch"], ["مسموح", "Allowed"], ["محدود", "Limited"], ["ممنوع", "Blocked"], ["آيفون", "iPhone"], ["لينكس", "Linux"], ["المدة", "Duration"], ["لغاية", "to"], ["تحديد", "Limit"], ["تسجيل", "Log"], ["اتقطع", "Disconnected"], ["ساعات", "hours"], ["دقيقة", "min"], ["غيرهم", "Others"], ["محمية", "protected"], ["إضافة", "Add"], ["احظره", "Block it"], ["اعرضه", "Show it"], ["مثال:", "e.g."], ["الوصف", "Description"], ["عنوان", "Address"], ["تنظيف", "Cleanup"], ["محجوز", "reserved"], ["مسجّل", "registered"], ["الحد:", "Limit:"], ["تفعيل", "Enable"], ["تنفيذ", "Run"], ["جلسات", "sessions"], ["من 31", "of 31"], ["هيعدي", "will get through"], ["اتغير", "changed"], ["شغّله", "Unblock"], ["شغّال", "On"], ["اليوم", "Day"], ["طابعة", "Printer"], ["سويتش", "Switch"], ["راوتر", "Router"], ["سيرفر", "Server"], ["تخزين", "Storage"], ["تنزيل", "Download"], ["تجميع", "Group"], ["تعديل", "Edit"], ["فلاتر", "Filters"], ["إظهار", "Show"], ["(عام)", "(global)"], ["نزول", "down"], ["الكل", "All"], ["بحث…", "Search…"], ["نظام", "System"], ["ثابت", "Reserved"], ["معفى", "Exempt"], ["محمي", "Protected"], ["ساكن", "Idle"], ["جهاز", "device"], ["يدوي", "Manual"], ["اعرض", "View"], ["دائم", "Permanent"], ["ساعة", "1 hour"], ["دخول", "logins"], ["ميجا", "Mb"], ["احظر", "Block"], ["خدمة", "service"], ["منها", "of which"], ["لمدة", "for"], ["أيام", "days"], ["رجوع", "Back"], ["رفع.", "up."], ["حدّه", "Limit it"], ["عنصر", "item"], ["فاضي", "empty"], ["شغال", "active"], ["محدد", "selected"], ["فشل:", "Failed:"], ["الحد", "Limit"], ["مرات", "times"], ["12 ص", "12am"], ["12 ظ", "12pm"], ["تمام", "OK"], ["متاح", "free"], ["رفع", "upload"], ["ألف", "K"], ["حفظ", "Save"], ["بحث", "Search"], ["نشط", "Active"], ["حظر", "Block"], ["نعم", "Yes"], ["ماك", "Mac"], ["منع", "Block"], ["حدث", "events"], ["دخل", "Signed in"], ["يوم", "days"], ["حذف", "Delete"], ["مسح", "Clear"], ["حجز", "Reserve"], ["حتى", "until"], ["على", "on"], ["حسب", "by"], ["6 ص", "6am"], ["6 م", "6pm"], ["لا", "No"], ["من", "from"], ["أو", "or"], ["بـ", "by "]];
+  PAIRS.unshift(['التصميم الإضافي', 'Alternate layout'], ['حركة التنزيل على WAN', 'WAN download traffic'],
+    ['الحظر محفوظ لكن عنوان الجهاز مش في جدول الفايروول.', 'Block saved. The device address is missing from the firewall table.'],
+    ['الحظر موجود في جدول الفايروول.', 'Block present in the firewall table.'],
+    ['حالة تطبيق الحظر غير مؤكدة.', 'Block enforcement is unverified.'],
+    ['المصدر: سياسة الأجهزة الجديدة', 'Source: new-device policy'], ['المصدر: إجراء يدوي', 'Source: manual action'],
+    ['حالة القاعدة', 'Rule status'], ['انتهاء القاعدة', 'Rule expiry'], ['تم النسخ.', 'Copied.'],
+    ['العنوان متحدد للنسخ اليدوي.', 'Address selected for manual copying.'], ['نسخ', 'Copy'],
+    ['تم تطبيق التغيير.', 'Change applied.'], ['تم حفظ التغيير.', 'Change saved.'],
+    ['التغيير اتحفظ لكن تعذّر تطبيقه على الفايروول.', 'Change saved. Firewall application failed.'],
+    ['تعذّر حفظ التغيير.', 'Could not save the change.'],
+    ['إزالة كل الأوفلاين', 'Remove all offline'], ['إزالة الأوفلاين المحدد', 'Remove selected offline'],
+    ['حركة الإنترنت على WAN', 'WAN traffic'], ['التنزيل', 'Download'],
+    ['IP على MAC مختلف', 'IP seen with another MAC'],
+    ['حد النزول (Mb/s)', 'Download limit (Mb/s)'], ['حد الرفع (Mb/s)', 'Upload limit (Mb/s)'],
+    ['حد الرفع', 'Upload limit'], ['حد الرفع لازم يكون بين 0.1 و50 Mb/s', 'Upload limit must be between 0.1 and 50 Mb/s'],
+    ['استخدام لحظي مرتفع', 'Heavy usage now'], ['حجم البيانات', 'Data transferred'],
+    ['عمر الاتصال', 'Connection age'], ['الإجراءات', 'Actions'], ['الخدمة', 'Service']);
   var lang = 'ar';
   try { lang = localStorage.getItem('nc_lang') || 'ar'; } catch(e){}
 

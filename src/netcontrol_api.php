@@ -18,6 +18,9 @@ header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
 function nc_out($data, $code = 200) {
+	if (!empty($data['ok']) && isset($GLOBALS['nc_change_status'])) {
+		$data['change_status'] = $GLOBALS['nc_change_status'];
+	}
 	http_response_code($code);
 	echo json_encode($data, JSON_UNESCAPED_UNICODE);
 	exit;
@@ -38,6 +41,15 @@ if ($action === 'state') {
 	 * stitch them together in the browser.
 	 */
 	$devs = nc_devices();
+	$blocked = array_filter($devs, function($d) { return !empty($d['blocked']); });
+	$table = array();
+	$table_ok = false;
+	if ($blocked && nc_anchor_active()) {
+		$lines = array();
+		exec('/sbin/pfctl -t ' . NC_TABLE . ' -T show 2>/dev/null', $lines, $rc);
+		$table_ok = ($rc === 0);
+		$table = array_flip(array_map('trim', $lines));
+	}
 	$live = array();
 	foreach (nc_live_devices() as $l) {
 		if (!empty($l['mac'])) {
@@ -48,6 +60,12 @@ if ($action === 'state') {
 		$l = $live[$d['mac']] ?? null;
 		$d['conns']   = $l['conns']   ?? 0;
 		$d['session'] = $l['session'] ?? null;
+		$d['hidden_offline'] = empty($d['online']) && empty($d['protected']) &&
+			!empty($store['offline_dismissed'][$d['mac']]);
+		if (!empty($d['blocked'])) {
+			$d['block_applied'] = $table_ok && !empty($d['online']) && !empty($d['ip'])
+				? isset($table[$d['ip']]) : null;
+		}
 	}
 	unset($d);
 
@@ -262,12 +280,74 @@ function nc_expiry($dur) {
 	}
 }
 
-$store = nc_store_load();
+function nc_api_lock_store() {
+	$lock = nc_store_lock();
+	if (!$lock) {
+		nc_out(array('ok' => false, 'error' => 'فيه تعديل تاني شغّال. جرّب تاني.'), 503);
+	}
+	register_shutdown_function('nc_store_unlock', $lock);
+}
+
+function nc_api_check_save($saved) {
+	if (!$saved) {
+		nc_out(array('ok' => false, 'change_status' => 'save_failed',
+			'error' => 'تعذّر حفظ التغيير.'), 500);
+	}
+	$GLOBALS['nc_change_status'] = 'saved';
+}
+
+function nc_api_check_apply($applied) {
+	if (!$applied) {
+		nc_out(array('ok' => false, 'change_status' => 'pending',
+			'error' => 'التغيير اتحفظ لكن تعذّر تطبيقه على الفايروول.'), 502);
+	}
+	$GLOBALS['nc_change_status'] = 'applied';
+}
+
+function nc_api_upload_limit($down) {
+	if (!$down || !isset($_POST['up_mb'])) {
+		return null;
+	}
+	$up = $_POST['up_mb'];
+	if (!is_string($up) || !preg_match('/^\d+(?:\.\d{1,3})?$/D', $up) ||
+		(float)$up < 0.1 || (float)$up > 50) {
+		nc_out(array('ok' => false, 'error' => 'حد الرفع لازم يكون بين 0.1 و50 Mb/s'), 400);
+	}
+	return (float)$up;
+}
+
+if ($action !== 'speedtest') {
+	nc_api_lock_store();
+	$store = nc_store_load();
+}
 $dur   = $_POST['duration'] ?? 'perm';
 $exp   = nc_expiry($dur);
 $durTxt = $exp ? ' (مؤقت حتى ' . date('H:i', $exp) . ')' : '';
 
 switch ($action) {
+
+case 'cleanoffline': {
+	$requested = $_POST['macs'] ?? array();
+	if (!is_array($requested)) {
+		nc_out(array('ok' => false, 'error' => 'Invalid device list'), 400);
+	}
+	$requested = array_fill_keys(array_filter($requested, 'is_string'), true);
+	$removed = 0;
+	foreach (nc_devices() as $device) {
+		$mac = $device['mac'];
+		if (isset($requested[$mac]) && empty($device['online']) && empty($device['protected']) &&
+			empty($device['ip_mac_conflict']) &&
+			empty($store['offline_dismissed'][$mac])) {
+			$store['offline_dismissed'][$mac] = true;
+			$removed++;
+		}
+	}
+	if ($removed) {
+		nc_api_check_save(nc_store_save($store));
+		nc_log("CLEAN-OFFLINE {$removed}");
+	}
+	nc_out(array('ok' => true, 'removed' => $removed));
+}
 
 case 'block':
 case 'unblock': {
@@ -304,8 +384,9 @@ case 'unblock': {
 		'cp_user' => ($action === 'block') ? ($d['cp_user'] ?? '') : '',
 		'last_seen' => time(),
 	));
-	nc_store_save($store);
+	nc_api_check_save(nc_store_save($store));
 	$n = nc_apply();
+	nc_api_check_apply($n !== false);
 	nc_log(sprintf("%s %s (%s) بـ%s%s",
 		$action === 'block' ? 'BLOCK' : 'UNBLOCK',
 		$mac, $d['ip'], $d['random'] ? 'IP' : 'MAC', $durTxt));
@@ -333,13 +414,14 @@ case 'limit': {
 		'ip'        => $d['ip'],
 		'name'      => $d['name'],
 		'limit'     => $mb ?: null,
+		'limit_up'  => nc_api_upload_limit($mb),
 		'expires'   => $mb ? $exp : null,
 		'last_seen' => time(),
 	));
-	nc_store_save($store);
-	nc_apply();
+	nc_api_check_save(nc_store_save($store));
+	nc_api_check_apply(nc_apply() !== false);
 	nc_log(sprintf("LIMIT %s (%s) = %s%s", $mac, $d['ip'],
-		$mb ? "{$mb}Mb" : 'بلا حد', $durTxt));
+		$mb ? $mb . 'Mb down / ' . nc_upload_limit($store['devices'][$mac]) . 'Mb up' : 'بلا حد', $durTxt));
 	nc_out(array('ok' => true));
 }
 
@@ -360,6 +442,7 @@ case 'bulk': {
 	if ($op === 'lim' && (int)($_POST['mb'] ?? 0) <= 0) {
 		nc_out(array('ok' => false, 'error' => 'السرعة ناقصة'), 400);
 	}
+	$up = in_array($op, array('lim', 'lim2'), true) ? nc_api_upload_limit($bmb) : null;
 	/* one scan, not one per device */
 	$bydev = array();
 	foreach (nc_devices() as $x) {
@@ -401,11 +484,14 @@ case 'bulk': {
 		if ($op === 'lim2')    { $cur['limit'] = 2;       $cur['expires'] = $exp; }
 		if ($op === 'lim')     { $cur['limit'] = $bmb;    $cur['expires'] = $exp; }
 		if ($op === 'unl')     { $cur['limit'] = null;    $cur['expires'] = $exp; }
+		if (in_array($op, array('lim', 'lim2', 'unl'), true)) {
+			$cur['limit_up'] = $up;
+		}
 		$store['devices'][$mac] = $cur;
 		$done++;
 	}
-	nc_store_save($store);
-	nc_apply();
+	nc_api_check_save(nc_store_save($store));
+	nc_api_check_apply(nc_apply() !== false);
 	nc_log(sprintf("BULK %s على %d جهاز%s%s", $op, $done, $durTxt,
 		$skipped ? ' (اتخطى محميين: ' . implode(',', $skipped) . ')' : ''));
 	nc_out(array('ok' => true, 'done' => $done, 'skipped' => $skipped));
@@ -422,7 +508,7 @@ case 'group': {
 		$store['devices'][$mac] = array_merge($store['devices'][$mac] ?? array(),
 			array('group' => $g, 'last_seen' => time()));
 	}
-	nc_store_save($store);
+	nc_api_check_save(nc_store_save($store));
 	nc_log(sprintf("GROUP %d جهاز -> %s", count($macs), $g));
 	nc_out(array('ok' => true));
 }
@@ -432,7 +518,7 @@ case 'rename': {
 	$name = trim(mb_substr($_POST['name'] ?? '', 0, 48));
 	$store['devices'][$d['mac']] = array_merge($store['devices'][$d['mac']] ?? array(),
 		array('name' => $name, 'ip' => $d['ip'], 'last_seen' => time()));
-	nc_store_save($store);
+	nc_api_check_save(nc_store_save($store));
 	nc_log(sprintf("RENAME %s -> %s", $d['mac'], $name));
 	nc_out(array('ok' => true));
 }
@@ -495,7 +581,7 @@ case 'clean': {
 	if (is_array($maps)) {
 		$maps = array_values($maps);
 	}
-	nc_store_save($store);
+	nc_api_check_save(nc_store_save($store));
 	if ($removed) {
 		write_config("netcontrol: مسح {$removed} حجز DHCP غير مستخدم");
 		services_dhcpd_configure();
@@ -537,7 +623,7 @@ case 'savepolicy': {
 	if (!count($pol['targets'])) {
 		$pol['targets'] = array('mobile');
 	}
-	nc_policy_set($pol);
+	nc_api_check_save(nc_policy_set($pol));
 	nc_log(sprintf('POLICY-SAVE %s %s targets=%s%s',
 		$pol['enabled'] ? 'ON' : 'OFF', $pol['action'],
 		implode(',', $pol['targets']),
@@ -548,7 +634,12 @@ case 'savepolicy': {
 }
 
 case 'policyrun': {
-	$acted = nc_policy_run(false);
+	try {
+		$acted = nc_policy_run(false);
+	} catch (RuntimeException $e) {
+		nc_log($e->getMessage());
+		nc_out(array('ok' => false, 'error' => 'تعذّر تنفيذ سياسة الأجهزة.'), 500);
+	}
 	nc_out(array('ok' => true, 'acted' => $acted));
 }
 
@@ -557,15 +648,18 @@ case 'policyforget': {
 	if (!$mac) {
 		nc_out(array('ok' => false, 'error' => 'MAC ناقص'), 400);
 	}
-	nc_policy_forget($mac);
-	/* and clear whatever the policy did to it */
-	$store = nc_store_load();
-	if (isset($store['devices'][$mac])) {
+	unset($store['policy_seen'][$mac]);
+	/* Forget the device and clear its rule in the same write. */
+	$has_rule = isset($store['devices'][$mac]);
+	if ($has_rule) {
 		$store['devices'][$mac]['blocked'] = false;
 		$store['devices'][$mac]['limit']   = null;
+		unset($store['devices'][$mac]['limit_up']);
 		$store['devices'][$mac]['expires'] = null;
-		nc_store_save($store);
-		nc_apply();
+	}
+	nc_api_check_save(nc_store_save($store));
+	if ($has_rule) {
+		nc_api_check_apply(nc_apply() !== false);
 	}
 	nc_log("POLICY-FORGET {$mac}");
 	nc_out(array('ok' => true));
@@ -638,8 +732,8 @@ case 'blockservice': {
 			'added'   => time(),
 		);
 	}
-	nc_store_save($store);
-	nc_dns_apply();
+	nc_api_check_save(nc_store_save($store));
+	nc_api_check_apply(nc_dns_apply() >= 0);
 	nc_log(sprintf("SERVICE-BLOCK %s (%d نطاق جديد من %d)%s",
 		$svc, $added, count($doms), $durTxt));
 	nc_out(array(
@@ -698,8 +792,8 @@ case 'site': {
 				}
 				$store['sites'] = $kept;
 				nc_log(sprintf('SITE-DEL %s (%d نطاق للخدمة)', $svc, $gone));
-				nc_store_save($store);
-				nc_dns_apply();
+				nc_api_check_save(nc_store_save($store));
+				nc_api_check_apply(nc_dns_apply() >= 0);
 				nc_out(array('ok' => true, 'removed' => $gone, 'service' => $svc));
 			}
 
@@ -711,8 +805,8 @@ case 'site': {
 				($store['sites'][$i]['enabled'] ? 'on' : 'off'));
 		}
 	}
-	nc_store_save($store);
-	nc_dns_apply();
+	nc_api_check_save(nc_store_save($store));
+	nc_api_check_apply(nc_dns_apply() >= 0);
 	nc_out(array('ok' => true, 'sites' => array_values($store['sites'])));
 }
 
@@ -785,6 +879,7 @@ case 'video': {
 			$cur['ip']        = $vv['ip'];
 			$cur['name']      = $cur['name'] ?? '';
 			$cur['limit']     = $mb;
+			unset($cur['limit_up']);
 			$cur['expires']   = $exp;
 			$cur['by_video']  = $key;
 			$cur['last_seen'] = time();
@@ -796,6 +891,7 @@ case 'video': {
 		foreach ($store['devices'] as $mac => &$cur) {
 			if (($cur['by_video'] ?? '') === $key) {
 				$cur['limit']    = null;
+				unset($cur['limit_up']);
 				$cur['expires']  = null;
 				unset($cur['by_video']);
 				$touched[$mac]   = 'cleared';
@@ -804,9 +900,9 @@ case 'video': {
 		unset($cur);
 	}
 
-	nc_store_save($store);
-	nc_apply();
-	nc_dns_apply();
+	nc_api_check_save(nc_store_save($store));
+	nc_api_check_apply(nc_apply() !== false);
+	nc_api_check_apply(nc_dns_apply() >= 0);
 
 	$set = count(array_filter($touched, function($x) { return $x === 'set'; }));
 	$clr = count(array_filter($touched, function($x) { return $x === 'cleared'; }));
@@ -848,7 +944,7 @@ case 'schedule': {
 		);
 		nc_log("SCHED-ADD " . ($_POST['from'] ?? '') . '-' . ($_POST['to'] ?? ''));
 	}
-	nc_store_save($store);
+	nc_api_check_save(nc_store_save($store));
 	nc_out(array('ok' => true, 'schedule' => array_values($store['schedule'])));
 }
 
@@ -900,9 +996,11 @@ case 'speedtest': {
 	$mbps = round($bps * 8 / 1000000, 1);
 	$busy = $before['wan_in'];
 
+	nc_api_lock_store();
+	$store = nc_store_load();
 	$store['source']['down'] = max($store['source']['down'] ?? 0, $mbps + $busy);
 	$store['source']['at']   = time();
-	nc_store_save($store);
+	nc_api_check_save(nc_store_save($store));
 
 	nc_log(sprintf("SPEEDTEST %.1f Mbps (الخط كان مشغول بـ %.1f)", $mbps, $busy));
 	nc_out(array('ok' => true, 'measured' => $mbps, 'busy' => $busy,

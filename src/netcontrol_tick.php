@@ -23,8 +23,13 @@ if (!$fh || !flock($fh, LOCK_EX | LOCK_NB)) {
 try {
 	nc_tick();
 	/* catch devices that joined since the last run */
-	if (file_exists('/usr/local/pkg/netcontrol.inc')) {
-		nc_policy_run(false);
+	$storeLock = nc_store_lock(10);
+	if ($storeLock) {
+		try {
+			nc_policy_run(false);
+		} finally {
+			nc_store_unlock($storeLock);
+		}
 	}
 } catch (Throwable $e) {
 	nc_log('TICK-ERROR ' . $e->getMessage());
